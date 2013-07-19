@@ -6,7 +6,6 @@ def loadShapePickles(regionName, subcutName, shape = "GT", path = "../EdgeFitter
 	from math import sqrt
 	from src.defs import getRegion
 	region = getRegion(regionName)
-	print "test"
 	if  "Run" in subcutName:
 		regionName += "_"+ subcutName
 	elif not subcutName == "default":
@@ -14,19 +13,20 @@ def loadShapePickles(regionName, subcutName, shape = "GT", path = "../EdgeFitter
 		regionName = regionName.replace("Barrel", subcutName+"Barrel")
 		regionName = regionName.replace("Control", subcutName+"Control")
 	picklePaths = {
-		"nS":"edgefit-%s-%sSFOS-nS.pkl",
-		"nSUncert":"edgefit-%s-%sSFOS-nSerror.pkl",
-		"nB":"edgefit-%s-%sSFOS-nB.pkl",
-		"nBUncert":"edgefit-%s-%sSFOS-nBerror.pkl",
-		"nZ":"edgefit-%s-%sSFOS-nZ.pkl",
-		"nZUncert":"edgefit-%s-%sSFOS-nZerror.pkl",
-		"chi2":"edgefit-%s-%sSFOS-chi2.pkl",
-		"nPar":"edgefit-%s-%sSFOS-nPar.pkl",
+		"nS":"edgefit-%s-%s_FixedEdgeSFOS-nS.pkl",
+		"nSUncert":"edgefit-%s-%s_FixedEdgeSFOS-nSerror.pkl",
+		"nB":"edgefit-%s-%s_FixedEdgeSFOS-nB.pkl",
+		"nBUncert":"edgefit-%s-%s_FixedEdgeSFOS-nBerror.pkl",
+		"nZ":"edgefit-%s-%s_FixedEdgeSFOS-nZ.pkl",
+		"nZUncert":"edgefit-%s-%s_FixedEdgeSFOS-nZerror.pkl",
+		"chi2":"edgefit-%s-%s_FixedEdgeSFOS-chi2.pkl",
+		"nPar":"edgefit-%s-%s_FixedEdgeSFOS-nPar.pkl",
 		}
 	result = {}
 	for varName, template in picklePaths.iteritems():
 		pklPath = os.path.join(path, template%(regionName, shape))
 		result[varName] = "--"
+		#~ print pklPath
 		if os.path.exists(pklPath):
 			pklFile = open(pklPath, "r")
 			result[varName] = pickle.load(pklFile)
@@ -159,7 +159,7 @@ def saveTable(table, name):
 	tabFile.write(table)
 	tabFile.close()
 
-	print table
+	#~ print table
 	
 def makeSummaryTable(data, subcuts, regionName, name):
 	tableTemplate =r"""
@@ -200,10 +200,10 @@ selection & approach & $N_S$ & $N_B$ ( low \mll ) & $N_Z$ & $N_{\text{Continuum}
 		"MET50Ge2Jets":"E_{T}^{miss} > 50 Gev",
 		"Barrel":"$|\eta|<$ 1.4",
 		"Endcap":"$|\eta_{1}|>$  1.4 $||$ $|\eta_{2}|>$  1.4 ",
-		"Type1":" type1 $E_T^{miss}>$  150 GeV ",
-		"Tc":" tc $E_T^{miss}>$  150 GeV ",
-		"Calo":" calo $E_T^{miss}>$  150 GeV ",
-		"MHT":"  $H_T^{miss}>$  150 GeV ",
+		"Type1MET":" type1 $E_T^{miss}$",
+		"TcMET":" tc $E_T^{miss}$",
+		"CaloMET":" calo $E_T^{miss}$",
+		"MHTMET":"  $H_T^{miss}$",
 		}
 	notesTemplate = "%% %(nS-debug)s\n%% %(cut)s \n"
 	notesLine2Template = r"%% %(nSStar-debug)s"+"\n"
@@ -255,7 +255,7 @@ def makeFitTable(data,region, subcuts, name):
 		"Ge2BTag":r"$n_{\text{b-tagged}} \ge 2$",
 		"Barrel":r"Only Barrel $|\eta^{\ell}| < 1.4$",
 		"Endcap":r"Only Forward, at least one $|\eta^{\ell}| > 1.4$",
-		"LowHT": r"$100 < \HT < 300$ GeV",
+		"LowHT": r"$\HT < 300$ GeV",
 		"HighHT": r"$\HT > 300$ GeV",
 		"TightIso":r"Tight isolated leptopns",
 		"Pt2020":r"$p_{T}^{\ell} > 20$ GeV",
@@ -272,9 +272,9 @@ def makeFitTable(data,region, subcuts, name):
 		"Pt3010":r"$p_{T}^{\ell} > 30(10)$ GeV",
 		"Pt3020":r"$p_{T}^{\ell} > 30(20)$ GeV",
 		"Pt3030":r"$p_{T}^{\ell} > 30$ GeV",		
-		"Type1":r"$E_T^{miss}$ corr. for jet corrections",		
-		"Tc":r"track corr. $E_T^{miss}$",		
-		"Calo":r"calo based $E_T^{miss}$",		
+		"Type1MET":r"$E_T^{miss}$ corr. for jet corrections",		
+		"TcMET":r"track corr. $E_T^{miss}$",		
+		"CaloMET":r"calo based $E_T^{miss}$",		
 		}
 		
 	notesTemplate = "%% %(nS-debug)s\n%% %(cut)s \n"
@@ -296,7 +296,7 @@ def makeFitTable(data,region, subcuts, name):
 			table += lineShapeTemplate%tempData[subcutName]["shapeKernelT"]
 
 
-		if subcutName == "default" or subcutName =="Ge2BTag" or subcutName =="Endcap" or subcutName =="Pt3030" or subcutName =="HighPU" or subcutName =="MuMu" or subcutName =="HighHT" or subcutName =="RunC" or subcutName =="TightIso" or subcutName =="Calo": 
+		if subcutName == "default" or subcutName =="Ge2BTag" or subcutName =="Endcap" or subcutName =="Pt3030" or subcutName =="HighPU" or subcutName =="MuMu" or subcutName =="HighHT" or subcutName =="RunC" or subcutName =="TightIso" or subcutName =="CaloMET": 
 			print subcutName
 			table += "\\hline\n"
 	#~ tempDataMET100["default"]["shapeKernelT"]["title"] = "MET triggers and diff. PD"	
@@ -407,15 +407,17 @@ def main():
 	from src.datasets import loadPickles
 	allPkls = loadPickles("shelves/cutAndCount_*.pkl")
 	#~ makeFitTable(allPkls, ["default","RunAB", "RunC","LowPU", "MidPU", "HighPU","LowHT", "HighHT","0BTag", "1BTag", "Ge2BTag","TightIso","Barrel"], "FitTable")
-	#~ makeFitTable(allPkls,"SignalHighMET", ["default","0BTag", "1BTag", "Ge2BTag","Pt2010","Pt2020", "Pt3010","Pt3020","Pt3030","Barrel","Endcap","Type1","Tc","Calo","LowPU", "MidPU", "HighPU","LowHT", "HighHT","RunAB", "RunC","TightIso",], "FitTableHighMET")
+	#~ makeFitTable(allPkls,"SignalHighMET", ["default","0BTag", "1BTag", "Ge2BTag","Pt2010","Pt2020", "Pt3010","Pt3020","Pt3030","Barrel","Endcap","Type1","Tc","MHT","LowPU", "MidPU", "HighPU","LowHT", "HighHT","RunAB", "RunC","TightIso",], "FitTableHighMET")
 	#~ makeFitTable(allPkls,"BarrelHighMET", ["default","0BTag", "1BTag", "Ge2BTag","Pt2010","Pt2020", "Pt3010","Pt3020","Pt3030","Barrel","Endcap","Type1","Tc","Calo","LowPU", "MidPU", "HighPU","LowHT", "HighHT","RunAB", "RunC","TightIso",], "FitTableBarrelHighMET")
 	#~ makeFitTable(allPkls,"SignalLowMET", ["default","0BTag", "1BTag", "Ge2BTag","Pt2010","Pt2020", "Pt3010","Pt3020","Pt3030","Barrel","Endcap","Type1","Tc","Calo","LowPU", "MidPU", "HighPU","LowHT", "HighHT","RunAB", "RunC","TightIso",], "FitTableLowMET")
 	#~ makeFitTable(allPkls,"SignalLowMETFullEta", ["default","0BTag", "1BTag", "Ge2BTag","Pt2010","Pt2020", "Pt3010","Pt3020","Pt3030","Barrel","Endcap","Type1","Tc","Calo","LowPU", "MidPU", "HighPU","LowHT", "HighHT","RunAB", "RunC","TightIso",], "FitTableLowMETFullEta")
+	makeFitTable(allPkls,"SignalNonRectCentral", ["default","0BTag", "1BTag", "Ge2BTag","Pt2010","Pt2020", "Pt3010","Pt3020","Pt3030","Barrel","Endcap","Type1MET","TcMET","CaloMET","LowPU", "MidPU", "HighPU","LowHT", "HighHT","RunAB", "RunC","TightIso",], "FitTableSignalNonRectCentral")
+	makeFitTable(allPkls,"SignalNonRectForward", ["default","0BTag", "1BTag", "Ge2BTag","Pt2010","Pt2020", "Pt3010","Pt3020","Pt3030","Barrel","Endcap","Type1MET","TcMET","CaloMET","LowPU", "MidPU", "HighPU","LowHT", "HighHT","RunAB", "RunC","TightIso",], "FitTableSignalNonRectForward")
 	for regionName in allPkls:
 		allPkls[regionName] = extendPickle(regionName, allPkls[regionName])		
 		makeRegionTables(allPkls[regionName]["default"], regionName)
-		#~ makeRegionTables(allPkls[regionName]["RunAB"], regionName+"_RunAB")
-		#~ makeRegionTables(allPkls[regionName]["RunC"], regionName+"_RunC")
+		makeRegionTables(allPkls[regionName]["RunAB"], regionName+"_RunAB")
+		makeRegionTables(allPkls[regionName]["RunC"], regionName+"_RunC")
 		
 
 		makeSummaryTable(allPkls[regionName], ["default","RunAB", "RunC"], regionName, "Results")
@@ -428,7 +430,7 @@ def main():
 		makeSummaryTable(allPkls[regionName], ["default","Barrel","Endcap"], regionName, "Eta")
 		makeSummaryTable(allPkls[regionName], ["default","MET100Ge2Jets","MET50Ge2Jets"], regionName, "MET")
 		makeSummaryTable(allPkls[regionName], ["default","CatA","CatB","CatC","CatD"], regionName, "Categories")
-		makeSummaryTable(allPkls[regionName], ["default","Type1","Tc","Calo","MHT"], regionName, "METFlavours")
+		makeSummaryTable(allPkls[regionName], ["default","Type1MET","TcMET","CaloMET","MHTMET"], regionName, "METFlavours")
 
 	makePASTable(allPkls, "default")
 	#~ makePASTable(allPkls, "RunAB")

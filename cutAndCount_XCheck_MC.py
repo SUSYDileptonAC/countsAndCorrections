@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 import math
+import ROOT
+from ROOT import TMath
 tableTemplate = r"""
 \begin{tabular}{l|ccc|cc|c}
 selection & $ee$ & $\mu\mu$ & $e\mu$ & $SF$ & $OF prediction$ & measured $n_{SF, OS}$\\
@@ -551,7 +553,7 @@ def getTableRare( trees, cuts, Samples,groups,order,titles = None, cutOrder = No
 
 def main():
 	from sys import argv
-	path = "/home/jan/Trees/sw532v0470/"
+	path = "/user/schomakers/trees"
 	EMutrees = readTrees(path, "EMu")
 	EEtrees = readTrees(path, "EE")
 	MuMutrees = readTrees(path, "MuMu")
@@ -610,8 +612,11 @@ def main():
 	#~ base = "weight*(chargeProduct < 0 && ((pt1 > 20 && pt2 > 10 ) || (pt2 > 20 && pt1 > 10 )) && p4.M()>15 && p4.M()< 70 && abs(eta1)<2.4 && abs(eta2)<2.4 && deltaR > 0.3 && nJets >= 2 && ht > 100 && met > 150 && abs(motherPdgId)==15 ) "
 	#~ base = "weight*(chargeProduct < 0 && ((pt1 > 20 && pt2 > 20 ) || (pt2 > 20 && pt1 > 20 )) && p4.M()>15 && p4.M()< 70 && abs(eta1)<2.4 && abs(eta2)<2.4 && deltaR > 0.3 && nJets >= 2 && ht > 100 && met > 150 && abs(matched==7)) "
 	#~ base = "weight*(chargeProduct < 0 && ((pt1 > 20 && pt2 > 20 ) || (pt2 > 20 && pt1 > 20 )) && p4.M()>20 && p4.M()< 70 && abs(eta1)<2.4 && abs(eta2)<2.4 && deltaR > 0.3 && nJets >= 2 && ht > 100 && met > 150 ) "
-	base = "weight*(chargeProduct < 0 && ((pt1 > 20 && pt2 > 20 ) || (pt2 > 20 && pt1 > 20 )) && p4.M()>20 && p4.M()< 70 && abs(eta1)<2.4 && abs(eta2)<2.4 && deltaR > 0.3 && nJets >= 2 && ht > 100 && met > 150 ) "
-	baseBarrel = "weight*(chargeProduct < 0 && ((pt1 > 20 && pt2 > 20 ) || (pt2 > 20 && pt1 > 20 )) && p4.M()>20 && p4.M()< 70 && abs(eta1)<1.4 && abs(eta2)<1.4 && deltaR > 0.3 && nJets >= 2 && ht > 100 && met > 150  ) "
+	#~ base = "weight*(chargeProduct < 0 && ((pt1 > 20 && pt2 > 20 ) || (pt2 > 20 && pt1 > 20 )) && p4.M()>20 && p4.M()< 70 && abs(eta1)<2.4 && abs(eta2)<2.4 && deltaR > 0.3 && nJets >= 2 && ht > 100 && met > 150 ) "
+	base = "weight*(chargeProduct < 0 && ((pt1 > 20 && pt2 > 20 ) || (pt2 > 20 && pt1 > 20 )) && p4.M()>20 && p4.M()< 70 && abs(eta1)<2.4 && abs(eta2)<2.4 && deltaR > 0.3 && ((nJets >= 2 && met > 150) ||(nJets >= 3 && met > 100)) ) "
+	baseCentral = "weight*(chargeProduct < 0 && ((pt1 > 20 && pt2 > 20 ) || (pt2 > 20 && pt1 > 20 )) && p4.M()>20 && p4.M()< 70 && abs(eta1)<2.4 && abs(eta2)<2.4 && deltaR > 0.3 && ((nJets >= 2 && met > 150) ||(nJets >= 3 && met > 100)) && abs(eta1) < 1.4 && abs(eta2) < 1.4 ) "
+	baseForward = "weight*(chargeProduct < 0 && ((pt1 > 20 && pt2 > 20 ) || (pt2 > 20 && pt1 > 20 )) && p4.M()>20 && p4.M()< 70 && abs(eta1)<2.4 && abs(eta2)<2.4 && deltaR > 0.3 && ((nJets >= 2 && met > 150) ||(nJets >= 3 && met > 100)) && 1.4 < TMath::Max(abs(eta1),abs(eta2)) ) "
+	#~ baseBarrel = "weight*(chargeProduct < 0 && ((pt1 > 20 && pt2 > 20 ) || (pt2 > 20 && pt1 > 20 )) && p4.M()>20 && p4.M()< 70 && abs(eta1)<1.4 && abs(eta2)<1.4 && deltaR > 0.3 && nJets >= 2 && ht > 100 && met > 150  ) "
 	#~ base = "weight*(chargeProduct < 0 && ((pt1 > 20 && pt2 > 20 ) || (pt2 > 20 && pt1 > 20 )) && p4.M()>20 && p4.M()< 70 && abs(eta1)<2.4 && abs(eta2)<2.4 && deltaR > 0.3 && nJets >= 3  && met > 100 ) "
 	baseLowMET = "weight*(chargeProduct < 0 && ((pt1 > 20 && pt2 > 20 ) || (pt2 > 20 && pt1 > 20 )) && p4.M()>20 && p4.M()< 70 && abs(eta1)<1.4 && abs(eta2)<1.4 && deltaR > 0.3 && nJets >= 3  && met > 100 ) "
 	baseLowMETFullEta = "weight*(chargeProduct < 0 && ((pt1 > 20 && pt2 > 20 ) || (pt2 > 20 && pt1 > 20 )) && p4.M()>20 && p4.M()< 70 && abs(eta1)<2.4 && abs(eta2)<2.4 && deltaR > 0.3 && nJets >= 3  && met > 100 ) "
@@ -623,10 +628,15 @@ def main():
 	jzb = "nJets >= 3 && jzb > 100"
 	pt2020 = "pt1 > 20 && pt2 > 20"
 	inverseNJets = "met > 100 && nJets <= 2"
+	central = "abs(eta1) < 1.4 && abs(eta2) < 1.4"
+	forward = "1.4 < TMath::Max(abs(eta1),abs(eta2))"
+	
 
 	sigReg = inclusiveSR
 	#inclusiveSR
 	cuts= {
+		"SignalNonRectCentral": [base, central],
+		"SignalNonRectForward": [base, forward],
 		"inclusiveMass": [base, sigReg],
 		"edgeMass":        [base, sigReg, edgeMass ],
 		"jzbMass": [base, sigReg, jzbMass],
@@ -634,6 +644,8 @@ def main():
 		}
 	
 	titles = {
+		"SignalNonRectCentral": "Central Signal Region",
+		"SignalNonRectForward": "Forward Signal Region",
 		"inclusiveMass": "--",
 		"edgeMass":        "$\mll <70~\GeV$",
 		"jzbMass": "$70 < \mll <110~\GeV$",
@@ -651,17 +663,17 @@ def main():
 		titles[name+"2020"] = titles[name+"2020"].replace(r"\wedge$ --","$")
 
 
-	cutAndCount = getTable(trees, base,Samples,groups,order, titles = titles, cutOrder = ["edgeMass"])
+	cutAndCount = getTable(trees, baseCentral,Samples,groups,order, titles = titles, cutOrder = ["SignalNonRectCentral"])
 
 	print cutAndCount
-	outFile = open("cutAndCountCrosscheck.tex","w")
+	outFile = open("tab/table_cutAndCountCrosscheckSignalNonRectCentral.tex","w")
 	outFile.write(cutAndCount)
 	outFile.close()
 
-	cutAndCount = getTable(trees, baseBarrel,Samples,groups,order, titles = titles, cutOrder = ["edgeMass"])
+	cutAndCount = getTable(trees, baseForward,Samples,groups,order, titles = titles, cutOrder = ["SignalNonRectForward"])
 
 	print cutAndCount
-	outFile = open("cutAndCountCrosscheckBarrel.tex","w")
+	outFile = open("tab/table_cutAndCountCrosscheckSignalNonRectForward.tex","w")
 	outFile.write(cutAndCount)
 	outFile.close()
 
@@ -678,31 +690,32 @@ def main():
 	}
 
 	
-	cutAndCount = getTableRare(trees, base,Samples,groups,order, titles = titles, cutOrder = ["edgeMass"])
+	cutAndCount = getTable(trees, baseCentral,Samples,groups,order, titles = titles, cutOrder = ["SignalNonRectCentral"])
 
 	print cutAndCount
-	outFile = open("cutAndCountCrosscheck_Rares.tex","w")
-	outFile.write(cutAndCount)
-	outFile.close()
-	cutAndCount = getTableRare(trees, baseLowMET,Samples,groups,order, titles = titles, cutOrder = ["edgeMass"])
-
-	print cutAndCount
-	outFile = open("cutAndCountCrosscheck_RaresLowMET.tex","w")
+	outFile = open("tab/table_cutAndCountCrosscheck_Rares_SignalNonRectCentral.tex","w")
 	outFile.write(cutAndCount)
 	outFile.close()
 	
-	cutAndCount = getTableRare(trees, baseBarrel,Samples,groups,order, titles = titles, cutOrder = ["edgeMass"])
+	cutAndCount = getTable(trees, baseForward,Samples,groups,order, titles = titles, cutOrder = ["SignalNonRectForward"])
 
 	print cutAndCount
-	outFile = open("cutAndCountCrosscheck_RaresBarrel.tex","w")
+	outFile = open("tab/table_cutAndCountCrosscheck_Rares_SignalNonRectForward.tex","w")
 	outFile.write(cutAndCount)
 	outFile.close()
-	cutAndCount = getTableRare(trees, baseLowMETFullEta,Samples,groups,order, titles = titles, cutOrder = ["edgeMass"])
-
-	print cutAndCount
-	outFile = open("cutAndCountCrosscheck_RaresLowMETFullEta.tex","w")
-	outFile.write(cutAndCount)
-	outFile.close()	
+	
+	#~ cutAndCount = getTableRare(trees, baseBarrel,Samples,groups,order, titles = titles, cutOrder = ["edgeMass"])
+#~ 
+	#~ print cutAndCount
+	#~ outFile = open("cutAndCountCrosscheck_RaresBarrel.tex","w")
+	#~ outFile.write(cutAndCount)
+	#~ outFile.close()
+	#~ cutAndCount = getTableRare(trees, baseLowMETFullEta,Samples,groups,order, titles = titles, cutOrder = ["edgeMass"])
+#~ 
+	#~ print cutAndCount
+	#~ outFile = open("cutAndCountCrosscheck_RaresLowMETFullEta.tex","w")
+	#~ outFile.write(cutAndCount)
+	#~ outFile.close()	
 	
 
 main()

@@ -91,10 +91,10 @@ def cutAndCountForRegion(trees, cut, name):
 	runC = "(runNr > 196531)"
 	barrel = "abs(eta1) < 1.4 && abs(eta2) < 1.4"
 	endcap = "((abs(eta1) < 2.4 && abs(eta2) > 1.4) || (abs(eta1) > 1.4 && abs(eta2) < 2.4))"
-	type1Met = "type1Met > 150"
-	tcMet = "tcMet > 150"
-	caloMet = "caloMet > 150"
-	MHT = "mht > 150"
+	type1Met = "(nJets >= 2 && type1Met > 150) || (nJets >=3 && type1Met > 100)"
+	tcMet = "(nJets >= 2 && tcMet > 150) || (nJets >=3 && tcMet > 100)"
+	caloMet = "(nJets >= 2 && caloMet > 150) || (nJets >=3 && caloMet > 100)"
+	MHT = "(nJets >= 2 && mht > 150) || (nJets >=3 && mht > 100)"
 
 
 	mllcuts= {
@@ -131,10 +131,10 @@ def cutAndCountForRegion(trees, cut, name):
 		"MET100Ge2Jets":[base, cut, MET100Ge2Jets],
 		"Barrel":[base, cut, barrel],
 		"Endcap":[base, cut, endcap],
-		"Type1":[base, cut, type1Met],
-		"Tc":[base, cut, tcMet],
-		"Calo":[base, cut, caloMet],
-		"MHT":[base, cut, MHT],
+		"Type1MET":[base, cut, type1Met],
+		"TcMET":[base, cut, tcMet],
+		"CaloMET":[base, cut, caloMet],
+		"MHTMET":[base, cut, MHT],
 		}
 		
 	if "SingleLepton" in name:
@@ -166,10 +166,10 @@ def cutAndCountForRegion(trees, cut, name):
 			"MET100Ge2Jets":[base, cut, MET100Ge2Jets],
 			"Barrel":[base, cut, barrel],
 			"Endcap":[base, cut, endcap],
-			"Type1":[base, cut, type1Met],
-			"Tc":[base, cut, type1Met],
-			"Calo":[base, cut, type1Met],
-			"MHT":[base, cut, MHT],
+			"Type1MET":[base, cut, type1Met],
+			"TcMET":[base, cut, tcMet],
+			"CaloMET":[base, cut, caloMet],
+			"MHTMET":[base, cut, MHT],
 			}
 	counts = {name:{}}
 	eventLists = {name:{}}
@@ -187,10 +187,10 @@ def cutAndCountForRegion(trees, cut, name):
 			if subcutName == "Pt2010":
 				fullcut = fullcut.replace("p4.M() > 20","p4.M() > 15 ")			
 				fullcut = fullcut.replace("20 < p4.M() ","p4.M() > 15 ")		
-			if subcutName == "MET50Ge2Jets" or subcutName == "MET100Ge2Jets" or subcutName == "Type1" or subcutName == "Calo" or subcutName == "Tc" or subcutName == "MHT":
-				fullcut = fullcut.replace("&& met > 150"," ")			
-			#~ print subcutName
-			#~ print fullcut	
+			if subcutName == "MET50Ge2Jets" or subcutName == "MET100Ge2Jets" or subcutName == "Type1MET" or subcutName == "CaloMET" or subcutName == "TcMET" or subcutName == "MHTMET":
+				fullcut = fullcut.replace("((nJets >= 2 && met > 150) || (nJets >=3 && met > 100)) &&"," ")			
+				#~ print subcutName
+				#~ print fullcut	
 			counts[name][subcutName][mllcutName] = getCounts(trees, fullcut)
 			#~ eventLists[name][subcutName][mllcutName] = getEventLists(trees, fullcut)
 

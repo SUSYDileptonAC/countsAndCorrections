@@ -107,6 +107,8 @@ class Regions:
 		dyPrediction = {
 			"default":	( 100, 0,0),
 			"SingleLetpon":	(100,0,0),
+			"RunAB": (0,0,0),
+			"RunC": (0,0,0),
 			}
 		color = ROOT.kAzure-4
 	class SignalNonRectCentral(Region):
@@ -119,6 +121,8 @@ class Regions:
 		dyPrediction = {
 			"default":	( 80, 0,0),
 			"SingleLetpon":	(80,0,0),
+			"RunAB": (0,0,0),
+			"RunC": (0,0,0),
 			}
 		color = ROOT.kAzure-4
 	class SignalNonRectForward(Region):
@@ -131,6 +135,8 @@ class Regions:
 		dyPrediction = {
 			"default":	( 20, 0,0),
 			"SingleLetpon":	(20,0,0),
+			"RunAB": (0,0,0),
+			"RunC": (0,0,0),
 			}
 		color = ROOT.kAzure-4
 	class SignalHighMETLowNJetsCentral(Region):
@@ -333,6 +339,42 @@ class Regions:
 		cut = "nJets == 2  && 100 <  met && met < 150 && (%s)"%Region.cut
 		title = "High E_{T}^{miss} CR"
 		latex = "High \MET\ Control Region"
+		rMuE = Constants.Pt2020.RMuE
+		rInOut = Constants.Pt2020.RInOut
+		R_SFOF = Constants.R_SFOF.Inclusive
+		dyPrediction = {
+
+			}
+		color = ROOT.kGray
+		
+	class ControlCentral(Region):
+		cut = "nJets == 2  && 100 <  met && met < 150 && abs(eta1)< 1.4 && abs(eta2) < 1.4 && (%s)"%Region.cut
+		title = "Central CR"
+		latex = "Central Control Region"
+		rMuE = Constants.Pt2020.RMuE
+		rInOut = Constants.Pt2020.RInOut
+		R_SFOF = Constants.R_SFOF.Central
+		dyPrediction = {
+
+			}
+		color = ROOT.kGray
+		
+	class ControlForward(Region):
+		cut = "nJets == 2  && 100 <  met && met < 150 && 1.4 <= TMath::Max(abs(eta1),abs(eta2)) && (%s)"%Region.cut
+		title = "Forward CR"
+		latex = "Forward Control Region"
+		rMuE = Constants.Pt2020.RMuE
+		rInOut = Constants.Pt2020.RInOut
+		R_SFOF = Constants.R_SFOF.Forward
+		dyPrediction = {
+
+			}
+		color = ROOT.kGray
+		
+	class ControlInclusive(Region):
+		cut = "nJets == 2  && 100 <  met && met < 150 && (%s)"%Region.cut
+		title = "Inclusive CR"
+		latex = "Inclusive Control Region"
 		rMuE = Constants.Pt2020.RMuE
 		rInOut = Constants.Pt2020.RInOut
 		R_SFOF = Constants.R_SFOF.Inclusive

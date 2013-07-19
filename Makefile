@@ -18,7 +18,7 @@ COUNTER = ./cutAndCount_Result.py
 MAKETABLES = ./makeSummaryTables.py
 SSPlotter = ./SameSignPlotter.py
 
-COUNTING_REGIONS = SignalNonRectInclusive SignalNonRectCentral SignalNonRectForward SignalNonRectInclusive_METPD SignalNonRectCentral_METPD SignalNonRectForward_METPD SignalHighMETLowNJetsCentral SignalHighMETLowNJetsForward SignalHighMETHighNJetsCentral SignalHighMETHighNJetsForward SignalLowMETHighNJetsCentral SignalLowMETHighNJetsForward SignalHighMET BarrelHighMET SignalLowMET SignalLowMETFullEta  ControlHighMET ControlLowMET SignalHighMET_METPD SignalLowMET_METPD BarrelHighMET_METPD SignalLowMETFullEta_METPD 
+COUNTING_REGIONS = SignalNonRectInclusive SignalNonRectCentral SignalNonRectForward SignalNonRectInclusive_METPD SignalNonRectCentral_METPD SignalNonRectForward_METPD SignalHighMETLowNJetsCentral SignalHighMETLowNJetsForward SignalHighMETHighNJetsCentral SignalHighMETHighNJetsForward SignalLowMETHighNJetsCentral SignalLowMETHighNJetsForward SignalHighMET BarrelHighMET SignalLowMET SignalLowMETFullEta  ControlHighMET ControlLowMET ControlCentral ControlForward ControlInclusive SignalHighMET_METPD SignalLowMET_METPD BarrelHighMET_METPD SignalLowMETFullEta_METPD 
 
 all: countPlots tables
 
@@ -28,7 +28,7 @@ slides.pdf: slides_ofVsSf_XCheck.tex
 
 copyAN:
 	scp tab/table_*.tex $(AN_TABLES)
-	scp fig/mll_Datadriven_SignalHighMET_*.pdf fig/mll_Datadriven_BarrelHighMET_*.pdf  fig/mll_Datadriven_SignalLowMET_*.pdf  $(AN_PLOTS)
+	scp fig/mll_Datadriven_SignalHighMET_*.pdf fig/mll_Datadriven_BarrelHighMET_*.pdf  fig/mll_Datadriven_SignalLowMET_*.pdf  fig/mll_Datadriven_SignalNonRectCentral_*.pdf fig/mll_Datadriven_SignalNonRectForward_*.pdf fig/mll_Datadriven_SignalNonRectInclusive_*.pdf $(AN_PLOTS)
 #	scp rmue/fig/8TeVrRatioDataVsMC_met.pdf rmue/fig/8TeVrRatioDataVsMC_ht.pdf rmue/fig/8TeVrRatioDataVsMC_eta1.pdf rmue/fig/8TeVrRatioDataVsMC_mll_Z.pdf rmue/fig/8TeVrRatioDataVsMC_nJets.pdf rmue/fig/8TeVrRatioDataVsMC_nVertices.pdf rmue/fig/8TeVrRatioDataVsMC_pt1.pdf rmue/fig/8TeVrRatioDataVsMC_mll_tt.pdf rmue/fig/8TeVrRatioDataVsMC_mll.pdf $(AN_PLOTS)
 
 copyTalk:
