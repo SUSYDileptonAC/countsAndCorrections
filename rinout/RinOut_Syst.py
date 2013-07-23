@@ -261,7 +261,7 @@ if (__name__ == "__main__"):
 	ptCutLabel = "20"#"20(10)"
 	variable = "p4.M()"
 	#~ cuts = "weight*(chargeProduct < 0 && %s && met < 100 && nJets ==2 && abs(eta1) < 2.4 && abs(eta2) < 2.4 && deltaR > 0.3 && runNr < 201657 && (runNr < 198049 || runNr > 198522))"%ptCut
-	cuts = "weight*(chargeProduct < 0 && %s && met < 100 && nJets ==2 && %s && %s && deltaR > 0.3 && runNr < 201657 && !(runNr >= 198049 && runNr <= 198522) )"%(ptCut,etaCut,etaCut)
+	cuts = "weight*(chargeProduct < 0 && %s && met < 100 && nJets ==2 && %s && deltaR > 0.3 && runNr < 201657 && !(runNr >= 198049 && runNr <= 198522) )"%(ptCut,etaCut)
 	nEvents=-1
 	minMll = 20
 	lumi = 9.2
@@ -300,7 +300,10 @@ if (__name__ == "__main__"):
 	#~ nllPredictionScale =  0.5* sqrt(trigger["EE"]*trigger["MuMu"])*1./trigger["EMu"] *(rmue+1./(rmue))
 	#~ snllPredictionScale = 0.5* sqrt(trigger["EE"]*trigger["MuMu"])*1./trigger["EMu"] *(1.-1./(rmue)**2)*0.1*rmue
 	nllPredictionScale =  1.02
-	snllPredictionScale = 0.07
+	if "Endcap" in suffix:
+		snllPredictionScale = 0.12
+	else:
+		snllPredictionScale = 0.07
 
 	
 	peak = (SFhist.Integral(SFhist.FindBin(81),SFhist.FindBin(101))- EMuhist.Integral(EMuhist.FindBin(81),EMuhist.FindBin(101))*nllPredictionScale) 
@@ -342,7 +345,7 @@ if (__name__ == "__main__"):
 	nJets=2
 	
 	#~ cuts = "weight*(chargeProduct < 0 && %s && met < %d && met > %d && nJets == %d && runNr <= 196531 && deltaR > 0.3 && abs(eta1)<2.4 && abs(eta2)<2.4)"
-	cuts = "weight*(chargeProduct < 0 && %s && met < %d && met > %d && nJets == %d  && deltaR > 0.3 && %s && %s && runNr < 201657 && !(runNr >= 198049 && runNr <= 198522))"
+	cuts = "weight*(chargeProduct < 0 && %s && met < %d && met > %d && nJets == %d  && deltaR > 0.3 && %s && runNr < 201657 && !(runNr >= 198049 && runNr <= 198522))"
 
 	
 	for index in range (0,metRange):
@@ -352,15 +355,15 @@ if (__name__ == "__main__"):
 		for name, tree in EEtrees.iteritems():
 			if name == "MergedData":
 				print name
-				EEhist = createHistoFromTree(tree,  variable, cuts %(ptCut,metBinsUp[index],metBinsDown[index],nJets,etaCut,etaCut), nBins, firstBin, lastBin, nEvents)
+				EEhist = createHistoFromTree(tree,  variable, cuts %(ptCut,metBinsUp[index],metBinsDown[index],nJets,etaCut), nBins, firstBin, lastBin, nEvents)
 		for name, tree in MuMutrees.iteritems():
 			if name == "MergedData":
 
-				MuMuhist = createHistoFromTree(tree,  variable, cuts %(ptCut,metBinsUp[index],metBinsDown[index],nJets,etaCut,etaCut), nBins, firstBin, lastBin, nEvents)
+				MuMuhist = createHistoFromTree(tree,  variable, cuts %(ptCut,metBinsUp[index],metBinsDown[index],nJets,etaCut), nBins, firstBin, lastBin, nEvents)
 		for name, tree in EMutrees.iteritems():
 			if name == "MergedData":
 
-				EMuhist = createHistoFromTree(tree,  variable, cuts %(ptCut,metBinsUp[index],metBinsDown[index],nJets,etaCut,etaCut), nBins, firstBin, lastBin, nEvents)
+				EMuhist = createHistoFromTree(tree,  variable, cuts %(ptCut,metBinsUp[index],metBinsDown[index],nJets,etaCut), nBins, firstBin, lastBin, nEvents)
 				
 		SFhist = EEhist.Clone()
 		SFhist.Add(MuMuhist.Clone())
@@ -479,15 +482,15 @@ if (__name__ == "__main__"):
 		for name, tree in EEtrees.iteritems():
 			if name == "MergedData":
 				print name
-				EEhist = createHistoFromTree(tree,  variable, cuts %(ptCut,100,0,nJets,etaCut,etaCut), nBins, firstBin, lastBin, nEvents)
+				EEhist = createHistoFromTree(tree,  variable, cuts %(ptCut,100,0,nJets,etaCut), nBins, firstBin, lastBin, nEvents)
 		for name, tree in MuMutrees.iteritems():
 			if name == "MergedData":
 
-				MuMuhist = createHistoFromTree(tree,  variable, cuts %(ptCut,100,0,nJets,etaCut,etaCut), nBins, firstBin, lastBin, nEvents)
+				MuMuhist = createHistoFromTree(tree,  variable, cuts %(ptCut,100,0,nJets,etaCut), nBins, firstBin, lastBin, nEvents)
 		for name, tree in EMutrees.iteritems():
 			if name == "MergedData":
 
-				EMuhist = createHistoFromTree(tree,  variable, cuts %(ptCut,100,0,nJets,etaCut,etaCut), nBins, firstBin, lastBin, nEvents)
+				EMuhist = createHistoFromTree(tree,  variable, cuts %(ptCut,100,0,nJets,etaCut), nBins, firstBin, lastBin, nEvents)
 				
 		SFhist = EEhist.Clone()
 		SFhist.Add(MuMuhist.Clone())

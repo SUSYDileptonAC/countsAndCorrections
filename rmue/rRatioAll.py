@@ -12,28 +12,28 @@ from src.plotTools import histoStack, save, legende, setPalette, histosqrt, make
 import src.Styles as Styles
 from src.latexTabelle import tableEnvironment, tabular
 from array import array
-
+from ROOT import TMath
 
 modifiers = {"SS":["chargeProduct==-1","chargeProduct==1"],
 			 "IsoSideBand":["&& id1 < 0.15 && id2 < 0.15","&& id1 > 0.15 && id2 > 0.15 && id1 < 1 && id2 < 1"],
-			 "Barrel":["abs(eta1) < 2.4 && abs(eta2) < 2.4","abs(eta1) < 1.4 && abs(eta2) < 1.4"],
-			 "Endcap":["abs(eta1) < 2.4 && abs(eta2) < 2.4","((abs(eta1) < 2.4 && abs(eta2) > 1.4) || (abs(eta1) > 1.4 && abs(eta2) < 2.4))"],
+			 "Central":["abs(eta1) < 2.4 && abs(eta2) < 2.4","abs(eta1) < 1.4 && abs(eta2) < 1.4"],
+			 "Forward":["abs(eta1) < 2.4 && abs(eta2) < 2.4","1.4<=TMath::Max(abs(eta1),abs(eta2))"],
 			 "BothEndcap":["abs(eta1) < 2.4 && abs(eta2) < 2.4","abs(eta1) > 1.4 && abs(eta2) > 1.4"],
 			 "BothVeryEndcap":["abs(eta1) < 2.4 && abs(eta2) < 2.4","abs(eta1) > 1.6 && abs(eta2) > 1.6"],
 			 "ExcludingGap":["abs(eta1) < 2.4 && abs(eta2) < 2.4","((abs(eta1) < 1.442) || (abs(eta1) > 1.56 && abs(eta1) < 2.4)) && ((abs(eta2) < 1.442) || (abs(eta2) > 1.56 && abs(eta2) < 2.4))"],
 			}
 centralValues = {"SS":0.2,
 				 "IsoSideBand":1.0,
-				 "Barrel":1.103,
-				 "Endcap":1.3,
+				 "Central":1.103,
+				 "Forward":1.3,
 				 "BothEndcap":1.34,
 				 "BothVeryEndcap":1.163,
 				 "ExcludingGap":1.155,
 				}
 relUncertainties = {"SS":0.1,
 				 "IsoSideBand":0.1,
-				 "Barrel":0.1,
-				 "Endcap":0.15,
+				 "Central":0.1,
+				 "Forward":0.15,
 				 "BothEndcap":0.15,
 				 "BothVeryEndcap":0.15,
 				 "ExcludingGap":0.1,
@@ -840,20 +840,24 @@ def tableRatio(n_mumu_R1MC, n_ee_R1MC, rR1MC, sigma_rR1MC, sigma_rR1MC_syst_p, s
 #	dictr2={"region":"1", "empty":"Data", "n_mumu":n_mumu_R1Data, "n_ee":n_ee_R1Data, "r":rR1Data, "sigma_r_stat":sigma_rR1Data, "sigmaUp_r":rR1Data*0.1, "sigmaDown_r":rR1Data*0.1}
 #	dictr3={"region":"2", "empty":"MC", "n_mumu":n_mumu_R2MC, "n_ee":n_ee_R2MC, "r":rR2MC, "sigma_r_stat":sigma_rR2MC, "sigmaUp_r":sqrt(sigma_rR2MC_syst_p**2 + (0.1*rR2MC)**2), "sigmaDown_r":sqrt(sigma_rR2MC_syst_m**2 + (0.1*rR2MC)**2)}
 #	dictr4={"region":"2", "empty":"Data", "n_mumu":n_mumu_R2Data, "n_ee":n_ee_R2Data, "r":rR2Data, "sigma_r_stat":sigma_rR2Data, "sigmaUp_r":rR2Data*0.1, "sigmaDown_r":rR2Data*0.1}
-	dictr5={"empty":"MC", "n_mumu":n_mumu_R3MC, "n_ee":n_ee_R3MC, "r":rR3MC, "sigma_r_stat":sigma_rR3MC, "sigmaUp_r":sqrt(sigma_rR3MC_syst_p**2 + (0.1*rR3MC)**2), "sigmaDown_r":sqrt(sigma_rR3MC_syst_m**2 + (0.1*rR3MC)**2)}
-	dictr6={"empty":"Data", "n_mumu":n_mumu_R3Data, "n_ee":n_ee_R3Data, "r":rR3Data, "sigma_r_stat":sigma_rR3Data, "sigmaUp_r":rR3Data*0.1, "sigmaDown_r":rR3Data*0.1}
+	if "Forward" in selectionModifier:
+		dictr5={"empty":"MC", "n_mumu":n_mumu_R3MC, "n_ee":n_ee_R3MC, "r":rR3MC, "sigma_r_stat":sigma_rR3MC, "sigmaUp_r":sqrt(sigma_rR3MC_syst_p**2 + (0.15*rR3MC)**2), "sigmaDown_r":sqrt(sigma_rR3MC_syst_m**2 + (0.15*rR3MC)**2)}
+		dictr6={"empty":"Data", "n_mumu":n_mumu_R3Data, "n_ee":n_ee_R3Data, "r":rR3Data, "sigma_r_stat":sigma_rR3Data, "sigmaUp_r":rR3Data*0.15, "sigmaDown_r":rR3Data*0.15}
+	else:
+		dictr5={"empty":"MC", "n_mumu":n_mumu_R3MC, "n_ee":n_ee_R3MC, "r":rR3MC, "sigma_r_stat":sigma_rR3MC, "sigmaUp_r":sqrt(sigma_rR3MC_syst_p**2 + (0.1*rR3MC)**2), "sigmaDown_r":sqrt(sigma_rR3MC_syst_m**2 + (0.1*rR3MC)**2)}
+		dictr6={"empty":"Data", "n_mumu":n_mumu_R3Data, "n_ee":n_ee_R3Data, "r":rR3Data, "sigma_r_stat":sigma_rR3Data, "sigmaUp_r":rR3Data*0.1, "sigmaDown_r":rR3Data*0.1}
 
 	rdictlist=[dictr0, dictr5, dictr6]
 	#prozentlist=["r"]
 	anzahlDezimalstellenDict = {"n_ee":0, "n_mumu":0,  "r":3, "sigma_r_stat":3}
 
-	titel="$r_{\mu e}$-values for data and MC in region 1 with $nJets = 0$, region 2 with $nJets \ge 2$ and region 3 without $nJets$"
-	verweis="RValues"
+	titel="$r_{\mu e}$-values for data and MC in the %s region with OS, $p_{T} > 20(20)$ GeV and 60 GeV $< m_{ll} <$ 120 GeV"%selectionModifier
 	nameModifier="_"
 	if len(selectionModifier) >0:
 		for modifier in selectionModifier:			
 			nameModifier = nameModifier+modifier
 	savename="Tables/new_r-Values%s.txt"%nameModifier
+	verweis="RValues%s"%nameModifier
 
 	tabr=tabular(rdictlist,rkeylist, anzahlDezimalstellenDict, set([0,"1", 3]))
 	tabrEnv=tableEnvironment(tabr, titel, verweis)

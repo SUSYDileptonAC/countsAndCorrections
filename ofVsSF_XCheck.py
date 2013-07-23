@@ -82,8 +82,8 @@ def readTreeFromFile(path, dileptonCombination, selection = "OS"):
 #	chain.Add("%s/ETH2AachenNtuples/%sDileptonTree"%(path, dileptonCombination))
 	chain.Add("%s/cutsV22DileptonFinalTrees/%sDileptonTree"%(path, dileptonCombination))
 	chain.SetName("%sDileptonTree"%dileptonCombination)
-	#~ result = chain.CopyTree("nJets >= 2")
-	result = chain
+	result = chain.CopyTree("nJets >= 2")
+	#~ result = chain
 	return result
 
 def makePlot(trees, cut, variable, combination, name, title = None, datasetName="Data"):
@@ -168,9 +168,9 @@ def makePlot(trees, cut, variable, combination, name, title = None, datasetName=
 	resPad.SetNumber(2)
 	resPad.Draw()
 	pad.cd()
-	if "iso" in variable:
-		canv.SetLogy(1)
-		pad.SetLogy(1)
+	#~ if "iso" in variable:
+		#~ canv.SetLogy(1)
+		#~ pad.SetLogy(1)
 	sameFlavour.SetMarkerStyle(20)
 	sameFlavour.SetLineColor(1)
 	sameFlavour.Draw("E P")
@@ -351,7 +351,7 @@ def main():
 
 	#	cut= "  chargeProduct < 0 && ((pt1 > 20 && pt2 > 10 ) || (pt2 > 20 && pt1 > 10 )) && nJets >= 2 && ht > 100 & met > 150"
 #	base = "chargeProduct < 0 && ((pt1 > 20 && pt2 > 10 ) || (pt2 > 20 && pt1 > 10 )) && abs(eta1)<2.4  && abs(eta2)<2.4 "
-	base = "chargeProduct < 0 && ((pt1 > 20 && pt2 > 20 ) || (pt2 > 20 && pt1 > 20 )) && abs(eta1)<2.4  && abs(eta2) < 2.4 && p4.M() > 20 && deltaR > 0.3 && runNr < 201657 && (runNr < 198049 || runNr > 198522) && id1 < 0.15 && id2 < 0.15"
+	base = "chargeProduct < 0 && ((pt1 > 20 && pt2 > 20 ) || (pt2 > 20 && pt1 > 20 )) && abs(eta1)<2.4  && abs(eta2) < 2.4 && p4.M() > 20 && deltaR > 0.3 && ((nJets >= 2 && met > 150) ||(nJets >= 3 && met > 100)) && runNr < 201657 && (runNr < 198049 || runNr > 198522) && id1 < 0.15 && id2 < 0.15"
 	baseSS = base.replace("chargeProduct < 0", "chargeProduct > 0")
 	baseNonIso = base+"&& id1 > 0.15 && id1 < 1 && id2 > 0.15 && id2 < 1"
 	edgeMass = "(20 < inv && inv < 70)"
@@ -372,8 +372,20 @@ def main():
 	control= "nJets == 2 && 100 < met && met > 150"
 	ttbarLoose = "nBJets >= 1 && met > 75 && inv > 12 && (76 > inv || inv > 106)"# && pt1 > 20 && pt2 > 20"
 	bTagged = "nJets >= 2 && ht > 100 && met > 50 && nBJets > 0"
+	central = "abs(eta1) < 1.4 && abs(eta2) < 1.4"
+	forward = "1.4 < TMath::Max(abs(eta1),abs(eta2))"
 
 	cuts= {
+		"SignalNonRectCentral_inclusiveMass": [base, central],
+		"SignalNonRectCentral_edgeMass": [base, central, edgeMass],
+		"SignalNonRectCentral_zMass": [base, central, zMass],
+		"SignalNonRectCentral_highMass": [base, central, highMass],
+		
+		"SignalNonRectForward_inclusiveMass": [base, forward],
+		"SignalNonRectForward_edgeMass": [base, forward, edgeMass],
+		"SignalNonRectForward_zMass": [base, forward, zMass],
+		"SignalNonRectForward_highMass": [base, forward, highMass],
+		
 		"HighMET_METStudy" : [highMETMll30to70],
 		"METStudyControl" : [METStudyControl],
 		"highMET_inclusiveMass": [base, highMET],
@@ -432,6 +444,8 @@ def main():
 				}
 	
 	titles = {
+		"SignalNonRectCentral": "Central Signal Region",
+		"SignalNonRectForward": "Forward Signal Region",
 		"inclusiveMass": "m_{ll} > 20 GeV",
 		"edgeMass":        "20 < m_{ll} < 70 GeV, ",
 		"zMass": ", 81 < m_{ll} < 101 GeV, ",
@@ -463,20 +477,22 @@ def main():
 
 	selections = []
 	#~ selections += ["HighMET_METStudy","METStudyControl"]
-	selections += ["highMET_inclusiveMass", "highMET_edgeMass", "highMET_zMass", "highMET_highMass",]#
-	selections += ["highMETBarrel_inclusiveMass", "highMETBarrel_edgeMass", "highMETBarrel_zMass", "highMETBarrel_highMass",]#
+	selections += ["SignalNonRectCentral_inclusiveMass", "SignalNonRectCentral_edgeMass", "SignalNonRectCentral_zMass", "SignalNonRectCentral_highMass",]#
+	selections += ["SignalNonRectForward_inclusiveMass", "SignalNonRectForward_edgeMass", "SignalNonRectForward_zMass", "SignalNonRectForward_highMass",]#
+	#~ selections += ["highMET_inclusiveMass", "highMET_edgeMass", "highMET_zMass", "highMET_highMass",]
+	#~ selections += ["highMETBarrel_inclusiveMass", "highMETBarrel_edgeMass", "highMETBarrel_zMass", "highMETBarrel_highMass",]#
 	#~ selections += ["Signal2011_inclusiveMass", "Signal2011_edgeMass", "Signal2011_zMass", "Signal2011_highMass",]#
 	#~ selections += ["Control2011_inclusiveMass", "Control2011_edgeMass", "Control2011_zMass", "Control2011_highMass",]#
-	selections += ["lowMET_inclusiveMass","lowMET_edgeMass",  "lowMET_zMass", "lowMET_highMass",]#
-	selections += ["lowMETBarrel_inclusiveMass","lowMETBarrel_edgeMass",  "lowMETBarrel_zMass", "lowMETBarrel_highMass",]#
-	selections += ["control_inclusiveMass","control_edgeMass",  "control_zMass", "control_highMass",]#
+	#~ selections += ["lowMET_inclusiveMass","lowMET_edgeMass",  "lowMET_zMass", "lowMET_highMass",]#
+	#~ selections += ["lowMETBarrel_inclusiveMass","lowMETBarrel_edgeMass",  "lowMETBarrel_zMass", "lowMETBarrel_highMass",]#
+	#~ selections += ["control_inclusiveMass","control_edgeMass",  "control_zMass", "control_highMass",]#
 #	selections += [ "ttbarLoose_inclusiveMass", "ttbarLoose_edgeMass","ttbarLoose_highMass"] #
-	selections += [ "OS_inclusiveMass", "OS_edgeMass", "OS_zMass","OS_highMass"] #
-	selections += [ "SS_inclusiveMass", "SS_edgeMass", "SS_zMass","SS_highMass"] #   
-	selections += ["bTagged_inclusiveMass",  "bTagged_edgeMass","bTagged_zMass", "bTagged_highMass"]
+	#~ selections += [ "OS_inclusiveMass", "OS_edgeMass", "OS_zMass","OS_highMass"] #
+	#~ selections += [ "SS_inclusiveMass", "SS_edgeMass", "SS_zMass","SS_highMass"] #   
+	#~ selections += ["bTagged_inclusiveMass",  "bTagged_edgeMass","bTagged_zMass", "bTagged_highMass"]
 				   #~ #"jzb100_inclusiveMass",  "jzb100_zMass","jzb50_inclusiveMass","jzb50_zMass"] #"","jzb100_edgeMass","jzb50_edgeMass",
 	#~ variables =["inv","nJets", "nBJets","nLightLeptons","ht", "met","tcMet","type1Met","caloMet","mht","ptLead","ptTrail","isoLead","isoTrail" ,"etaLead","etaTrail" ,"deltaR", "deltaPhi","deltaPhiJetMET","deltaPhiSecondJetMET","deltaPhiLeptonMETHard","deltaPhiLeptonMETSoft","meanIP", "jzb","nVertices","sqrts"]
-#	variables = ["ptLead","ptTrail","invZoomed"]
+	#~ variables = ["ptLead","ptTrail","invZoomed"]
 	variables = ["isoLead","isoTrail"]
 	#selections = filter(lambda x: x.endswith("_highMass"), selections)
 

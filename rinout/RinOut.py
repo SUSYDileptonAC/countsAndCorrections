@@ -262,7 +262,7 @@ if (__name__ == "__main__"):
 	etaCut = etaCuts[argv[1]]
 	suffix = argv[1]
 	#~ cuts = "weight*(chargeProduct < 0 && %s && met < 100 && nJets ==2 && abs(eta1) < 2.4 && abs(eta2) < 2.4 && deltaR > 0.3 && runNr < 201657 && (runNr < 198049 || runNr > 198522))"%ptCut
-	cuts = "weight*(chargeProduct < 0 && %s && met < 100 && nJets ==2 && %s && %s && deltaR > 0.3 && runNr < 201657 && !(runNr >= 198049 && runNr <= 198522))"%(ptCut,etaCut,etaCut)
+	cuts = "weight*(chargeProduct < 0 && %s && met < 100 && nJets ==2 && %s && deltaR > 0.3 && runNr < 201657 && !(runNr >= 198049 && runNr <= 198522))"%(ptCut,etaCut)
 	print cuts
 	nEvents=-1
 	
@@ -318,7 +318,10 @@ if (__name__ == "__main__"):
 	#~ nllPredictionScale =  0.5* sqrt(trigger["EE"]*trigger["MuMu"])*1./trigger["EMu"] *(rmue+1./(rmue))
 	#~ snllPredictionScale = 0.5* sqrt(trigger["EE"]*trigger["MuMu"])*1./trigger["EMu"] *(1.-1./(rmue)**2)*0.1*rmue
 	nllPredictionScale =  1.02
-	snllPredictionScale = 0.07
+	if "Endcap" in suffix:
+		snllPredictionScale = 0.12
+	else:
+		snllPredictionScale = 0.07
 
 	fitHist = SFhist.Clone()
 	fitHist.Add(EMuhist,-1)
@@ -473,7 +476,7 @@ if (__name__ == "__main__"):
 	ErrRinoutSystLowMET = sqrt(ErrRinoutSystLowMET**2 + (RinoutLowMET*0.1)**2)
 	ErrRinoutLowMET = sqrt((continuumErrorLowMET/peakLowMET)**2 + (continuumLowMET*peakErrorLowMET/peak**2)**2)
 	
-	print "R_{in,out} = %f \pm %f (stat.) \pm \%f (syst) "%(RinoutLowMET,ErrRinoutLowMET,ErrRinoutSystLowMET) 	
+	#~ print "R_{in,out} = %f \pm %f (stat.) \pm \%f (syst) "%(RinoutLowMET,ErrRinoutLowMET,ErrRinoutSystLowMET) 	
 	
 	
 	
@@ -486,7 +489,7 @@ if (__name__ == "__main__"):
 	ErrRinoutSystLowJets = sqrt(ErrRinoutSystLowJets**2 + (RinoutLowJets*0.1)**2)
 	ErrRinoutLowJets = sqrt((continuumErrorLowJets/peakLowJets)**2 + (continuumLowJets*peakErrorLowJets/peak**2)**2)
 	
-	print "R_{in,out} = %f \pm %f (stat.) \pm \%f (syst) "%(RinoutLowJets,ErrRinoutLowJets,ErrRinoutSystLowJets) 	
+	#~ print "R_{in,out} = %f \pm %f (stat.) \pm \%f (syst) "%(RinoutLowJets,ErrRinoutLowJets,ErrRinoutSystLowJets) 	
 
 	#hCanvas.SetLogy()
 	

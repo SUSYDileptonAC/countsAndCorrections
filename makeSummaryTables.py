@@ -181,7 +181,7 @@ selection & approach & $N_S$ & $N_B$ ( low \mll ) & $N_Z$ & $N_{\text{Continuum}
 		"1BTag":r"$n_{\text{b-tagged}} = 1$",
 		"Ge2BTag":r"$n_{\text{b-tagged}} \ge 2$",
 		"Barrel":r"$\eta^{\ell} < 1.4$",
-		"LowHT": r"$100 < \HT < 300$ GeV",
+		"LowHT": r"$\HT < 300$ GeV",
 		"HighHT": r"$\HT > 300$ GeV",
 		"TightIso":r"rel. iso $< 0.05$",
 		"Pt2020":r"$p_{T}^{\ell} > 20$ GeV",

@@ -29,6 +29,7 @@ slides.pdf: slides_ofVsSf_XCheck.tex
 copyAN:
 	scp tab/table_*.tex $(AN_TABLES)
 	scp fig/mll_Datadriven_SignalHighMET_*.pdf fig/mll_Datadriven_BarrelHighMET_*.pdf  fig/mll_Datadriven_SignalLowMET_*.pdf  fig/mll_Datadriven_SignalNonRectCentral_*.pdf fig/mll_Datadriven_SignalNonRectForward_*.pdf fig/mll_Datadriven_SignalNonRectInclusive_*.pdf $(AN_PLOTS)
+	scp fig/MergedData_SignalNonRectCentral_*.pdf fig/MergedData_SignalNonRectForward_*.pdf  $(AN_PLOTS)/bluePlots
 #	scp rmue/fig/8TeVrRatioDataVsMC_met.pdf rmue/fig/8TeVrRatioDataVsMC_ht.pdf rmue/fig/8TeVrRatioDataVsMC_eta1.pdf rmue/fig/8TeVrRatioDataVsMC_mll_Z.pdf rmue/fig/8TeVrRatioDataVsMC_nJets.pdf rmue/fig/8TeVrRatioDataVsMC_nVertices.pdf rmue/fig/8TeVrRatioDataVsMC_pt1.pdf rmue/fig/8TeVrRatioDataVsMC_mll_tt.pdf rmue/fig/8TeVrRatioDataVsMC_mll.pdf $(AN_PLOTS)
 
 copyTalk:

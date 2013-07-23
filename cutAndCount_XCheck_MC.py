@@ -167,7 +167,10 @@ def getCounts(trees, cut,Samples,group,groupmembers):
 	#~ nllPredictionScale =  0.5* sqrt(trigger["EE"]*trigger["MuMu"])*1./trigger["EMu"] *(rmue+1./(rmue))
 	#~ snllPredictionScale = sqrt((0.5* sqrt(trigger["EE"]*trigger["MuMu"])*1./trigger["EMu"] *(1.-1./(rmue)**2)*0.1*rmue)**2 + (0.05*0.5*(rmue+1./rmue))**2*((1/trigger["EE"])**2 + (1/2*trigger["MuMu"])**2 +(1/2*trigger["EMu"])**2))
 	nllPredictionScale = 1.02
-	snllPredictionScale = 0.07
+	if "TMath" in cut:
+		snllPredictionScale = 0.12
+	else:
+		snllPredictionScale = 0.07
 	
 	n = {
 		"MuMu" : 0.,
@@ -347,7 +350,10 @@ def getCountsRare(trees, cut,Samples,group,groupmembers):
 	#~ nllPredictionScale =  0.5* sqrt(trigger["EE"]*trigger["MuMu"])*1./trigger["EMu"] *(rmue+1./(rmue))
 	#~ snllPredictionScale = sqrt((0.5* sqrt(trigger["EE"]*trigger["MuMu"])*1./trigger["EMu"] *(1.-1./(rmue)**2)*0.1*rmue)**2 + (0.05*0.5*(rmue+1./rmue))**2*((1/trigger["EE"])**2 + (1/2*trigger["MuMu"])**2 +(1/2*trigger["EMu"])**2))
 	nllPredictionScale = 1.02
-	snllPredictionScale = 0.07
+	if "TMath" in cut:
+		snllPredictionScale = 0.12
+	else:
+		snllPredictionScale = 0.07
 	
 	n = {
 		"MuMu" : 0.,
@@ -690,14 +696,14 @@ def main():
 	}
 
 	
-	cutAndCount = getTable(trees, baseCentral,Samples,groups,order, titles = titles, cutOrder = ["SignalNonRectCentral"])
+	cutAndCount = getTable(trees, baseCentral, Samples,groups,order, titles = titles, cutOrder = ["SignalNonRectCentral"])
 
 	print cutAndCount
 	outFile = open("tab/table_cutAndCountCrosscheck_Rares_SignalNonRectCentral.tex","w")
 	outFile.write(cutAndCount)
 	outFile.close()
 	
-	cutAndCount = getTable(trees, baseForward,Samples,groups,order, titles = titles, cutOrder = ["SignalNonRectForward"])
+	cutAndCount = getTable(trees, baseForward, Samples,groups,order, titles = titles, cutOrder = ["SignalNonRectForward"])
 
 	print cutAndCount
 	outFile = open("tab/table_cutAndCountCrosscheck_Rares_SignalNonRectForward.tex","w")
