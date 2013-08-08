@@ -106,8 +106,8 @@ class SubProcesses8TeV:  #noch zu bearbeiten!
     
     class Data:#ist neu
     	name="data"
-        file="/user/schomakers/trees/sw532v0470.processed.MergedData.root"
-        #~ file="/home/jan/Trees/nonIsolated/sw532v0473.processed.MergedData.root"
+        #~ file="/user/schomakers/trees/sw532v0470.processed.MergedData.root"
+        file="/home/jan/Trees/sw532v0474/sw532v0474TaskForceJSON.processed.MergedData.root"
         #file="../processedTrees/sw532v0457.processed.MergedData.root"
 		#"sw532v0456.cutsV22Dilepton.Data_Run2012A.root"
 	#"sw525v0451b.cutsV22Dilepton.Data_Run2012A.root" # fix vom 30.6.
@@ -165,14 +165,14 @@ class SubProcesses8TeV:  #noch zu bearbeiten!
 
         name="TTJets"
         #file= "sw525v0453.cutsV22Dilepton.TTJets_madgraph_Summer12.root" #6M Ereignisse fuer Vergleichsplot
-        file="/user/schomakers/trees/sw532v0470.processed.TTJets_MGDecays_madgraph_Summer12.root"#sw532v0456.cutsV22Dilepton.TTJets_madgraph_Summer12.root"
+        file="/home/jan/Trees/sw532v0474/sw532v0474.processed.TT_Dileptonic_Powheg_Summer12_v1.root"#sw532v0456.cutsV22Dilepton.TTJets_madgraph_Summer12.root"
 		
 	#"sw525v0451.cutsV22Dilepton.TTJets_madgraph_Summer12.root" #12.6.2012
         xSection=23.6 #pb
 
     class ZJets:#ist neu
         name="ZJets"
-        file="/user/schomakers/trees/sw532v0470.processed.ZJets_madgraph_Summer12.root"#sw532v0456.cutsV22Dilepton.ZJets_madgraph_Summer12.root"
+        file="/home/jan/Trees/sw532v0474/sw532v0474.processed.ZJets_madgraph_Summer12.root"#sw532v0456.cutsV22Dilepton.ZJets_madgraph_Summer12.root"
 	#"sw525v0451.cutsV22Dilepton.ZJets_madgraph_Summer12.root" # 12.6.2012
         xSection=3503.71
 

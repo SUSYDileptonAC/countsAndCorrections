@@ -10,9 +10,9 @@ ROOT.gStyle.SetOptStat(0)
 
 etaCuts = {
 			"Barrel":"abs(eta1) < 1.4 && abs(eta2) < 1.4",
-			"Endcap":"((abs(eta1) < 2.4 && abs(eta2) > 1.4) || (abs(eta1) > 1.4 && abs(eta2) < 2.4))",
-			"BothEndcap":"abs(eta1) > 1.4 && abs(eta2) > 1.4",
-			"Inclusive":"abs(eta1) < 2.4 && abs(eta2) < 2.4"
+			"Endcap":"(((abs(eta1) < 1.4 || abs(eta1) > 1.6) && (abs(eta2) < 1.4 || abs(eta2) > 1.6)) && 1.6 <= TMath::Max(abs(eta1),abs(eta2)))",
+			"BothEndcap":"abs(eta1) > 1.6 && abs(eta2) > 1.6",
+			"Inclusive":"abs(eta1) < 2.4 && abs(eta2) < 2.4 && ((abs(eta1) < 1.4 || abs(eta1) > 1.6) && (abs(eta2) < 1.4 || abs(eta2) > 1.6))"
 			}
 
 
@@ -252,7 +252,7 @@ def setTDRStyle():
 	
 if (__name__ == "__main__"):
 	setTDRStyle()
-	path = "/user/schomakers/trees"
+	path = "/home/jan/Trees/sw532v0474/"
 	from sys import argv	
 	from ROOT import TCanvas, TPad, TH1F, TH1I, THStack, TLegend, TF1
 	hCanvas = TCanvas("hCanvas", "Distribution", 800,800)
@@ -262,7 +262,7 @@ if (__name__ == "__main__"):
 	etaCut = etaCuts[argv[1]]
 	suffix = argv[1]
 	#~ cuts = "weight*(chargeProduct < 0 && %s && met < 100 && nJets ==2 && abs(eta1) < 2.4 && abs(eta2) < 2.4 && deltaR > 0.3 && runNr < 201657 && (runNr < 198049 || runNr > 198522))"%ptCut
-	cuts = "weight*(chargeProduct < 0 && %s && met < 100 && nJets ==2 && %s && deltaR > 0.3 && runNr < 201657 && !(runNr >= 198049 && runNr <= 198522))"%(ptCut,etaCut)
+	cuts = "weight*(chargeProduct < 0 && %s && met < 100 && nJets ==2 && %s && deltaR > 0.3 && runNr <= 201678 && !(runNr >= 198049 && runNr <= 198522) )"%(ptCut,etaCut)
 	print cuts
 	nEvents=-1
 	

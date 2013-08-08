@@ -39,41 +39,79 @@ class Constants:
 		class EffMuMu(Constant):
 			val = 0.964
 			err = 0.964 * 0.05
+		class Correction:
+			class Inclusive(Constant):
+				val = 1.0141201251122918
+				err = 0.067*1.0141201251122918
+			class Central(Constant):
+				val = 1.0108872929936177
+				err = 0.067*1.0108872929936177
+			class Forward(Constant):
+				val = 1.0283930366539031
+				err = 0.067*1.0283930366539031
 
-	class Pt2010:
-		class RInOut(Constant):
-			val = 0.1376
-			err = sqrt(0.0014**2+0.0344**2)
-		class RMuE(Constant):
-			val =1.21
-			err =1.21*0.1			
+	class Pt2010:## Wrong numbers, redo!
+		class RInOut:
+			class Inclusive(Constant):
+				val =0.069
+				err =0.069*0.25
+			class Central(Constant):
+				val =0.072
+				err =0.072*0.25
+			class Forward(Constant):
+				val =0.063
+				err =0.063*0.25
+		class RMuE:
+			class Inclusive(Constant):
+				val =1.144
+				err =1.144*0.1
+			class Central(Constant):
+				val =1.101
+				err =1.101*0.1
+			class Forward(Constant):
+				val =1.209
+				err =1.209*0.15		
 		
 	class Pt2020:
-		class RInOut(Constant):
-			val =0.069633
-			err =0.069633*0.25
-		class RMuE(Constant):
-			val =1.21
-			err =1.21*0.1
+		class RInOut:
+			class Inclusive(Constant):
+				val =0.069
+				err =0.069*0.25
+			class Central(Constant):
+				val =0.072
+				err =0.072*0.25
+			class Forward(Constant):
+				val =0.063
+				err =0.063*0.25
+		class RMuE:
+			class Inclusive(Constant):
+				val =1.144
+				err =1.144*0.1
+			class Central(Constant):
+				val =1.101
+				err =1.101*0.1
+			class Forward(Constant):
+				val =1.209
+				err =1.209*0.15
 	class R_SFOF:
-		class Inclusive:
+		class Inclusive(Constant):
 			val = 1.02
 			err = 0.07
-		class Central:
+		class Central(Constant):
 			val = 1.02
 			err = 0.07
-		class Forward:
+		class Forward(Constant):
 			val = 1.02
 			err = 0.12
 			
 			
 
 class Region:
-	cut = "chargeProduct < 0 && pt1 > 20 && pt2 > 20 && abs(eta1)<2.4  && abs(eta2) < 2.4 && deltaR > 0.3 && p4.M() > 20  && !(runNr >= 198049 && runNr <= 198522) && runNr < 201657 "
-	cut2010 = "chargeProduct < 0 && ((pt1 > 20 && pt2 > 10 ) || (pt2 > 20 && pt1 > 10 )) && abs(eta1)<2.4  && abs(eta2) < 2.4 && deltaR > 0.3 && p4.M() > 15  && !(runNr >= 198049 && runNr <= 198522) && runNr < 201657 "
-	cut3020 = "chargeProduct < 0 && ((pt1 > 30 && pt2 > 20 ) || (pt2 > 30 && pt1 > 20 )) && abs(eta1)<2.4  && abs(eta2) < 2.4 && deltaR > 0.3 && p4.M() > 20  && !(runNr >= 198049 && runNr <= 198522) && runNr < 201657 "
-	cut3010 = "chargeProduct < 0 && ((pt1 > 30 && pt2 > 10 ) || (pt2 > 30 && pt1 > 10 )) && abs(eta1)<2.4  && abs(eta2) < 2.4 && deltaR > 0.3 && p4.M() > 20  && !(runNr >= 198049 && runNr <= 198522) && runNr < 201657 "
-	cut3030 = "chargeProduct < 0 && ((pt1 > 30 && pt2 > 30 ) || (pt2 > 30 && pt1 > 30 )) && abs(eta1)<2.4  && abs(eta2) < 2.4 && deltaR > 0.3 && p4.M() > 20  && !(runNr >= 198049 && runNr <= 198522) && runNr < 201657 "
+	cut = "chargeProduct < 0 && pt1 > 20 && pt2 > 20 && abs(eta1)<2.4 && ((abs(eta1) < 1.4 || abs(eta1) > 1.6) && (abs(eta2) < 1.4 || abs(eta2) > 1.6)) && abs(eta2) < 2.4 && deltaR > 0.3 && p4.M() > 20  && !(runNr >= 198049 && runNr <= 198522) && runNr <= 201678 && !(runNr == 195649 && lumiSec == 49 && eventNr == 75858433) && !(runNr == 195749 && lumiSec == 108 && eventNr == 216906941)"
+	cut2010 = "chargeProduct < 0 && ((pt1 > 20 && pt2 > 10 ) || (pt2 > 20 && pt1 > 10 )) && abs(eta1)<2.4  && abs(eta2) < 2.4 && ((abs(eta1) < 1.4 || abs(eta1) > 1.6) && (abs(eta2) < 1.4 || abs(eta2) > 1.6)) && deltaR > 0.3 && p4.M() > 15  && !(runNr >= 198049 && runNr <= 198522) && runNr < 201678 && !(runNr == 195649 && lumiSec == 49 && eventNr == 75858433) && !(runNr == 195749 && lumiSec == 108 && eventNr == 216906941)"
+	cut3020 = "chargeProduct < 0 && ((pt1 > 30 && pt2 > 20 ) || (pt2 > 30 && pt1 > 20 )) && abs(eta1)<2.4  && abs(eta2) < 2.4 && ((abs(eta1) < 1.4 || abs(eta1) > 1.6) && (abs(eta2) < 1.4 || abs(eta2) > 1.6)) && deltaR > 0.3 && p4.M() > 20  && !(runNr >= 198049 && runNr <= 198522) && runNr < 201678 && !(runNr == 195649 && lumiSec == 49 && eventNr == 75858433) && !(runNr == 195749 && lumiSec == 108 && eventNr == 216906941)"
+	cut3010 = "chargeProduct < 0 && ((pt1 > 30 && pt2 > 10 ) || (pt2 > 30 && pt1 > 10 )) && abs(eta1)<2.4  && abs(eta2) < 2.4 && ((abs(eta1) < 1.4 || abs(eta1) > 1.6) && (abs(eta2) < 1.4 || abs(eta2) > 1.6)) && deltaR > 0.3 && p4.M() > 20  && !(runNr >= 198049 && runNr <= 198522) && runNr < 201678 && !(runNr == 195649 && lumiSec == 49 && eventNr == 75858433) && !(runNr == 195749 && lumiSec == 108 && eventNr == 216906941)"
+	cut3030 = "chargeProduct < 0 && ((pt1 > 30 && pt2 > 30 ) || (pt2 > 30 && pt1 > 30 )) && abs(eta1)<2.4  && abs(eta2) < 2.4 && ((abs(eta1) < 1.4 || abs(eta1) > 1.6) && (abs(eta2) < 1.4 || abs(eta2) > 1.6)) && deltaR > 0.3 && p4.M() > 20  && !(runNr >= 198049 && runNr <= 198522) && runNr < 201678 && !(runNr == 195649 && lumiSec == 49 && eventNr == 75858433) && !(runNr == 195749 && lumiSec == 108 && eventNr == 216906941)"
 	title = "everything"
 	latex = "everything"
 	dyPrediction = {}
@@ -89,9 +127,10 @@ class Regions:
 		cut = " nJets >= 2 && ht > 100 && met > 150 && (%s)"%Region.cut
 		title = "High E_{T}^{miss} SR"
 		latex = "High \MET\ Signal Region"
-		rMuE = Constants.Pt2020.RMuE
-		rInOut = Constants.Pt2020.RInOut
+		rMuE = Constants.Pt2020.RMuE.Inclusive
+		rInOut = Constants.Pt2020.RInOut.Inclusive
 		R_SFOF = Constants.R_SFOF.Inclusive
+		R_SFOFTrig = Constants.Trigger.Correction.Inclusive
 		dyPrediction = {
 			"default":	( 38.93, 9,13,0),
 			"SingleLetpon":	( sum([32, 16, 7.7, 5.1]), sqrt(sum([i**2 for i in [10, 11, 4.1, 2.8]])),0),
@@ -101,9 +140,10 @@ class Regions:
 		cut = "((nJets >= 2 && met > 150) || (nJets >=3 && met > 100)) && (%s)"%Region.cut
 		title = "NonRect  SR"
 		latex = "NonRect Signal Region"
-		rMuE = Constants.Pt2020.RMuE
-		rInOut = Constants.Pt2020.RInOut
+		rMuE = Constants.Pt2020.RMuE.Inclusive
+		rInOut = Constants.Pt2020.RInOut.Inclusive
 		R_SFOF = Constants.R_SFOF.Inclusive
+		R_SFOFTrig = Constants.Trigger.Correction.Inclusive
 		dyPrediction = {
 			"default":	( 100, 0,0),
 			"SingleLetpon":	(100,0,0),
@@ -115,9 +155,10 @@ class Regions:
 		cut = "((nJets >= 2 && met > 150) || (nJets >=3 && met > 100)) && abs(eta1)< 1.4 && abs(eta2) < 1.4 && (%s)"%Region.cut
 		title = "NonRect  SR Barrel"
 		latex = "NonRect Signal Region Barrel"
-		rMuE = Constants.Pt2020.RMuE
-		rInOut = Constants.Pt2020.RInOut
+		rMuE = Constants.Pt2020.RMuE.Central
+		rInOut = Constants.Pt2020.RInOut.Central
 		R_SFOF = Constants.R_SFOF.Central
+		R_SFOFTrig = Constants.Trigger.Correction.Central
 		dyPrediction = {
 			"default":	( 80, 0,0),
 			"SingleLetpon":	(80,0,0),
@@ -126,12 +167,13 @@ class Regions:
 			}
 		color = ROOT.kAzure-4
 	class SignalNonRectForward(Region):
-		cut = "((nJets >= 2 && met > 150) || (nJets >=3 && met > 100)) && 1.4 <= TMath::Max(abs(eta1),abs(eta2)) && (%s)"%Region.cut
+		cut = "((nJets >= 2 && met > 150) || (nJets >=3 && met > 100)) && 1.6 <= TMath::Max(abs(eta1),abs(eta2)) && (%s)"%Region.cut
 		title = "NonRect  SR Forward"
 		latex = "NonRect Signal Region Forward"
-		rMuE = Constants.Pt2020.RMuE
-		rInOut = Constants.Pt2020.RInOut
+		rMuE = Constants.Pt2020.RMuE.Forward
+		rInOut = Constants.Pt2020.RInOut.Forward
 		R_SFOF = Constants.R_SFOF.Forward
+		R_SFOFTrig = Constants.Trigger.Correction.Forward
 		dyPrediction = {
 			"default":	( 20, 0,0),
 			"SingleLetpon":	(20,0,0),
@@ -143,21 +185,23 @@ class Regions:
 		cut = "nJets == 2 && met > 150  && abs(eta1)< 1.4 && abs(eta2) < 1.4 && (%s)"%Region.cut
 		title = "HighMETLowNJets  SR Barrel"
 		latex = "HighMETLowNJets Region Barrel"
-		rMuE = Constants.Pt2020.RMuE
-		rInOut = Constants.Pt2020.RInOut
+		rMuE = Constants.Pt2020.RMuE.Central
+		rInOut = Constants.Pt2020.RInOut.Central
 		R_SFOF = Constants.R_SFOF.Central
+		R_SFOFTrig = Constants.Trigger.Correction.Forward
 		dyPrediction = {
 			"default":	( 30, 0,0),
 			"SingleLetpon":	(30,0,0),
 			}
 		color = ROOT.kAzure-4
 	class SignalHighMETLowNJetsForward(Region):
-		cut = "nJets == 2 && met > 150  && 1.4 <= TMath::Max(abs(eta1),abs(eta2)) && (%s)"%Region.cut
+		cut = "nJets == 2 && met > 150  && 1.6 <= TMath::Max(abs(eta1),abs(eta2)) && (%s)"%Region.cut
 		title = "HighMETLowNJets  SR Forward"
 		latex = "HighMETLowNJets Signal Region Forward"
-		rMuE = Constants.Pt2020.RMuE
-		rInOut = Constants.Pt2020.RInOut
+		rMuE = Constants.Pt2020.RMuE.Forward
+		rInOut = Constants.Pt2020.RInOut.Forward
 		R_SFOF = Constants.R_SFOF.Forward
+		R_SFOFTrig = Constants.Trigger.Correction.Forward
 		dyPrediction = {
 			"default":	( 30, 0,0),
 			"SingleLetpon":	(30,0,0),
@@ -167,21 +211,23 @@ class Regions:
 		cut = "nJets >= 3 && met > 150  && abs(eta1)< 1.4 && abs(eta2) < 1.4 && (%s)"%Region.cut
 		title = "HighMETHighNJets  SR Barrel"
 		latex = "HighMETHighNJets Region Barrel"
-		rMuE = Constants.Pt2020.RMuE
-		rInOut = Constants.Pt2020.RInOut
+		rMuE = Constants.Pt2020.RMuE.Central
+		rInOut = Constants.Pt2020.RInOut.Central
 		R_SFOF = Constants.R_SFOF.Central
+		R_SFOFTrig = Constants.Trigger.Correction.Central
 		dyPrediction = {
 			"default":	( 30, 0,0),
 			"SingleLetpon":	(30,0,0),
 			}
 		color = ROOT.kAzure-4
 	class SignalHighMETHighNJetsForward(Region):
-		cut = "nJets >= 3 && met > 150  && 1.4 <= TMath::Max(abs(eta1),abs(eta2)) && (%s)"%Region.cut
+		cut = "nJets >= 3 && met > 150  && 1.6 <= TMath::Max(abs(eta1),abs(eta2)) && (%s)"%Region.cut
 		title = "HighMETHighNJets  SR Forward"
 		latex = "HighMETHighNJets Signal Region Forward"
-		rMuE = Constants.Pt2020.RMuE
-		rInOut = Constants.Pt2020.RInOut
+		rMuE = Constants.Pt2020.RMuE.Forward
+		rInOut = Constants.Pt2020.RInOut.Forward
 		R_SFOF = Constants.R_SFOF.Forward
+		R_SFOFTrig = Constants.Trigger.Correction.Forward
 		dyPrediction = {
 			"default":	( 30, 0,0),
 			"SingleLetpon":	(30,0,0),
@@ -191,21 +237,23 @@ class Regions:
 		cut = "nJets >= 3 &&  met > 100 && met < 150  && abs(eta1)< 1.4 && abs(eta2) < 1.4 && (%s)"%Region.cut
 		title = "LowMETHighNJets  SR Barrel"
 		latex = "LowMETHighNJets Region Barrel"
-		rMuE = Constants.Pt2020.RMuE
-		rInOut = Constants.Pt2020.RInOut
+		rMuE = Constants.Pt2020.RMuE.Central
+		rInOut = Constants.Pt2020.RInOut.Central
 		R_SFOF = Constants.R_SFOF.Central
+		R_SFOFTrig = Constants.Trigger.Correction.Central
 		dyPrediction = {
 			"default":	( 30, 0,0),
 			"SingleLetpon":	(30,0,0),
 			}
 		color = ROOT.kAzure-4
 	class SignalLowMETHighNJetsForward(Region):
-		cut = "nJets >= 3 && met > 100 &&  met < 150  && 1.4 <= TMath::Max(abs(eta1),abs(eta2)) && (%s)"%Region.cut
+		cut = "nJets >= 3 && met > 100 &&  met < 150  && 1.6 <= TMath::Max(abs(eta1),abs(eta2)) && (%s)"%Region.cut
 		title = "LowMETHighNJets  SR Forward"
 		latex = "LowMETHighNJets Signal Region Forward"
-		rMuE = Constants.Pt2020.RMuE
-		rInOut = Constants.Pt2020.RInOut
+		rMuE = Constants.Pt2020.RMuE.Forward
+		rInOut = Constants.Pt2020.RInOut.Forward
 		R_SFOF = Constants.R_SFOF.Forward
+		R_SFOFTrig = Constants.Trigger.Correction.Forward
 		dyPrediction = {
 			"default":	( 30, 0,0),
 			"SingleLetpon":	(30,0,0),
@@ -215,9 +263,10 @@ class Regions:
 		cut = " nJets >= 2 && ht > 100 && met > 150 && abs(eta1)< 1.4 && abs(eta2) < 1.4 && (%s)"%Region.cut
 		title = "High E_{T}^{miss} SR"
 		latex = "High \MET\ Signal Region"
-		rMuE = Constants.Pt2020.RMuE
-		rInOut = Constants.Pt2020.RInOut
+		rMuE = Constants.Pt2020.RMuE.Central
+		rInOut = Constants.Pt2020.RInOut.Central
 		R_SFOF = Constants.R_SFOF.Central
+		R_SFOFTrig = Constants.Trigger.Correction.Central
 		dyPrediction = {
 			"default":	( 28.91, 6.72,0),
 			"SingleLetpon":	( sum([32, 16, 7.7, 5.1]), sqrt(sum([i**2 for i in [10, 11, 4.1, 2.8]])),0),
@@ -227,9 +276,10 @@ class Regions:
 		cut = "nJets >= 2 && ht > 100 && met > 150 &&  (%s)"%Region.cut2010
 		title = "High E_{T}^{miss} SR p_{T} > 20(10) GeV"
 		latex = "High \MET\ Signal Region p_{T} > 20(10) GeV"
-		rMuE = Constants.Pt2010.RMuE
-		rInOut = Constants.Pt2010.RInOut
+		rMuE = Constants.Pt2010.RMuE.Inclusive
+		rInOut = Constants.Pt2010.RInOut.Inclusive
 		R_SFOF = Constants.R_SFOF.Inclusive
+		R_SFOFTrig = Constants.Trigger.Correction.Inclusive
 		dyPrediction = {
 			"default":	( sum([32, 16, 7.7, 5.1]), sqrt(sum([i**2 for i in [10, 11, 4.1, 2.8]])),0),
 			"RunAB":	( sum([14, 8.9, 4.3, 2.8]), sqrt(sum([i**2 for i in [4.2, 6.3, 2.3, 1.5]])),0),
@@ -240,9 +290,10 @@ class Regions:
 		cut = "nJets >= 2 && ht > 100 && met > 150 &&  (%s)"%Region.cut3010
 		title = "High E_{T}^{miss} SR p_{T} > 30(10) GeV"
 		latex = "High \MET\ Signal Region p_{T} > 30(10) GeV"
-		rMuE = Constants.Pt2010.RMuE
-		rInOut = Constants.Pt2010.RInOut
+		rMuE = Constants.Pt2010.RMuE.Inclusive
+		rInOut = Constants.Pt2010.RInOut.Inclusive
 		R_SFOF = Constants.R_SFOF.Inclusive
+		R_SFOFTrig = Constants.Trigger.Correction.Inclusive
 		dyPrediction = {
 			"default":	( 0,0,0),
 			}
@@ -252,9 +303,10 @@ class Regions:
 		cut = "nJets >= 2 && ht > 100 && met > 150 &&  (%s)"%Region.cut3020
 		title = "High E_{T}^{miss} SR p_{T} > 30(20) GeV"
 		latex = "High \MET\ Signal Region p_{T} > 30(20) GeV"
-		rMuE = Constants.Pt2010.RMuE
-		rInOut = Constants.Pt2010.RInOut
+		rMuE = Constants.Pt2010.RMuE.Inclusive
+		rInOut = Constants.Pt2010.RInOut.Inclusive
 		R_SFOF = Constants.R_SFOF.Inclusive
+		R_SFOFTrig = Constants.Trigger.Correction.Inclusive
 		dyPrediction = {
 			"default":	( 0,0,0),
 			}
@@ -264,9 +316,10 @@ class Regions:
 		cut = "nJets >= 2 && ht > 100 && met > 150 &&  (%s)"%Region.cut3030
 		title = "High E_{T}^{miss} SR p_{T} > 30 GeV"
 		latex = "High \MET\ Signal Region p_{T} > 30 GeV"
-		rMuE = Constants.Pt2010.RMuE
-		rInOut = Constants.Pt2010.RInOut
+		rMuE = Constants.Pt2010.RMuE.Inclusive
+		rInOut = Constants.Pt2010.RInOut.Inclusive
 		R_SFOF = Constants.R_SFOF.Inclusive
+		R_SFOFTrig = Constants.Trigger.Correction.Inclusive
 		dyPrediction = {
 			"default":	( 0,0,0),
 			}
@@ -277,9 +330,10 @@ class Regions:
 		cut = " nJets >= 2 && ht > 100 && ht <= 300 && met > 150 && (%s)"%Region.cut
 		title = "High E_{T}^{miss} SR"
 		latex = "High \MET\ 2011 Controll Region"
-		rMuE = Constants.Pt2020.RMuE
-		rInOut = Constants.Pt2020.RInOut
+		rMuE = Constants.Pt2020.RMuE.Inclusive
+		rInOut = Constants.Pt2020.RInOut.Inclusive
 		R_SFOF = Constants.R_SFOF.Inclusive
+		R_SFOFTrig = Constants.Trigger.Correction.Inclusive
 		dyPrediction = {
 	
 			}
@@ -288,9 +342,10 @@ class Regions:
 		cut = " nJets >= 2 && ht > 300 && ht < 300 && met > 150 && (%s)"%Region.cut
 		title = "High E_{T}^{miss} SR"
 		latex = "High \MET\ 2011 Signal Region"
-		rMuE = Constants.Pt2020.RMuE
-		rInOut = Constants.Pt2020.RInOut
+		rMuE = Constants.Pt2020.RMuE.Inclusive
+		rInOut = Constants.Pt2020.RInOut.Inclusive
 		R_SFOF = Constants.R_SFOF.Inclusive
+		R_SFOFTrig = Constants.Trigger.Correction.Inclusive
 		dyPrediction = {
 
 			}
@@ -339,9 +394,10 @@ class Regions:
 		cut = "nJets == 2  && 100 <  met && met < 150 && (%s)"%Region.cut
 		title = "High E_{T}^{miss} CR"
 		latex = "High \MET\ Control Region"
-		rMuE = Constants.Pt2020.RMuE
-		rInOut = Constants.Pt2020.RInOut
+		rMuE = Constants.Pt2020.RMuE.Inclusive
+		rInOut = Constants.Pt2020.RInOut.Inclusive
 		R_SFOF = Constants.R_SFOF.Inclusive
+		R_SFOFTrig = Constants.Trigger.Correction.Inclusive
 		dyPrediction = {
 
 			}
@@ -351,21 +407,23 @@ class Regions:
 		cut = "nJets == 2  && 100 <  met && met < 150 && abs(eta1)< 1.4 && abs(eta2) < 1.4 && (%s)"%Region.cut
 		title = "Central CR"
 		latex = "Central Control Region"
-		rMuE = Constants.Pt2020.RMuE
-		rInOut = Constants.Pt2020.RInOut
+		rMuE = Constants.Pt2020.RMuE.Central
+		rInOut = Constants.Pt2020.RInOut.Central
 		R_SFOF = Constants.R_SFOF.Central
+		R_SFOFTrig = Constants.Trigger.Correction.Central
 		dyPrediction = {
 
 			}
 		color = ROOT.kGray
 		
 	class ControlForward(Region):
-		cut = "nJets == 2  && 100 <  met && met < 150 && 1.4 <= TMath::Max(abs(eta1),abs(eta2)) && (%s)"%Region.cut
+		cut = "nJets == 2  && 100 <  met && met < 150 && 1.6 <= TMath::Max(abs(eta1),abs(eta2)) && (%s)"%Region.cut
 		title = "Forward CR"
 		latex = "Forward Control Region"
-		rMuE = Constants.Pt2020.RMuE
-		rInOut = Constants.Pt2020.RInOut
+		rMuE = Constants.Pt2020.RMuE.Forward
+		rInOut = Constants.Pt2020.RInOut.Forward
 		R_SFOF = Constants.R_SFOF.Forward
+		R_SFOFTrig = Constants.Trigger.Correction.Forward
 		dyPrediction = {
 
 			}
@@ -375,9 +433,10 @@ class Regions:
 		cut = "nJets == 2  && 100 <  met && met < 150 && (%s)"%Region.cut
 		title = "Inclusive CR"
 		latex = "Inclusive Control Region"
-		rMuE = Constants.Pt2020.RMuE
-		rInOut = Constants.Pt2020.RInOut
+		rMuE = Constants.Pt2020.RMuE.Inclusive
+		rInOut = Constants.Pt2020.RInOut.Inclusive
 		R_SFOF = Constants.R_SFOF.Inclusive
+		R_SFOFTrig = Constants.Trigger.Correction.Inclusive
 		dyPrediction = {
 
 			}
@@ -398,9 +457,10 @@ class Regions:
 
 			}
 
-		rMuE = Constants.Pt2020.RMuE
-		rInOut = Constants.Pt2020.RInOut
+		rMuE = Constants.Pt2020.RMuE.Central
+		rInOut = Constants.Pt2020.RInOut.Central
 		R_SFOF = Constants.R_SFOF.Central
+		R_SFOFTrig = Constants.Trigger.Correction.Central
 		color = ROOT.kRed-2
 		
 	class SignalLowMETFullEta(Region):
@@ -417,9 +477,10 @@ class Regions:
 
 			}
 
-		rMuE = Constants.Pt2020.RMuE
-		rInOut = Constants.Pt2020.RInOut
+		rMuE = Constants.Pt2020.RMuE.Inclusive
+		rInOut = Constants.Pt2020.RInOut.Inclusive
 		R_SFOF = Constants.R_SFOF.Inclusive
+		R_SFOFTrig = Constants.Trigger.Correction.Inclusive
 		color = ROOT.kRed-2		
 
 	class SignalLowMET_METPD(SignalLowMET):
@@ -446,9 +507,10 @@ class Regions:
 		cut = "nJets <= 2  && 100 <  met && met < 150 && (%s)"%Region.cut
 		title = "Low E_{T}^{miss} CR"
 		latex = "Low \MET\ Control Region"
-		rMuE = Constants.Pt2020.RMuE
-		rInOut = Constants.Pt2020.RInOut
+		rMuE = Constants.Pt2020.RMuE.Central
+		rInOut = Constants.Pt2020.RInOut.Central
 		R_SFOF = Constants.R_SFOF.Central
+		R_SFOFTrig = Constants.Trigger.Correction.Central
 
 	class DrellYan(Region):
 		cut = "nJets == 2  &&  met < 100 && (%s)"%Region.cut

@@ -1,16 +1,22 @@
 MAKERmueDependencies = python rRatioAll.py 
 
-AN_PATH = /user/schomakers/DileptonAN
+AN_PATH = /home/jan/Doktorarbeit/Dilepton/projects/DileptonAN
 AN_TABLES=$(AN_PATH)/tables
 AN_PLOTS=$(AN_PATH)/plots
 
 
-inclusive:
-		$(MAKERmueDependencies) Inclusive 
-Central:
-		$(MAKERmueDependencies) Central
-Forward:
-		$(MAKERmueDependencies) Forward
+dependenciesInclusive:
+		$(MAKERmueDependencies) Dependencies
+dependenciesCentral:
+		$(MAKERmueDependencies) Dependencies Central
+dependenciesForward:
+		$(MAKERmueDependencies) Dependencies Forward
+centralValueInclusive:
+		$(MAKERmueDependencies) CentralValue
+centralValueCentral:
+		$(MAKERmueDependencies) CentralValue Central
+centralValueForward:
+		$(MAKERmueDependencies) CentralValue Forward
 		
 		
 copyAN:

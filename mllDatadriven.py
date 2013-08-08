@@ -43,6 +43,17 @@ def getSF(trees, cut, var = "inv"):
 	result.SetMarkerSize(1)
 	return result
 	
+def getDilepton(trees, cut,dilepton, var = "inv"):
+	from src.histos import getHisto
+	from ROOT import kBlack
+	result = getHisto(trees[dilepton], cut, var)
+	result.SetLineColor(kBlack)
+	result.SetLineWidth(2)
+	result.SetMarkerColor(kBlack)
+	result.SetMarkerStyle(8)
+	result.SetMarkerSize(1)
+	return result
+	
 def getSFSignal(trees, cut ,lineColour=0, var = "inv",name = "signal"):
 	
 	from src.histos import getSFHisto
@@ -55,6 +66,17 @@ def getSFSignal(trees, cut ,lineColour=0, var = "inv",name = "signal"):
 	result.SetMarkerSize(1)
 	return result
 
+def getSplitCorrection(rmue,rmueErr,trigCorr,trigCorrErr,dilepton):
+	result = 0.
+	resultErr = 0.
+	if dilepton == "EE":
+		result = 1./(1. + rmue**2)*trigCorr
+		resultErr = (2*(rmueErr/rmue)**2+(trigCorrErr/trigCorr)**2)**0.5
+	elif dilepton == "MuMu":
+		result = rmue**2/(1. + rmue**2)*trigCorr
+		resultErr = (2*(rmueErr/rmue)**2+(trigCorrErr/trigCorr)**2)**0.5
+	return result,resultErr
+
 def getLines(yMin,yMax, xPos = [70.,81., 101]):
 	from ROOT import TLine, kGray
 	result = []
@@ -64,6 +86,8 @@ def getLines(yMin,yMax, xPos = [70.,81., 101]):
 		result[-1].SetLineColor(kGray+2)
 		result[-1].SetLineStyle(2)
 	return result
+
+
 
 def drawDiffPad(resPad, diffHisto, maxY) :
 	from ROOT import TLine, kGray, kBlue
@@ -189,117 +213,11 @@ def getSysErrorBand(hist, scale, errorList=None,DY=False,ofHist=None):
 	result.SetLineColor(TColor.GetColor("#ff9933"))
 	return result, errs
 
-def main():
-	
-	from sys import argv
-	from src.defs import getRegion, getOFScale, Signals
-	from src.datasets import readTreeFromFile
-	from src.histos import getBinWidth
+
+def DrawPlot(sfLeptons,ofLeptons,dyLineShape,ofErrors,binWidth,regionName,subcutName,maxY,plotSignal,relDYError,relDYErrorPeak,relDYErrorLowMass,ofScaleError,lumi,dilepton=""):
+
 	from src.Styles import tdrStyle
-	from src.ratios import RatioGraph
-	from math import sqrt
-
 	from ROOT import TLegend, TCanvas, THStack, TLatex, TPad, kBlue
-	plotSignal = False
-	theSignals = []
-	diffhistsSF = []
-	signalhistsSF = []
-	signalhistsOF = []
-	if argv[4] == "Signal":
-		plotSignal = True
-		theSignals = Signals.theSignals 
-		print "Plotting Signals!"
-		
-
-	regionName = argv[2]
-	subcutName =  argv[3]
-	lumi = { "default": 9200,
-			 "RunAB": 5230,
-			 "RunC": 4100
-		}
-
- 	
-	maxY = 90
-	maxDiff = [0., 2.]
-	if regionName == "SignalNonRectInclusive":
-		maxY = 180.
-	if regionName == "SignalNonRectCentral":
-		maxY = 150.
-	if regionName == "SignalNonRectForward":
-		maxY = 120.
-		#~ maxDiff = [-30, 50.]
-	#~ if regionName == "SignalHighMET_SingleLepton":
-		#~ maxY = 80.
-		#~ maxDiff = [-30, 50.]
-	#~ if regionName == "SignalHighMETpt2010":
-		#~ maxY = 110.
-		#~ maxDiff = [-30, 50.]
-	#~ if regionName == "SignalLowMET":
-		#~ maxY = 120.
-		#~ maxDiff = [-30, 50.]
-
-
-	
-	region = getRegion(regionName)
-	dyRegion = getRegion("DrellYan")
-
-	cuts = {"default": region.cut,
-			"RunAB": "%s && runNr <= 196531"%region.cut,
-			"RunC":"%s && runNr > 196531 && (runNr < 198049 || runNr > 198522) &&  runNr < 201657"%region.cut,
-			"SingleLepton": region.cut,
-		}
-
-
-	if "SingleLepton" in regionName  or "METPD" in regionName:
-		path = region.getPath(argv[1])
-	else:
-		path = argv[1]
-		
-	print path
-	preselection = "nJets >= 2"
-	if regionName =="SignalHighMET_SingleLepton":
-		trees = {
-			"MuMu": readTreeFromFile(path, "MuMu", preselection,SingleLepton=True),
-			"EMu": readTreeFromFile(path, "EMu", preselection,SingleLepton=True),
-			"EE": readTreeFromFile(path, "EE", preselection,SingleLepton=True),
-			}
-	else:
-		trees = {
-			"MuMu": readTreeFromFile(path, "MuMu", preselection),
-			"EMu": readTreeFromFile(path, "EMu", preselection),
-			"EE": readTreeFromFile(path, "EE", preselection),
-			}
-	binWidth = getBinWidth("inv")	
-
-	ofLeptons = getOF(trees, cuts[subcutName])
-	
-	ofScale = region.R_SFOF.val
-	ofScaleError = region.R_SFOF.err
-	
-	print ofScale, ofScaleError
-	
-	ofLeptons.Scale(ofScale)
-	setOverflowBin(ofLeptons,305,binWidth)
-
-
-	dyLineShape = getDY(trees, dyRegion.cut)
-	dyLineShape.Scale(region.dyPrediction[subcutName][0]*1./dyLineShape.Integral(0, dyLineShape.GetXaxis().GetNbins()+1))
-	setOverflowBin(dyLineShape,305,binWidth)
-	sfLeptons = getSF(trees, cuts[subcutName])
-	setOverflowBin(sfLeptons,305,binWidth)
-	from src.defs import Constants
-	Rinout =  Constants.Pt2020.RInOut.val
-	if region.dyPrediction[subcutName][0] > 0:
-		relDYError = sqrt(region.dyPrediction[subcutName][1]**2 + region.dyPrediction[subcutName][2]**2) * 1./ region.dyPrediction[subcutName][0]
-		relDYErrorPeak = sqrt(region.dyPrediction[subcutName][1]**2 + region.dyPrediction[subcutName][2]**2) * 1./region.dyPrediction[subcutName][0]
-		relDYErrorLowMass = sqrt((sqrt(region.dyPrediction[subcutName][1]**2 + region.dyPrediction[subcutName][2]**2)*Rinout+(0.25*Rinout*region.dyPrediction[subcutName][0])**2)) * (region.dyPrediction[subcutName][0]*Rinout/ofLeptons.Integral(ofLeptons.FindBin(15),ofLeptons.FindBin(70)))
-	else:
-		relDYError = 0
-		relDYErrorPeak = 0
-		relDYErrorLowMass = 0
-	dyErrors, errorList = getSysErrorGraph(dyLineShape, relDYError)
-	ofErrors, errorList = getSysErrorGraph(ofLeptons, ofScaleError, errorList,dyLineShape)
-
 
 	leg = TLegend(0.52, 0.51, 0.89, 0.89,"","brNDC")
 	leg.SetFillColor(10)
@@ -310,11 +228,11 @@ def main():
 	legendHistDing = TH1F()
 	legendHistDing.SetFillColor(kWhite)
 	if regionName =="SignalNonRectInclusive":
-		leg.AddEntry(legendHistDing,"Signal Inclusive Signal Region","h")
+		leg.AddEntry(legendHistDing,"Signal Inclusive Signal Region %s"%dilepton,"h")
 	elif regionName =="SignalNonRectCentral":
-		leg.AddEntry(legendHistDing,"Signal Central Signal Region","h")
+		leg.AddEntry(legendHistDing,"Signal Central Signal Region %s"%dilepton,"h")
 	elif regionName =="SignalNonRectForward":
-		leg.AddEntry(legendHistDing,"Forward Signal Region","h")
+		leg.AddEntry(legendHistDing,"Forward Signal Region %s"%dilepton,"h")
 	leg.AddEntry(sfLeptons,"Data","PL")
 	leg.AddEntry(ofLeptons, "Total Backgrounds","l")
 	leg.AddEntry(dyLineShape,"DY (data-driven)", "f")
@@ -328,9 +246,9 @@ def main():
 				"EMu": readTreeFromFile(signal["filename"], "EMu", preselection),
 				"EE": readTreeFromFile(signal["filename"], "EE", preselection),		
 			}
-			#~ print signal["lineColour"]
-			#~ print signal["crossSection"]
-			#~ print signal["nEvents"]
+			print signal["lineColour"]
+			print signal["crossSection"]
+			print signal["nEvents"]
 	
 			ofSignalLeptons = getOFSignal(signalTrees, cuts["default"],signal["lineColour"])	
 			ofSignalLeptons.Scale(ofScale)
@@ -339,9 +257,9 @@ def main():
 			sfSignalLeptons = getSFSignal(signalTrees, cuts["default"],signal["lineColour"])
 			sfSignalLeptons.Scale(lumi[subcutName]*signal["crossSection"]/signal["nEvents"])	
 			sfSignalLeptons.SetTitle(signal["label"])
-			#~ print lumi[subcutName]*signal["crossSection"]/signal["nEvents"]
+			print lumi[subcutName]*signal["crossSection"]/signal["nEvents"]
 			sfSignalLeptons.Add(ofSignalLeptons.Clone(),-1)
-			#~ print sfSignalLeptons.Integral(sfSignalLeptons.FindBin(20),sfSignalLeptons.FindBin(70))	
+			print sfSignalLeptons.Integral(sfSignalLeptons.FindBin(20),sfSignalLeptons.FindBin(70))	
 			sfSignalLeptons.Add(ofLeptons.Clone())
 			sfSignalLeptons.Add(dyLineShape.Clone())
 			leg.AddEntry(sfSignalLeptons.Clone(),signal["label"],"l")
@@ -379,7 +297,7 @@ def main():
 	#~ labelPad.Draw()
 	labelPad.UseCurrentStyle()			
 	pad.cd()
-
+	
 	frame = pad.DrawFrame(20,0,305,maxY,";;events / %d GeV"%binWidth)
 	frame.GetYaxis().CenterTitle(True)
 	predictions = THStack("predictions","predictions")
@@ -416,7 +334,7 @@ def main():
 	text2.SetTextFont(42)
 	text2.SetTextSize(0.03)
 	text2.SetTextAngle(270)
-	text2.Draw()		
+	#~ text2.Draw()		
 	
 	pad.cd()
 	pad.RedrawAxis()
@@ -425,6 +343,7 @@ def main():
 	#residuals.addErrorBySize(ofScaleError, ofScaleError, add=False, color = kBlue-9 )
 	#residuals.draw(resPad, yMin = 0., yMax = 2., addChi2=False)
 	resPad.cd()
+	maxDiff = [0., 2.]
 	difference = sfLeptons.Clone("difference")
 	
 	difference.Divide(predictionSum)
@@ -475,9 +394,151 @@ def main():
 	#~ print canv.GetWh(), canv.GetWw()
 	canv.SetWindowSize(600,750)
 	#~ print canv.GetWh(), canv.GetWw()
-	canv.Print("fig/mll_Datadriven_%s_%s.pdf"%(regionName, subcutName))
+	if dilepton != "":
+		canv.Print("fig/mll_Datadriven_%s_%s_%s.pdf"%(regionName, subcutName,dilepton))
+	else:	
+		canv.Print("fig/mll_Datadriven_%s_%s.pdf"%(regionName, subcutName))
 	pad.Delete()
 	resPad.Delete()
+
+
+
+def main():
+	
+	from sys import argv
+	from src.defs import getRegion, getOFScale, Signals
+	from src.datasets import readTreeFromFile
+	from src.histos import getBinWidth
+	from src.Styles import tdrStyle
+	from src.ratios import RatioGraph
+	from math import sqrt
+
+	from ROOT import TLegend, TCanvas, THStack, TLatex, TPad, kBlue
+	plotSignal = False
+	theSignals = []
+	diffhistsSF = []
+	signalhistsSF = []
+	signalhistsOF = []
+	if argv[4] == "Signal":
+		plotSignal = True
+		theSignals = Signals.theSignals 
+		print "Plotting Signals!"
+		
+
+	regionName = argv[2]
+	subcutName =  argv[3]
+	lumi = { "default": 9200,
+			 "RunAB": 5230,
+			 "RunC": 4100
+		}
+
+ 	
+	maxY = 90
+	
+	if regionName == "SignalNonRectInclusive":
+		maxY = 180.
+	if regionName == "SignalNonRectCentral":
+		maxY = 150.
+	if regionName == "SignalNonRectForward":
+		maxY = 120.
+		#~ maxDiff = [-30, 50.]
+	#~ if regionName == "SignalHighMET_SingleLepton":
+		#~ maxY = 80.
+		#~ maxDiff = [-30, 50.]
+	#~ if regionName == "SignalHighMETpt2010":
+		#~ maxY = 110.
+		#~ maxDiff = [-30, 50.]
+	#~ if regionName == "SignalLowMET":
+		#~ maxY = 120.
+		#~ maxDiff = [-30, 50.]
+
+
+	
+	region = getRegion(regionName)
+	dyRegion = getRegion("DrellYan")
+	
+	cuts = {"default": region.cut,
+			"RunAB": "%s && runNr <= 196531"%region.cut,
+			"RunC":"%s && runNr > 196531 && (runNr < 198049 || runNr > 198522) &&  runNr < 201678"%region.cut,
+			"SingleLepton": region.cut,
+		}
+
+	print cuts[subcutName]
+	if "SingleLepton" in regionName  or "METPD" in regionName:
+		path = region.getPath(argv[1])
+	else:
+		path = argv[1]
+		
+	print path
+	preselection = "nJets >= 2"
+	if regionName =="SignalHighMET_SingleLepton":
+		trees = {
+			"MuMu": readTreeFromFile(path, "MuMu", preselection,SingleLepton=True),
+			"EMu": readTreeFromFile(path, "EMu", preselection,SingleLepton=True),
+			"EE": readTreeFromFile(path, "EE", preselection,SingleLepton=True),
+			}
+	else:
+		trees = {
+			"MuMu": readTreeFromFile(path, "MuMu", preselection),
+			"EMu": readTreeFromFile(path, "EMu", preselection),
+			"EE": readTreeFromFile(path, "EE", preselection),
+			}
+	binWidth = getBinWidth("inv")	
+
+	ofLeptons = getOF(trees, cuts[subcutName])
+	
+	ofScale = region.R_SFOF.val
+	ofScaleError = region.R_SFOF.err
+	
+	ofLeptonsEE = ofLeptons.Clone("ofLeptonsEE")
+	ofLeptonsMuMu = ofLeptons.Clone("ofLeptonsMuMu")
+	
+	print ofScale, ofScaleError
+	
+	ofLeptons.Scale(ofScale)
+	setOverflowBin(ofLeptons,305,binWidth)
+	
+		
+
+	dyLineShape = getDY(trees, dyRegion.cut)
+	dyLineShape.Scale(region.dyPrediction[subcutName][0]*1./dyLineShape.Integral(0, dyLineShape.GetXaxis().GetNbins()+1))
+	setOverflowBin(dyLineShape,305,binWidth)
+	sfLeptons = getSF(trees, cuts[subcutName])
+	setOverflowBin(sfLeptons,305,binWidth)
+	
+	eeLeptons = getDilepton(trees,cuts[subcutName],"EE")
+	setOverflowBin(eeLeptons,305,binWidth)
+	print region.rMuE.val,region.rMuE.err,region.R_SFOFTrig.val,region.R_SFOFTrig.err	
+	eeScale, eeScaleError = getSplitCorrection(region.rMuE.val,region.rMuE.err,region.R_SFOFTrig.val,region.R_SFOFTrig.err,"EE")
+	ofLeptonsEE.Scale(eeScale)
+	setOverflowBin(ofLeptonsEE,305,binWidth)	
+	
+	mmLeptons = getDilepton(trees,cuts[subcutName],"MuMu")
+	setOverflowBin(mmLeptons,305,binWidth)	
+	mmScale, mmScaleError = getSplitCorrection(region.rMuE.val,region.rMuE.err,region.R_SFOFTrig.val,region.R_SFOFTrig.err,"MuMu")
+	ofLeptonsMuMu.Scale(mmScale)
+	setOverflowBin(ofLeptonsMuMu,305,binWidth)	
+	
+	
+	Rinout =  region.rInOut.val
+	if region.dyPrediction[subcutName][0] > 0:
+		relDYError = sqrt(region.dyPrediction[subcutName][1]**2 + region.dyPrediction[subcutName][2]**2) * 1./ region.dyPrediction[subcutName][0]
+		relDYErrorPeak = sqrt(region.dyPrediction[subcutName][1]**2 + region.dyPrediction[subcutName][2]**2) * 1./region.dyPrediction[subcutName][0]
+		relDYErrorLowMass = sqrt((sqrt(region.dyPrediction[subcutName][1]**2 + region.dyPrediction[subcutName][2]**2)*Rinout+(0.25*Rinout*region.dyPrediction[subcutName][0])**2)) * (region.dyPrediction[subcutName][0]*Rinout/ofLeptons.Integral(ofLeptons.FindBin(15),ofLeptons.FindBin(70)))
+	else:
+		relDYError = 0
+		relDYErrorPeak = 0
+		relDYErrorLowMass = 0
+	dyErrors, errorList = getSysErrorGraph(dyLineShape, relDYError)
+	print ofScaleError, eeScaleError, mmScaleError
+	ofErrors, errorListOF = getSysErrorGraph(ofLeptons, ofScaleError, errorList,dyLineShape)
+	ofErrorsEE, errorListEE = getSysErrorGraph(ofLeptonsEE, eeScaleError, errorList,dyLineShape)
+	ofErrorsMM, errorListMM = getSysErrorGraph(ofLeptonsMuMu, mmScaleError, errorList,dyLineShape)
+
+
+	DrawPlot(sfLeptons,ofLeptons,dyLineShape,ofErrors,binWidth,regionName,subcutName,maxY,plotSignal,relDYError,relDYErrorPeak,relDYErrorLowMass,ofScaleError,lumi)
+	DrawPlot(eeLeptons,ofLeptonsEE,dyLineShape,ofErrorsEE,binWidth,regionName,subcutName,maxY,plotSignal,relDYError,relDYErrorPeak,relDYErrorLowMass,eeScaleError,lumi,dilepton="EE")
+	DrawPlot(mmLeptons,ofLeptonsMuMu,dyLineShape,ofErrorsMM,binWidth,regionName,subcutName,maxY,plotSignal,relDYError,relDYErrorPeak,relDYErrorLowMass,mmScaleError,lumi,dilepton="MuMu")
 	
 
 main()

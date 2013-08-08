@@ -1,5 +1,16 @@
 #!/usr/bin/env python
 
+def getSplitCorrection(rmue,rmueErr,trigCorr,trigCorrErr,dilepton):
+	result = 0.
+	resultErr = 0.
+	if dilepton == "EE":
+		result = 1./(1. + rmue**2)*trigCorr
+		resultErr = (2*(rmueErr/rmue)**2+(trigCorrErr/trigCorr)**2)**0.5
+	elif dilepton == "MuMu":
+		result = rmue**2/(1. + rmue**2)*trigCorr
+		resultErr = (2*(rmueErr/rmue)**2+(trigCorrErr/trigCorr)**2)**0.5
+	return result,resultErr
+
 def loadShapePickles(regionName, subcutName, shape = "GT", path = "../EdgeFitter/shelves"):
 	import os
 	import pickle
@@ -12,6 +23,7 @@ def loadShapePickles(regionName, subcutName, shape = "GT", path = "../EdgeFitter
 		regionName = regionName.replace("Signal", subcutName)
 		regionName = regionName.replace("Barrel", subcutName+"Barrel")
 		regionName = regionName.replace("Control", subcutName+"Control")
+	#~ print regionName
 	picklePaths = {
 		"nS":"edgefit-%s-%s_FixedEdgeSFOS-nS.pkl",
 		"nSUncert":"edgefit-%s-%s_FixedEdgeSFOS-nSerror.pkl",
@@ -33,8 +45,8 @@ def loadShapePickles(regionName, subcutName, shape = "GT", path = "../EdgeFitter
 			pklFile.close()
 	if subcutName in region.dyPrediction:
 		if region.dyPrediction[subcutName][0] > 0.:
-			print subcutName
-			print regionName
+			#~ print subcutName
+			#~ print regionName
 			result["nZ"] = region.dyPrediction[subcutName][0]
 			result["nZSysUncert"] = region.dyPrediction[subcutName][1]
 			result["nZStatUncert"] = region.dyPrediction[subcutName][2]
@@ -71,6 +83,7 @@ def extendBasics(pkl, region):
 
 	ofScale = region.R_SFOF.val
 	ofScaleRelError = region.R_SFOF.err
+
 #	rmue = 1.20
 #	trigger = {
 #		"EE":93.0,
@@ -78,10 +91,9 @@ def extendBasics(pkl, region):
 #		"MuMu":94.4
 #		}
 #	nllPredictionScale =  0.5* sqrt(trigger["EE"]*trigger["MuMu"])*1./trigger["EMu"] *(rmue+1./(rmue))
-	
 	n["nS"] = n["EE"]  + n["MuMu"] - n["EMu"]*ofScale
 	n["nSSysUncert"] = n["EMu"]* ofScaleRelError
-	n["nSStatUncert"] = sqrt(n["EMu"]+n["EE"]+n["MuMu"])
+	n["nSStatUncert"] = sqrt((sqrt(n["EMu"])*ofScale)**2+n["EE"]+n["MuMu"])
 	#~ n["nSSysUncert"] = ((n["EMu"]* ofScaleRelError)**2 + (sqrt(n["EMu"])*ofScale)**2)**0.5
 	#~ n["nSStatUncert"] = sqrt(n["EMu"])
 	n["nSUncert"] = sqrt(n["nSStatUncert"]**2+n["nSSysUncert"]**2)
@@ -89,10 +101,32 @@ def extendBasics(pkl, region):
 	n["nSF"] = n["EE"]  + n["MuMu"]
 	
 	n["nOF"] = n["EMu"]*ofScale
-	n["nOFSysUncert"] = n["EMu"] * ofScaleRelError
+	n["nOFSysUncert"] = n["EMu"] * ofScaleRelError * ofScale
 	#~ n["nOFSysUncert"] =((n["EMu"]* ofScaleRelError)**2 + (sqrt(n["EMu"])*ofScale)**2)**0.5
 	n["nOFStatUncert"] = sqrt(n["EMu"])
 	n["nOFUncert"] = sqrt(n["nOFStatUncert"]**2+n["nOFSysUncert"]**2)
+
+
+	eeScale, eeScaleError = getSplitCorrection(region.rMuE.val,region.rMuE.err,region.R_SFOFTrig.val,region.R_SFOFTrig.err,"EE")
+	mmScale, mmScaleError = getSplitCorrection(region.rMuE.val,region.rMuE.err,region.R_SFOFTrig.val,region.R_SFOFTrig.err,"MuMu")
+
+	n["nBEE"] = n["EMu"]*eeScale
+	n["nBEEStatUncert"] = sqrt(n["EMu"])*eeScale
+	n["nBEESysUncert"] = n["EMu"] * eeScale * eeScaleError
+	n["nBEEUncert"] = sqrt(n["nBEEStatUncert"]**2 + n["nBEESysUncert"]**2)
+	n["nSEE"] = n["EE"] - n["EMu"]*eeScale
+	n["nSEESysUncert"] = n["EMu"] * eeScale * eeScaleError
+	n["nSEEStatUncert"] = sqrt((sqrt(n["EMu"])* eeScale)**2+n["EE"]) 
+	n["nSEEUncert"] = sqrt(n["nSEEStatUncert"]**2+n["nSEESysUncert"]**2)	
+	
+	n["nBMuMu"] = n["EMu"]*mmScale
+	n["nBMuMuStatUncert"] = sqrt(n["EMu"])*mmScale
+	n["nBMuMuSysUncert"] = n["EMu"] * mmScale * mmScaleError
+	n["nBMuMuUncert"] = sqrt(n["nBMuMuStatUncert"]**2 + n["nBMuMuSysUncert"]**2)
+	n["nSMuMu"] = n["MuMu"] - n["EMu"]*mmScale
+	n["nSMuMuSysUncert"] = n["EMu"] * mmScale * mmScaleError
+	n["nSMuMuStatUncert"] = sqrt((sqrt(n["EMu"])** mmScale)+n["MuMu"]) 
+	n["nSMuMuUncert"] = sqrt(n["nSMuMuStatUncert"]**2+n["nSMuMuSysUncert"]**2)	
 		
 	n["nS-debug"] = "nS=%s + %s - %s = %s"%(n["EE"] , n["MuMu"], n["nOF"], n["nS"])
 	if n["EE"] != 0:
@@ -120,11 +154,13 @@ def extendPickle( name, pkl):
 		result[subcut]["shapeHistT"] = loadShapePickles(name, subcut, shape = "HistT")
                 result[subcut]["shapeKernelT"] = loadShapePickles(name, subcut, shape = "KernelT")
 		result[subcut]["nBEdge"] = result[subcut]["edgeMass"]["nOF"]
+		#~ print subcut, result[subcut]["nBEdge"]
 		result[subcut]["nBEdgeSysUncert"] = result[subcut]["edgeMass"]["nOFSysUncert"]
 		result[subcut]["nBEdgeStatUncert"] = result[subcut]["edgeMass"]["nOFStatUncert"]
 		result[subcut]["nBEdgeUncert"] = result[subcut]["edgeMass"]["nOFUncert"]
-
+		
 		result[subcut]["nB"] = result[subcut]["default"]["nOF"]
+		#~ print subcut, result[subcut]["nB"] 
 		result[subcut]["nBSysUncert"] = result[subcut]["default"]["nOFSysUncert"]
 		result[subcut]["nBStatUncert"] = result[subcut]["default"]["nOFStatUncert"]
 		result[subcut]["nBUncert"] = result[subcut]["default"]["nOFUncert"]
@@ -153,6 +189,60 @@ def extendPickle( name, pkl):
 		result[subcut]["nSStarUncert"] = sqrt(result[subcut]["nSStarStatUncert"]**2 + result[subcut]["nSStarSysUncert"]**2)
 		result[subcut]["nSStar-debug"] = "%.4f - %.4f = %.4f (Uncert sqrt(sum(i**2 for i in [%.4f, %.4f, %.4f] ) = %.4f"%(result[subcut]["edgeMass"]["nS"], result[subcut]["nCont"], result[subcut]["nSStar"], result[subcut]["edgeMass"]["nSSysUncert"], result[subcut]["nContUncert"], result[subcut]["edgeMass"]["nSStatUncert"], result[subcut]["nSStarUncert"])
 	return result
+	
+def extendPickleSeparated( name, pkl,dilepton):
+	from math import sqrt
+	from src.defs import getRegion
+	result = {}
+	for subcut, nSub in pkl.iteritems():
+		region = getRegion(name)
+		result[subcut] = {}
+		for mllcut, n in nSub.iteritems():
+			result[subcut][mllcut] =  extendBasics(n, region)
+
+
+		scale, scaleError = getSplitCorrection(region.rMuE.val,region.rMuE.err,region.R_SFOFTrig.val,region.R_SFOFTrig.err,dilepton)
+
+		result[subcut]["nBEdge"] = result[subcut]["edgeMass"]["nB%s"%dilepton]
+		#~ print subcut, result[subcut]["nBEdge"] 
+		result[subcut]["nBEdgeSysUncert"] = result[subcut]["edgeMass"]["nB%sSysUncert"%dilepton]
+		result[subcut]["nBEdgeStatUncert"] = result[subcut]["edgeMass"]["nB%sStatUncert"%dilepton]
+		result[subcut]["nBEdgeUncert"] = result[subcut]["edgeMass"]["nB%sUncert"%dilepton]
+
+		result[subcut]["nB"] = result[subcut]["default"]["nB%s"%dilepton]
+		result[subcut]["nBSysUncert"] = result[subcut]["default"]["nB%sSysUncert"%dilepton]
+		result[subcut]["nBStatUncert"] = result[subcut]["default"]["nB%sStatUncert"%dilepton]
+		result[subcut]["nBUncert"] = result[subcut]["default"]["nB%sUncert"%dilepton]
+
+		if not subcut in region.dyPrediction:
+			result[subcut]["nZ"] = result[subcut]["onShellMass"]["nS%s"%dilepton]
+			result[subcut]["nZSysUncert"] = result[subcut]["onShellMass"]["nS%sSysUncert"%dilepton]
+			result[subcut]["nZStatUncert"] = result[subcut]["onShellMass"]["nS%sStatUncert"%dilepton]
+			result[subcut]["nZUncert"] = result[subcut]["onShellMass"]["nS%sUncert"%dilepton]
+		else:
+			result[subcut]["nZ"] = region.dyPrediction[subcut][0]*scale
+			result[subcut]["nZSysUncert"] = ((region.dyPrediction[subcut][1]*scale)**2 + (region.dyPrediction[subcut][1]*scale*scaleError)**2)**0.5
+			result[subcut]["nZStatUncert"] = ((region.dyPrediction[subcut][2]*scale)**2 + (region.dyPrediction[subcut][2]*scale*scaleError)**2)**0.5
+			result[subcut]["nZUncert"] = sqrt(sum([i**2 for i in [result[subcut]["nZStatUncert"], result[subcut]["nZSysUncert"]]]))
+		result[subcut]["nCont"] = result[subcut]["nZ"] * region.rInOut.val
+		result[subcut]["nContSysUncert"] = sqrt(sum([i**2 for i in [result[subcut]["nCont"] * region.rInOut.err * 1./region.rInOut.val, result[subcut]["nZSysUncert"]* region.rInOut.val ]]))
+		result[subcut]["nContStatUncert"] = result[subcut]["nZStatUncert"] * region.rInOut.val
+		result[subcut]["nContUncert"] = sqrt(sum([i**2 for i in [result[subcut]["nContStatUncert"], result[subcut]["nContSysUncert"]]]))
+
+		for i in ["nS", "nSUncert", "nSSysUncert", "nSStatUncert"]:
+			result[subcut][i] = result[subcut]["edgeMass"][i]
+		
+		result[subcut]["nS"] = result[subcut]["edgeMass"]["nS%s"%dilepton]
+		result[subcut]["nSStatUncert"] = result[subcut]["edgeMass"]["nS%sStatUncert"%dilepton]
+		result[subcut]["nSSysUncert"] = result[subcut]["edgeMass"]["nS%sSysUncert"%dilepton]
+		result[subcut]["nSUncert"] = result[subcut]["edgeMass"]["nS%sUncert"%dilepton]
+		
+		result[subcut]["nSStar"] = result[subcut]["edgeMass"]["nS%s"%dilepton] - result[subcut]["nCont"]
+		result[subcut]["nSStarSysUncert"] = sqrt( result[subcut]["edgeMass"]["nS%sSysUncert"%dilepton]**2 + result[subcut]["nContUncert"]**2)
+		result[subcut]["nSStarStatUncert"] = result[subcut]["edgeMass"]["nS%sStatUncert"%dilepton]
+		result[subcut]["nSStarUncert"] = sqrt(result[subcut]["nSStarStatUncert"]**2 + result[subcut]["nSStarSysUncert"]**2)
+		result[subcut]["nSStar-debug"] = "%.4f - %.4f = %.4f (Uncert sqrt(sum(i**2 for i in [%.4f, %.4f, %.4f] ) = %.4f"%(result[subcut]["edgeMass"]["nS"], result[subcut]["nCont"], result[subcut]["nSStar"], result[subcut]["edgeMass"]["nSSysUncert"], result[subcut]["nContUncert"], result[subcut]["edgeMass"]["nSStatUncert"], result[subcut]["nSStarUncert"])
+	return result
 
 def saveTable(table, name):
 	tabFile = open("tab/table_%s.tex"%name, "w")
@@ -161,7 +251,7 @@ def saveTable(table, name):
 
 	#~ print table
 	
-def makeSummaryTable(data, subcuts, regionName, name):
+def makeSummaryTable(data, subcuts, regionName, name,dilepton=""):
 	tableTemplate =r"""
 %s
 \begin{tabular}{ll|ccc|cc}
@@ -214,23 +304,27 @@ selection & approach & $N_S$ & $N_B$ ( low \mll ) & $N_Z$ & $N_{\text{Continuum}
 	table = ""
 	notes = ""
 	for subcutName in subcuts:
-		print name
-		print regionName
-		print subcutName
-		print titles[subcutName]
+		
+		#~ print name
+		#~ print regionName
+		#~ print subcutName
+		#~ print titles[subcutName]
 		data[subcutName]["title"] = titles[subcutName]
 		notes += notesTemplate%data[subcutName]["edgeMass"]
 		notes += notesLine2Template%data[subcutName]
 		table += lineCountTemplate%data[subcutName]
-		if not data[subcutName]["shapeKernelT"]["nS"] == "--":
-			table += lineShapeTemplate%data[subcutName]["shapeKernelT"]
-		if not data[subcutName]["shapeHistT"]["nS"] == "--":
-			table += lineShapeTemplate%data[subcutName]["shapeHistT"]
+		if not dilepton != "":
+			if not data[subcutName]["shapeKernelT"]["nS"] == "--":
+				table += lineShapeTemplate%data[subcutName]["shapeKernelT"]
+			if not data[subcutName]["shapeHistT"]["nS"] == "--":
+				table += lineShapeTemplate%data[subcutName]["shapeHistT"]
                 #~ if not data[subcutName]["shapeKernelT"]["nS"] == "--":
 			#~ table += lineShapeTemplate%data[subcutName]["shapeKernelT"]
 		table += "\\hline\n"
-	
-	saveTable(tableTemplate%(notes, table), "summary_%s_%s"%(regionName,name))
+	if not dilepton == "":	
+		saveTable(tableTemplate%(notes, table), "summary_%s_%s_%s"%(regionName,name,dilepton))
+	else:
+		saveTable(tableTemplate%(notes, table), "summary_%s_%s"%(regionName,name))
 				  
 def makeFitTable(data,region, subcuts, name):
 	tableTemplate =r"""
@@ -297,11 +391,12 @@ def makeFitTable(data,region, subcuts, name):
 
 
 		if subcutName == "default" or subcutName =="Ge2BTag" or subcutName =="Endcap" or subcutName =="Pt3030" or subcutName =="HighPU" or subcutName =="MuMu" or subcutName =="HighHT" or subcutName =="RunC" or subcutName =="TightIso" or subcutName =="CaloMET": 
-			print subcutName
+			#~ print subcutName
 			table += "\\hline\n"
 	#~ tempDataMET100["default"]["shapeKernelT"]["title"] = "MET triggers and diff. PD"	
 	#~ table += lineShapeTemplate%tempDataMETPD["default"]["shapeKernelT"]
-	tempDataMETPD["default"]["shapeKernelT"]["title"] = "MET triggers and diff. PD"	
+	tempDataMETPD["default"]["shapeKernelT"]["title"] = "MET triggers and diff. PD"
+	#~ print tempDataMETPD["default"]["shapeKernelT"]	
 	table += lineShapeTemplate%tempDataMETPD["default"]["shapeKernelT"]
 	table += "\\hline\n"
 	#~ table += r"Simultaneous fit of \Rinout &  &   & \\"+"\n"
@@ -312,7 +407,7 @@ def makeFitTable(data,region, subcuts, name):
 	saveTable(tableTemplate%(notes, table), name)
 				  
 
-def makeRegionTables(data, name):
+def makeRegionTables(data, name,dilepton=""):
 	tableTemplate =r"""
 %s
 \begin{tabular}{l|ccc|c}
@@ -344,8 +439,10 @@ selection & $ee$ & $\mu\mu$ & $e\mu$ & measured $N_{S}$\\
 		table += lineTemplate%data[subcutName]
 		table += finaleNoteTemplate %data[subcutName]
 		notes += notesTemplate%data[subcutName]
-
-	saveTable(tableTemplate%(notes, table), "region_%s"%name)
+	if dilepton != "":
+		saveTable(tableTemplate%(notes, table), "region_%s_%s"%(name,dilepton))
+	else:
+		saveTable(tableTemplate%(notes, table), "region_%s"%name)
 	
 	
 
@@ -406,6 +503,8 @@ def main():
 	from sys import argv
 	from src.datasets import loadPickles
 	allPkls = loadPickles("shelves/cutAndCount_*.pkl")
+	allPklsEE = loadPickles("shelves/cutAndCount_*.pkl")
+	allPklsMuMu = loadPickles("shelves/cutAndCount_*.pkl")
 	#~ makeFitTable(allPkls, ["default","RunAB", "RunC","LowPU", "MidPU", "HighPU","LowHT", "HighHT","0BTag", "1BTag", "Ge2BTag","TightIso","Barrel"], "FitTable")
 	#~ makeFitTable(allPkls,"SignalHighMET", ["default","0BTag", "1BTag", "Ge2BTag","Pt2010","Pt2020", "Pt3010","Pt3020","Pt3030","Barrel","Endcap","Type1","Tc","MHT","LowPU", "MidPU", "HighPU","LowHT", "HighHT","RunAB", "RunC","TightIso",], "FitTableHighMET")
 	#~ makeFitTable(allPkls,"BarrelHighMET", ["default","0BTag", "1BTag", "Ge2BTag","Pt2010","Pt2020", "Pt3010","Pt3020","Pt3030","Barrel","Endcap","Type1","Tc","Calo","LowPU", "MidPU", "HighPU","LowHT", "HighHT","RunAB", "RunC","TightIso",], "FitTableBarrelHighMET")
@@ -431,7 +530,44 @@ def main():
 		makeSummaryTable(allPkls[regionName], ["default","MET100Ge2Jets","MET50Ge2Jets"], regionName, "MET")
 		makeSummaryTable(allPkls[regionName], ["default","CatA","CatB","CatC","CatD"], regionName, "Categories")
 		makeSummaryTable(allPkls[regionName], ["default","Type1MET","TcMET","CaloMET","MHTMET"], regionName, "METFlavours")
+		
+		allPklsEE[regionName] = extendPickleSeparated(regionName, allPklsEE[regionName],"EE")		
+		makeRegionTables(allPklsEE[regionName]["default"], regionName,"EE")
+		makeRegionTables(allPklsEE[regionName]["RunAB"], regionName+"_RunAB","EE")
+		makeRegionTables(allPklsEE[regionName]["RunC"], regionName+"_RunC","EE")
+		
 
+		makeSummaryTable(allPklsEE[regionName], ["default","RunAB", "RunC"], regionName, "Results","EE")
+		makeSummaryTable(allPklsEE[regionName], ["Pt2010","Pt2020", "Pt3010","Pt3020","Pt3030"], regionName, "PtCuts","EE")
+		makeSummaryTable(allPklsEE[regionName], ["LowPU", "MidPU", "HighPU"], regionName, "PileUp","EE")
+		makeSummaryTable(allPklsEE[regionName], ["LowHT", "HighHT"], regionName, "HT","EE")
+		makeSummaryTable(allPklsEE[regionName], ["0BTag", "1BTag", "Ge2BTag"], regionName, "BTagging","EE")
+		makeSummaryTable(allPklsEE[regionName], ["default"], regionName, "Pt2010","EE")
+		makeSummaryTable(allPklsEE[regionName], ["default","TightIso"], regionName, "Iso","EE")
+		makeSummaryTable(allPklsEE[regionName], ["default","Barrel","Endcap"], regionName, "Eta","EE")
+		makeSummaryTable(allPklsEE[regionName], ["default","MET100Ge2Jets","MET50Ge2Jets"], regionName, "MET","EE")
+		makeSummaryTable(allPklsEE[regionName], ["default","CatA","CatB","CatC","CatD"], regionName, "Categories","EE")
+		makeSummaryTable(allPklsEE[regionName], ["default","Type1MET","TcMET","CaloMET","MHTMET"], regionName, "METFlavours","EE")
+		
+		
+		allPklsMuMu[regionName] = extendPickleSeparated(regionName, allPklsMuMu[regionName],"MuMu")		
+		makeRegionTables(allPklsMuMu[regionName]["default"], regionName,"MuMu")
+		makeRegionTables(allPklsMuMu[regionName]["RunAB"], regionName+"_RunAB","MuMu")
+		makeRegionTables(allPklsMuMu[regionName]["RunC"], regionName+"_RunC","MuMu")
+		
+
+		makeSummaryTable(allPklsMuMu[regionName], ["default","RunAB", "RunC"], regionName, "Results","MuMu")
+		makeSummaryTable(allPklsMuMu[regionName], ["Pt2010","Pt2020", "Pt3010","Pt3020","Pt3030"], regionName, "PtCuts","MuMu")
+		makeSummaryTable(allPklsMuMu[regionName], ["LowPU", "MidPU", "HighPU"], regionName, "PileUp","MuMu")
+		makeSummaryTable(allPklsMuMu[regionName], ["LowHT", "HighHT"], regionName, "HT","MuMu")
+		makeSummaryTable(allPklsMuMu[regionName], ["0BTag", "1BTag", "Ge2BTag"], regionName, "BTagging","MuMu")
+		makeSummaryTable(allPklsMuMu[regionName], ["default"], regionName, "Pt2010","MuMu")
+		makeSummaryTable(allPklsMuMu[regionName], ["default","TightIso"], regionName, "Iso","MuMu")
+		makeSummaryTable(allPklsMuMu[regionName], ["default","Barrel","Endcap"], regionName, "Eta","MuMu")
+		makeSummaryTable(allPklsMuMu[regionName], ["default","MET100Ge2Jets","MET50Ge2Jets"], regionName, "MET","MuMu")
+		makeSummaryTable(allPklsMuMu[regionName], ["default","CatA","CatB","CatC","CatD"], regionName, "Categories","MuMu")
+		makeSummaryTable(allPklsMuMu[regionName], ["default","Type1MET","TcMET","CaloMET","MHTMET"], regionName, "METFlavours","MuMu")
+		
 	makePASTable(allPkls, "default")
 	#~ makePASTable(allPkls, "RunAB")
 	#~ makePASTable(allPkls, "RunC")

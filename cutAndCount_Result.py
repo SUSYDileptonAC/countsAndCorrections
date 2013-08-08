@@ -90,7 +90,7 @@ def cutAndCountForRegion(trees, cut, name):
 	runAB = "(runNr <= 196531)"
 	runC = "(runNr > 196531)"
 	barrel = "abs(eta1) < 1.4 && abs(eta2) < 1.4"
-	endcap = "((abs(eta1) < 2.4 && abs(eta2) > 1.4) || (abs(eta1) > 1.4 && abs(eta2) < 2.4))"
+	endcap = "1.6 <= TMath::Max(abs(eta1),abs(eta2))"
 	type1Met = "(nJets >= 2 && type1Met > 150) || (nJets >=3 && type1Met > 100)"
 	tcMet = "(nJets >= 2 && tcMet > 150) || (nJets >=3 && tcMet > 100)"
 	caloMet = "(nJets >= 2 && caloMet > 150) || (nJets >=3 && caloMet > 100)"

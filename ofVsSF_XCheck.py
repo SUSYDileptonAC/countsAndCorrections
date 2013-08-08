@@ -491,9 +491,9 @@ def main():
 	#~ selections += [ "SS_inclusiveMass", "SS_edgeMass", "SS_zMass","SS_highMass"] #   
 	#~ selections += ["bTagged_inclusiveMass",  "bTagged_edgeMass","bTagged_zMass", "bTagged_highMass"]
 				   #~ #"jzb100_inclusiveMass",  "jzb100_zMass","jzb50_inclusiveMass","jzb50_zMass"] #"","jzb100_edgeMass","jzb50_edgeMass",
-	#~ variables =["inv","nJets", "nBJets","nLightLeptons","ht", "met","tcMet","type1Met","caloMet","mht","ptLead","ptTrail","isoLead","isoTrail" ,"etaLead","etaTrail" ,"deltaR", "deltaPhi","deltaPhiJetMET","deltaPhiSecondJetMET","deltaPhiLeptonMETHard","deltaPhiLeptonMETSoft","meanIP", "jzb","nVertices","sqrts"]
+	variables =["sqrts","inv","nJets", "nBJets","nLightLeptons","ht", "met","tcMet","type1Met","caloMet","mht","ptLead","ptTrail","isoLead","isoTrail" ,"etaLead","etaTrail" ,"deltaR", "deltaPhi","deltaPhiJetMET","deltaPhiSecondJetMET","deltaPhiLeptonMETHard","deltaPhiLeptonMETSoft","meanIP", "jzb","nVertices"]
 	#~ variables = ["ptLead","ptTrail","invZoomed"]
-	variables = ["isoLead","isoTrail"]
+	#~ variables = ["isoLead","isoTrail"]
 	#selections = filter(lambda x: x.endswith("_highMass"), selections)
 
 	if False:
