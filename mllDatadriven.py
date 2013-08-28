@@ -66,15 +66,16 @@ def getSFSignal(trees, cut ,lineColour=0, var = "inv",name = "signal"):
 	result.SetMarkerSize(1)
 	return result
 
-def getSplitCorrection(rmue,rmueErr,trigCorr,trigCorrErr,dilepton):
+def getSplitCorrection(rmue,rmueErr,dilepton):
+	from src.defs import Constants
 	result = 0.
 	resultErr = 0.
 	if dilepton == "EE":
-		result = 1./(1. + rmue**2)*trigCorr
-		resultErr = (2*(rmueErr/rmue)**2+(trigCorrErr/trigCorr)**2)**0.5
+		result = 1./(2*rmue)*(Constants.Trigger.EffEE.val/Constants.Trigger.EffEMu.val)
+		resultErr = (2*(rmueErr/rmue)**2+(0.071)**2)**0.5
 	elif dilepton == "MuMu":
-		result = rmue**2/(1. + rmue**2)*trigCorr
-		resultErr = (2*(rmueErr/rmue)**2+(trigCorrErr/trigCorr)**2)**0.5
+		result =(1.*rmue/2)*(Constants.Trigger.EffMuMu.val/Constants.Trigger.EffEMu.val)
+		resultErr = (2*(rmueErr/rmue)**2+(0.071**2))**0.5
 	return result,resultErr
 
 def getLines(yMin,yMax, xPos = [70.,81., 101]):
@@ -509,13 +510,13 @@ def main():
 	eeLeptons = getDilepton(trees,cuts[subcutName],"EE")
 	setOverflowBin(eeLeptons,305,binWidth)
 	print region.rMuE.val,region.rMuE.err,region.R_SFOFTrig.val,region.R_SFOFTrig.err	
-	eeScale, eeScaleError = getSplitCorrection(region.rMuE.val,region.rMuE.err,region.R_SFOFTrig.val,region.R_SFOFTrig.err,"EE")
+	eeScale, eeScaleError = getSplitCorrection(region.rMuE.val,region.rMuE.err,"EE")
 	ofLeptonsEE.Scale(eeScale)
 	setOverflowBin(ofLeptonsEE,305,binWidth)	
 	
 	mmLeptons = getDilepton(trees,cuts[subcutName],"MuMu")
 	setOverflowBin(mmLeptons,305,binWidth)	
-	mmScale, mmScaleError = getSplitCorrection(region.rMuE.val,region.rMuE.err,region.R_SFOFTrig.val,region.R_SFOFTrig.err,"MuMu")
+	mmScale, mmScaleError = getSplitCorrection(region.rMuE.val,region.rMuE.err,"MuMu")
 	ofLeptonsMuMu.Scale(mmScale)
 	setOverflowBin(ofLeptonsMuMu,305,binWidth)	
 	

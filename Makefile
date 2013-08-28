@@ -1,5 +1,5 @@
 #DATA_TREES=../../../sw532v0458/processedTrees/sw532v0460.processed.MergedData.root
-DATA_TREES=/home/jan/Trees/sw532v0474/sw532v0474TaskForceJSON.processed.MergedData.root
+DATA_TREES=/home/jan/Trees/sw532v0474/sw532v0474.processed.MergedData.root
 DATA_TREES_2011=/home/jan/Trees/sw532v0470/sw532v0470.processed.MergedData2011.root
 DATA_TREES_METPD=/home/jan/Trees/sw532v0474/sw532v0474TaskForceJSON.processed.MergedData_METPD.root
 DATA_TREES_SingleLepton=/home/jan/Trees/sw532v0470/sw532v0470.processed.MergedData_SingleLepton.root

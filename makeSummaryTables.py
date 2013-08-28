@@ -1,14 +1,15 @@
 #!/usr/bin/env python
 
-def getSplitCorrection(rmue,rmueErr,trigCorr,trigCorrErr,dilepton):
+def getSplitCorrection(rmue,rmueErr,dilepton):
+	from src.defs import Constants
 	result = 0.
 	resultErr = 0.
 	if dilepton == "EE":
-		result = 1./(1. + rmue**2)*trigCorr
-		resultErr = (2*(rmueErr/rmue)**2+(trigCorrErr/trigCorr)**2)**0.5
+		result = 1./(2*rmue)*(Constants.Trigger.EffEE.val/Constants.Trigger.EffEMu.val)
+		resultErr = (2*(rmueErr/rmue)**2+(0.071)**2)**0.5
 	elif dilepton == "MuMu":
-		result = rmue**2/(1. + rmue**2)*trigCorr
-		resultErr = (2*(rmueErr/rmue)**2+(trigCorrErr/trigCorr)**2)**0.5
+		result =(1.*rmue/2)*(Constants.Trigger.EffMuMu.val/Constants.Trigger.EffEMu.val)
+		resultErr = (2*(rmueErr/rmue)**2+(0.071**2))**0.5
 	return result,resultErr
 
 def loadShapePickles(regionName, subcutName, shape = "GT", path = "../EdgeFitter/shelves"):
@@ -107,8 +108,8 @@ def extendBasics(pkl, region):
 	n["nOFUncert"] = sqrt(n["nOFStatUncert"]**2+n["nOFSysUncert"]**2)
 
 
-	eeScale, eeScaleError = getSplitCorrection(region.rMuE.val,region.rMuE.err,region.R_SFOFTrig.val,region.R_SFOFTrig.err,"EE")
-	mmScale, mmScaleError = getSplitCorrection(region.rMuE.val,region.rMuE.err,region.R_SFOFTrig.val,region.R_SFOFTrig.err,"MuMu")
+	eeScale, eeScaleError = getSplitCorrection(region.rMuE.val,region.rMuE.err,"EE")
+	mmScale, mmScaleError = getSplitCorrection(region.rMuE.val,region.rMuE.err,"MuMu")
 
 	n["nBEE"] = n["EMu"]*eeScale
 	n["nBEEStatUncert"] = sqrt(n["EMu"])*eeScale
@@ -201,7 +202,7 @@ def extendPickleSeparated( name, pkl,dilepton):
 			result[subcut][mllcut] =  extendBasics(n, region)
 
 
-		scale, scaleError = getSplitCorrection(region.rMuE.val,region.rMuE.err,region.R_SFOFTrig.val,region.R_SFOFTrig.err,dilepton)
+		scale, scaleError = getSplitCorrection(region.rMuE.val,region.rMuE.err,dilepton)
 
 		result[subcut]["nBEdge"] = result[subcut]["edgeMass"]["nB%s"%dilepton]
 		#~ print subcut, result[subcut]["nBEdge"] 
@@ -510,8 +511,8 @@ def main():
 	#~ makeFitTable(allPkls,"BarrelHighMET", ["default","0BTag", "1BTag", "Ge2BTag","Pt2010","Pt2020", "Pt3010","Pt3020","Pt3030","Barrel","Endcap","Type1","Tc","Calo","LowPU", "MidPU", "HighPU","LowHT", "HighHT","RunAB", "RunC","TightIso",], "FitTableBarrelHighMET")
 	#~ makeFitTable(allPkls,"SignalLowMET", ["default","0BTag", "1BTag", "Ge2BTag","Pt2010","Pt2020", "Pt3010","Pt3020","Pt3030","Barrel","Endcap","Type1","Tc","Calo","LowPU", "MidPU", "HighPU","LowHT", "HighHT","RunAB", "RunC","TightIso",], "FitTableLowMET")
 	#~ makeFitTable(allPkls,"SignalLowMETFullEta", ["default","0BTag", "1BTag", "Ge2BTag","Pt2010","Pt2020", "Pt3010","Pt3020","Pt3030","Barrel","Endcap","Type1","Tc","Calo","LowPU", "MidPU", "HighPU","LowHT", "HighHT","RunAB", "RunC","TightIso",], "FitTableLowMETFullEta")
-	makeFitTable(allPkls,"SignalNonRectCentral", ["default","0BTag", "1BTag", "Ge2BTag","Pt2010","Pt2020", "Pt3010","Pt3020","Pt3030","Barrel","Endcap","Type1MET","TcMET","CaloMET","LowPU", "MidPU", "HighPU","LowHT", "HighHT","RunAB", "RunC","TightIso",], "FitTableSignalNonRectCentral")
-	makeFitTable(allPkls,"SignalNonRectForward", ["default","0BTag", "1BTag", "Ge2BTag","Pt2010","Pt2020", "Pt3010","Pt3020","Pt3030","Barrel","Endcap","Type1MET","TcMET","CaloMET","LowPU", "MidPU", "HighPU","LowHT", "HighHT","RunAB", "RunC","TightIso",], "FitTableSignalNonRectForward")
+	#~ makeFitTable(allPkls,"SignalNonRectCentral", ["default","0BTag", "1BTag", "Ge2BTag","Pt2010","Pt2020", "Pt3010","Pt3020","Pt3030","Barrel","Endcap","Type1MET","TcMET","CaloMET","LowPU", "MidPU", "HighPU","LowHT", "HighHT","RunAB", "RunC","TightIso",], "FitTableSignalNonRectCentral")
+	#~ makeFitTable(allPkls,"SignalNonRectForward", ["default","0BTag", "1BTag", "Ge2BTag","Pt2010","Pt2020", "Pt3010","Pt3020","Pt3030","Barrel","Endcap","Type1MET","TcMET","CaloMET","LowPU", "MidPU", "HighPU","LowHT", "HighHT","RunAB", "RunC","TightIso",], "FitTableSignalNonRectForward")
 	for regionName in allPkls:
 		allPkls[regionName] = extendPickle(regionName, allPkls[regionName])		
 		makeRegionTables(allPkls[regionName]["default"], regionName)

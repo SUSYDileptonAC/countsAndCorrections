@@ -165,7 +165,7 @@ class SubProcesses8TeV:  #noch zu bearbeiten!
 
         name="TTJets"
         #file= "sw525v0453.cutsV22Dilepton.TTJets_madgraph_Summer12.root" #6M Ereignisse fuer Vergleichsplot
-        file="/home/jan/Trees/sw532v0474/sw532v0474.processed.TT_Dileptonic_Powheg_Summer12_v1.root"#sw532v0456.cutsV22Dilepton.TTJets_madgraph_Summer12.root"
+        file="/home/jan/Trees/sw532v0474/sw532v0474.processed.TTJets_MGDecays_madgraph_Summer12.root"#sw532v0456.cutsV22Dilepton.TTJets_madgraph_Summer12.root"
 		
 	#"sw525v0451.cutsV22Dilepton.TTJets_madgraph_Summer12.root" #12.6.2012
         xSection=23.6 #pb

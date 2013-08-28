@@ -602,32 +602,33 @@ def rRatioDataVsMC(plotMC, plotData, variante=2,selectionModifier=[], isinput=Fa
 		log.logError("Variante %s ungueltig! Waehle 1 fuer einen linearFit oder 2 fuer eine Horizontale." %variante)
 
 	
-	####################### Raw Inputs ##############################	
-	if len(histoMData) > 0:
-		c1.DrawFrame(xMin,1,xMax,histoMData[0].GetBinContent(histoMData[0].GetMaximumBin())*10,"; %s; N_{Events}" %xaxis)
+	####################### Raw Inputs ##############################
+	if plotData != None:	
+		if len(histoMData) > 0:
+			c1.DrawFrame(xMin,1,xMax,histoMData[0].GetBinContent(histoMData[0].GetMaximumBin())*10,"; %s; N_{Events}" %xaxis)
 
-		latex = ROOT.TLatex()
-		latex.SetTextSize(0.035)
-		latex.SetNDC(True)
-		latex.DrawLatex(0.15, 0.96, "CMS Preliminary  #sqrt{s} = 8 TeV,  #scale[0.6]{#int}Ldt = %s fb^{-1}"%(0.001*Constants.lumi8TeV))
+			latex = ROOT.TLatex()
+			latex.SetTextSize(0.035)
+			latex.SetNDC(True)
+			latex.DrawLatex(0.15, 0.96, "CMS Preliminary  #sqrt{s} = 8 TeV,  #scale[0.6]{#int}Ldt = %s fb^{-1}"%(0.001*Constants.lumi8TeV))
 
-		
-		legend = ROOT.TLegend(0.65,0.7,0.9,0.9)
-		legend.SetFillStyle(0)
-		legend.SetBorderSize(0)	
-		legend.AddEntry(histoMData[0],"#mu#mu events","p")
-		legend.AddEntry(histoEData[0],"ee events","p")
-		histoMData[0].SetMarkerColor(ROOT.kRed)
-		histoMData[0].SetLineColor(ROOT.kRed)
-		histoMData[0].Draw("samepe")
-		histoEData[0].Draw("samepe")
-		legend.Draw("same")
-		ROOT.gPad.SetLogy(1)
-		save(c1, plotpath, filename+"_RawInputsData")
-		
-		c1.Clear()
-		ROOT.gPad.SetLogy(0)	
-	####################### Fehlerband ##############################
+			
+			legend = ROOT.TLegend(0.65,0.7,0.9,0.9)
+			legend.SetFillStyle(0)
+			legend.SetBorderSize(0)	
+			legend.AddEntry(histoMData[0],"#mu#mu events","p")
+			legend.AddEntry(histoEData[0],"ee events","p")
+			histoMData[0].SetMarkerColor(ROOT.kRed)
+			histoMData[0].SetLineColor(ROOT.kRed)
+			histoMData[0].Draw("samepe")
+			histoEData[0].Draw("samepe")
+			legend.Draw("same")
+			ROOT.gPad.SetLogy(1)
+			save(c1, plotpath, filename+"_RawInputsData")
+			
+			c1.Clear()
+			ROOT.gPad.SetLogy(0)	
+		####################### Fehlerband ##############################
 
 	if plotMC==Ratio_p4M_MCControlSS or plotMC==Ratio_p4M_MCSS:
 		c1.DrawFrame(xMin,0,xMax,1.7,"; %s; r_{#mue}" %xaxis)
@@ -661,7 +662,10 @@ def rRatioDataVsMC(plotMC, plotData, variante=2,selectionModifier=[], isinput=Fa
 	latex = ROOT.TLatex()
 	latex.SetTextSize(0.035)
 	latex.SetNDC(True)
-	latex.DrawLatex(0.15, 0.96, "CMS Preliminary   #sqrt{s} = 8 TeV,  #scale[0.6]{#int}Ldt = %s fb^{-1}"%(0.001*Constants.lumi8TeV))
+	if plotData != None:
+		latex.DrawLatex(0.15, 0.96, "CMS Preliminary   #sqrt{s} = 8 TeV,  #scale[0.6]{#int}Ldt = %s fb^{-1}"%(0.001*Constants.lumi8TeV))
+	else:
+		latex.DrawLatex(0.15, 0.96, "CMS Private Work   #sqrt{s} = 8 TeV,  #scale[0.6]{#int}Ldt = %s fb^{-1}"%(0.001*Constants.lumi8TeV))
 
 
 
@@ -940,7 +944,7 @@ def main():
 	elif argv[1] == "Dependencies":
 		etaMC, etaData = rRatioDataVsMC(Ratio_eta1_MC, Ratio_eta1_Data, variante=2,selectionModifier=selectionModifier)
 		metMC, metData=rRatioDataVsMC(Ratio_met_MC, Ratio_met_Data, variante=2,selectionModifier=selectionModifier)
-		metMCtt, metDatatt=rRatioDataVsMC(Ratio_met_MC_tt, Ratio_met_Data, variante=2,selectionModifier=selectionModifier)
+		metMCtt, metDatatt=rRatioDataVsMC(Ratio_met_MC_tt, None, variante=2,selectionModifier=selectionModifier)
 		nJetsMC, nJetsData = rRatioDataVsMC(Ratio_nJets_MC, Ratio_nJets_Data, variante=2,selectionModifier=selectionModifier)
 		nVerticesMC, nVerticesData = rRatioDataVsMC(Ratio_nVertices_MC, Ratio_nVertices_Data, variante=2,selectionModifier=selectionModifier)
 		htMC, htData=rRatioDataVsMC(Ratio_ht_MC, Ratio_ht_Data,variante=2,selectionModifier=selectionModifier)
