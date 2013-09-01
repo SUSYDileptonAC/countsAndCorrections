@@ -1,12 +1,15 @@
 #!/usr/bin/env python
 
 
-cutStrings = {"SignalHighMET":"weight*(chargeProduct < 0 && pt1 > 20 && pt2 > 20 && abs(eta1)<2.4  && abs(eta2) < 2.4 && p4.M() > 20 && deltaR > 0.3 && met > 150 && ht > 100 && nJets >=2 && runNr < 201657 && !(runNr >= 198049 && runNr <= 198522))",
-				"BarrelHighMET":"weight*(chargeProduct < 0 && pt1 > 20 && pt2 > 20 && abs(eta1)<1.4  && abs(eta2) < 1.4 && p4.M() > 20 && deltaR > 0.3 && met > 150 && ht > 100 && nJets >=2 && runNr < 201657 && !(runNr >= 198049 && runNr <= 198522))",
-				"SignalLowMET":"weight*(chargeProduct < 0 && pt1 > 20 && pt2 > 20 && abs(eta1)<1.4  && abs(eta2) < 1.4 && p4.M() > 20 && deltaR > 0.3 && met > 100 && nJets >=3 && runNr < 201657 && !(runNr >= 198049 && runNr <= 198522))",
-				"SignalLowMETFullEta":"weight*(chargeProduct < 0 && pt1 > 20 && pt2 > 20 && abs(eta1)<2.4  && abs(eta2) < 2.4 && p4.M() > 20 && deltaR > 0.3 && met > 100  && nJets >=3 && runNr < 201657 && !(runNr >= 198049 && runNr <= 198522))",
-				"ControlBarrel":"weight*(chargeProduct < 0 && pt1 > 20 && pt2 > 20 && abs(eta1)<1.4  && abs(eta2) < 1.4 && p4.M() > 20 && deltaR > 0.3 && met > 100 && met < 150  && nJets ==2 && runNr < 201657 && !(runNr >= 198049 && runNr <= 198522))",	
-				"ControlInclusive":"weight*(chargeProduct < 0 && pt1 > 20 && pt2 > 20 && abs(eta1)<2.4  && abs(eta2) < 2.4 && p4.M() > 20 && deltaR > 0.3 && met > 100 && met < 150 && nJets ==2 && runNr < 201657 && !(runNr >= 198049 && runNr <= 198522))",						
+cutStrings = {"SignalHighMET":"weight*(chargeProduct < 0 && pt1 > 20 && pt2 > 20 && abs(eta1)<2.4  && abs(eta2) < 2.4 && p4.M() > 20 && deltaR > 0.3 && met > 150 && ht > 100 && nJets >=2 && runNr < 201678 && !(runNr >= 198049 && runNr <= 198522))",
+				"BarrelHighMET":"weight*(chargeProduct < 0 && pt1 > 20 && pt2 > 20 && abs(eta1)<1.4  && abs(eta2) < 1.4 && p4.M() > 20 && deltaR > 0.3 && met > 150 && ht > 100 && nJets >=2 && runNr < 201678 && !(runNr >= 198049 && runNr <= 198522))",
+				"SignalLowMET":"weight*(chargeProduct < 0 && pt1 > 20 && pt2 > 20 && abs(eta1)<1.4  && abs(eta2) < 1.4 && p4.M() > 20 && deltaR > 0.3 && met > 100 && nJets >=3 && runNr < 201678 && !(runNr >= 198049 && runNr <= 198522))",
+				"SignalLowMETFullEta":"weight*(chargeProduct < 0 && pt1 > 20 && pt2 > 20 && abs(eta1)<2.4  && abs(eta2) < 2.4 && p4.M() > 20 && deltaR > 0.3 && met > 100  && nJets >=3 && runNr < 201678 && !(runNr >= 198049 && runNr <= 198522))",
+				"ControlBarrel":"weight*(chargeProduct < 0 && pt1 > 20 && pt2 > 20 && abs(eta1)<1.4  && abs(eta2) < 1.4 && p4.M() > 20 && deltaR > 0.3 && met > 100 && met < 150  && nJets ==2 && runNr < 201678 && !(runNr >= 198049 && runNr <= 198522))",	
+				"ControlInclusive":"weight*(chargeProduct < 0 && pt1 > 20 && pt2 > 20 && abs(eta1)<2.4  && abs(eta2) < 2.4 && p4.M() > 20 && deltaR > 0.3 && met > 100 && met < 150 && nJets ==2 && runNr < 201678 && !(runNr >= 198049 && runNr <= 198522))",						
+				"ControlForward":"weight*(chargeProduct < 0 && pt1 > 20 && pt2 > 20 && abs(eta1)<2.4  && abs(eta2) < 2.4 && !((abs(eta1) > 1.4 && abs(eta1) < 1.6) || (abs(eta2) > 1.4 && abs(eta2) < 1.6)) && (TMath::Max(abs(eta1),abs(eta2)) > 1.6) && p4.M() > 20 && deltaR > 0.3 && met > 100 && met < 150 && nJets ==2 && runNr < 201678 && !(runNr >= 198049 && runNr <= 198522))",						
+				"SignalCentral":"weight*(chargeProduct < 0 && pt1 > 20 && pt2 > 20 && abs(eta1)<1.4  && abs(eta2) < 1.4 && p4.M() > 20 && deltaR > 0.3 && ((met > 100 && nJets >= 3) || (met > 150 && nJets >= 2)) && nJets ==2 && runNr < 201678 && !(runNr >= 198049 && runNr <= 198522))",						
+				"SignalForward":"weight*(chargeProduct < 0 && pt1 > 20 && pt2 > 20 && abs(eta1)<2.4  && abs(eta2) < 2.4 && !((abs(eta1) > 1.4 && abs(eta1) < 1.6) || (abs(eta2) > 1.4 && abs(eta2) < 1.6)) && (TMath::Max(abs(eta1),abs(eta2)) > 1.6) && p4.M() > 20 && deltaR > 0.3 && ((met > 100 && nJets >= 3) || (met > 150 && nJets >= 2)) && nJets ==2 && runNr < 201678 && !(runNr >= 198049 && runNr <= 198522))",						
 			}
 
 regionNames = {"SignalHighMET":"High E_{T}^{miss} inclusive",
@@ -15,9 +18,13 @@ regionNames = {"SignalHighMET":"High E_{T}^{miss} inclusive",
 				"SignalLowMETFullEta":"Low E_{T}^{miss} inclusive",
 				"ControlBarrel":"Control region central",
 				"ControlInclusive":"Control region inclusive",				
+				"ControlForward":"Control Region Forward",				
+				"SignalCentral":"Signal Region Central",				
+				"SignalForward":"Signal Region Forward",				
 				}
 				
-rMuEs = {"SignalHighMET":1.21,"BarrelHighMET":1.10,"SignalLowMET":1.10,"SignalLowMETFullEta":1.21,"ControlBarrel":1.10,"ControlInclusive":1.21,}
+rMuEs = {"SignalCentral":1.10,"SignalForward":1.20,"SignalHighMET":1.21,"BarrelHighMET":1.10,"SignalLowMET":1.10,"SignalLowMETFullEta":1.21,"ControlBarrel":1.10,"ControlInclusive":1.21,"ControlForward":1.20,}
+rMuEErrs = {"SignalCentral":0.110,"SignalForward":0.180,"SignalHighMET":0.121,"BarrelHighMET":0.110,"SignalLowMET":0.110,"SignalLowMETFullEta":0.121,"ControlBarrel":0.110,"ControlInclusive":0.121,"ControlForward":0.18,}
 
 def createHistoFromTree(tree, variable, weight, nBins, firstBin, lastBin, nEvents = -1):
 	"""
@@ -51,7 +58,7 @@ def rMuEFromSFOF(eeHist,mumuHist,emuHist):
 		of = emuHist.GetBinContent(x)*1.02
 		if of > 0:
 			rSFOF = sf/of
-			if eeHist.GetBinContent(x) >0 and mumuHist.GetBinContent(x) >0:
+			if eeHist.GetBinContent(x) >0 or mumuHist.GetBinContent(x) >0:
 				eemmPart = 1./(eeHist.GetBinContent(x)+mumuHist.GetBinContent(x))
 			else: 
 				eemmPart = 0.
@@ -62,15 +69,15 @@ def rMuEFromSFOF(eeHist,mumuHist,emuHist):
 				
 			relErrRSFOF = sqrt(eemmPart + emPart)
 			print rSFOF, relErrRSFOF
-			if rSFOF >1.05:
+			if rSFOF >1.001:
 				result["up"].append(rSFOF + sqrt(rSFOF**2-1) )
 				result["down"].append(rSFOF - sqrt(rSFOF**2-1) )
 				
 				resultErr["up"].append(rSFOF*relErrRSFOF*(1+rSFOF/sqrt(rSFOF**2-1)))
 				resultErr["down"].append(rSFOF*relErrRSFOF*(1-rSFOF/sqrt(rSFOF**2-1)))
 			else:
-				result["up"].append(1)
-				result["down"].append(1)
+				result["up"].append(rSFOF)
+				result["down"].append(rSFOF)
 				
 				resultErr["up"].append(rSFOF*relErrRSFOF)
 				resultErr["down"].append(rSFOF*relErrRSFOF)				
@@ -101,7 +108,7 @@ def rMuEMeasure(eeHist,mumuHist):
 def main():
 	from sys import argv
 	import ROOT
-	from ROOT import TCanvas, TGraphErrors, TPad, TChain, TH1F, TLegend,
+	from ROOT import TCanvas, TGraphErrors, TPad, TChain, TH1F, TLegend
 	from numpy import array
 	from setTDRStyle import setTDRStyle
 	
@@ -115,7 +122,7 @@ def main():
 	plotPad.Draw()	
 	plotPad.cd()		
 
-	path = "/home/jan/Trees/sw532v0470/sw532v0470.processed.MergedData.root"
+	path = "/home/jan/Trees/sw532v0474/sw532v0474.processed.MergedData.root"
 	
 	
 	treeEMu = TChain()
@@ -143,7 +150,7 @@ def main():
  	#~ y= array("f", [1.175, 1.175]) # 1.237
  	y= array([rMuEs[region], rMuEs[region]],"f") # 1.237
    	ex= array([0.,0.],"f")
-   	ey= array([rMuEs[region]*0.10, rMuEs[region]*0.10],"f")
+   	ey= array([rMuEErrs[region], rMuEErrs[region]],"f")
    	ge= ROOT.TGraphErrors(2, x, y, ex, ey)
    	ge.SetFillColor(ROOT.kOrange-9)
    	ge.SetFillStyle(1001)

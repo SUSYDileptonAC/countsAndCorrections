@@ -58,7 +58,7 @@ def rMuEMeasure(eeHist,mumuHist):
 def main():
 	from sys import argv
 	import ROOT
-	from ROOT import TCanvas, TGraphErrors, TPad, TChain, TH1F, TLegend
+	from ROOT import TCanvas, TGraphErrors, TPad, TChain, TH1F, TLegend, TF1
 	from numpy import array
 	from setTDRStyle import setTDRStyle
 	
@@ -72,7 +72,7 @@ def main():
 	plotPad.Draw()	
 	plotPad.cd()		
 
-	path = "/home/jan/Trees/sw532v0474/sw532v0474TaskForceJSON.processed.MergedData.root"
+	path = "/home/jan/Trees/sw532v0474/sw532v0474.processed.MergedData.root"
 	pathMC = "/home/jan/Trees/sw532v0474/sw532v0474.processed.TTJets_MGDecays_madgraph_Summer12.root"
 	
 	
@@ -103,7 +103,7 @@ def main():
 	rMuEMeasured = rMuEMeasure(eeHist,mumuHist)	
 	rMuEMeasuredMC = rMuEMeasure(eeHistMC,mumuHistMC)	
 	
-	hCanvas.DrawFrame(20,0,300,2,"; %s ; %s" %("m_{ll} [GeV]","r_{#mu e}"))			
+	hCanvas.DrawFrame(20,0,300,2.5,"; %s ; %s" %("m_{ll} [GeV]","r_{#mu e}"))			
 	latex = ROOT.TLatex()
 	latex.SetTextSize(0.04)
 	latex.SetNDC(True)
@@ -164,13 +164,18 @@ def main():
 	graphMeasured.SetLineColor(ROOT.kGreen+3)
 	graphMeasuredMC.SetLineColor(ROOT.kBlue+3)
 
-	
+	fit = TF1("dataFit","pol1",0,300)
+	fit.SetLineColor(ROOT.kGreen+3)
+	fitMC = TF1("mcFit","pol1",0,300)
+	fitMC.SetLineColor(ROOT.kBlue+3)
+	graphMeasured.Fit("dataFit")
+	graphMeasuredMC.Fit("mcFit")
 
 	graphMeasured.Draw("sameEP0")
 	graphMeasuredMC.Draw("sameEP0")
 	
 	
-	
+	ROOT.gStyle.SetOptFit(0)
 	
 	legend = TLegend(0.6, 0.7, 0.95, 0.95)
 	legend.SetFillStyle(0)
@@ -182,9 +187,16 @@ def main():
 	legend.AddEntry(ge,"Syst. Uncert. of r_{#mu e}","f")
 	legend.AddEntry(graphMeasured,"r_{#mu e} = #sqrt{N_{#mu#mu}/N_{ee}} Data","p")
 	legend.AddEntry(graphMeasuredMC,"r_{#mu e} = #sqrt{N_{#mu#mu}/N_{ee}} MC","p")
+
+	latex = ROOT.TLatex()
+	latex.SetTextSize(0.035)	
+	latex.SetNDC()	
+	latex.DrawLatex(0.2, 0.25, "Fit on data: %.2f #pm %.2f %.5f #pm %.5f * m_{ll}"%(fit.GetParameter(0),fit.GetParError(0),fit.GetParameter(1),fit.GetParError(1)))
+	latex.DrawLatex(0.2, 0.20, "Fit on MC:   %.2f #pm %.2f %.5f #pm %.5f * m_{ll}"%(fitMC.GetParameter(0),fitMC.GetParError(0),fitMC.GetParameter(1),fitMC.GetParError(1)))
+	
 	
 	legend.Draw("same")
-	
+	plotPad.RedrawAxis()
 	hCanvas.Print("rMuMllDepedency_%s.pdf"%region)
 	
 	

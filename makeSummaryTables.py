@@ -25,19 +25,30 @@ def loadShapePickles(regionName, subcutName, shape = "GT", path = "../EdgeFitter
 		regionName = regionName.replace("Barrel", subcutName+"Barrel")
 		regionName = regionName.replace("Control", subcutName+"Control")
 	#~ print regionName
+	#~ picklePaths = {
+		#~ "nS":"edgefit-%s-%s_FixedEdgeSFOS-nS.pkl",
+		#~ "nSUncert":"edgefit-%s-%s_FixedEdgeSFOS-nSerror.pkl",
+		#~ "nB":"edgefit-%s-%s_FixedEdgeSFOS-nB.pkl",
+		#~ "nBUncert":"edgefit-%s-%s_FixedEdgeSFOS-nBerror.pkl",
+		#~ "nZ":"edgefit-%s-%s_FixedEdgeSFOS-nZ.pkl",
+		#~ "nZUncert":"edgefit-%s-%s_FixedEdgeSFOS-nZerror.pkl",
+		#~ "chi2":"edgefit-%s-%s_FixedEdgeSFOS-chi2.pkl",
+		#~ "nPar":"edgefit-%s-%s_FixedEdgeSFOS-nPar.pkl",
+		#~ }
 	picklePaths = {
-		"nS":"edgefit-%s-%s_FixedEdgeSFOS-nS.pkl",
-		"nSUncert":"edgefit-%s-%s_FixedEdgeSFOS-nSerror.pkl",
-		"nB":"edgefit-%s-%s_FixedEdgeSFOS-nB.pkl",
-		"nBUncert":"edgefit-%s-%s_FixedEdgeSFOS-nBerror.pkl",
-		"nZ":"edgefit-%s-%s_FixedEdgeSFOS-nZ.pkl",
-		"nZUncert":"edgefit-%s-%s_FixedEdgeSFOS-nZerror.pkl",
-		"chi2":"edgefit-%s-%s_FixedEdgeSFOS-chi2.pkl",
-		"nPar":"edgefit-%s-%s_FixedEdgeSFOS-nPar.pkl",
+		"nS":"edgefit-%s-%sSFOS-nS.pkl",
+		"nSUncert":"edgefit-%s-%sSFOS-nSerror.pkl",
+		"nB":"edgefit-%s-%sSFOS-nB.pkl",
+		"nBUncert":"edgefit-%s-%sSFOS-nBerror.pkl",
+		"nZ":"edgefit-%s-%sSFOS-nZ.pkl",
+		"nZUncert":"edgefit-%s-%sSFOS-nZerror.pkl",
+		"chi2":"edgefit-%s-%sSFOS-chi2.pkl",
+		"nPar":"edgefit-%s-%sSFOS-nPar.pkl",
 		}
 	result = {}
 	for varName, template in picklePaths.iteritems():
 		pklPath = os.path.join(path, template%(regionName, shape))
+		print pklPath
 		result[varName] = "--"
 		#~ print pklPath
 		if os.path.exists(pklPath):
@@ -70,6 +81,8 @@ def loadShapePickles(regionName, subcutName, shape = "GT", path = "../EdgeFitter
 		result["shape"] = "binned shape"
         elif shape == "KernelT":
                 result["shape"] = "KDE"
+        elif shape == "MarcoAndreaT":
+                result["shape"] = "anal. shape"
 	else:
 		result["shape"] = shape
 	result["title"] = ""
@@ -153,7 +166,8 @@ def extendPickle( name, pkl):
 
 		result[subcut]["shapeGT"] = loadShapePickles(name, subcut, shape = "GT")
 		result[subcut]["shapeHistT"] = loadShapePickles(name, subcut, shape = "HistT")
-                result[subcut]["shapeKernelT"] = loadShapePickles(name, subcut, shape = "KernelT")
+		result[subcut]["shapeKernelT"] = loadShapePickles(name, subcut, shape = "KernelT")
+		result[subcut]["shapeMarcoAndreaT"] = loadShapePickles(name, subcut, shape = "MarcoAndreaT")
 		result[subcut]["nBEdge"] = result[subcut]["edgeMass"]["nOF"]
 		#~ print subcut, result[subcut]["nBEdge"]
 		result[subcut]["nBEdgeSysUncert"] = result[subcut]["edgeMass"]["nOFSysUncert"]
@@ -315,6 +329,8 @@ selection & approach & $N_S$ & $N_B$ ( low \mll ) & $N_Z$ & $N_{\text{Continuum}
 		notes += notesLine2Template%data[subcutName]
 		table += lineCountTemplate%data[subcutName]
 		if not dilepton != "":
+			if not data[subcutName]["shapeMarcoAndreaT"]["nS"] == "--":
+				table += lineShapeTemplate%data[subcutName]["shapeMarcoAndreaT"]
 			if not data[subcutName]["shapeKernelT"]["nS"] == "--":
 				table += lineShapeTemplate%data[subcutName]["shapeKernelT"]
 			if not data[subcutName]["shapeHistT"]["nS"] == "--":
