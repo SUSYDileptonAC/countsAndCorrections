@@ -107,7 +107,7 @@ class SubProcesses8TeV:  #noch zu bearbeiten!
     class Data:#ist neu
     	name="data"
         #~ file="/user/schomakers/trees/sw532v0470.processed.MergedData.root"
-        file="/home/jan/Trees/sw532v0474/sw532v0474TaskForceJSON.processed.MergedData.root"
+        file="/home/jan/Trees/sw532v0474/sw532v0474.processed.MergedData.root"
         #file="../processedTrees/sw532v0457.processed.MergedData.root"
 		#"sw532v0456.cutsV22Dilepton.Data_Run2012A.root"
 	#"sw525v0451b.cutsV22Dilepton.Data_Run2012A.root" # fix vom 30.6.

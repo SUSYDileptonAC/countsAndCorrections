@@ -303,12 +303,13 @@ class Cuts:
     basicCutNoDeltaRSS="chargeProduct==1 && nJets>=2 && pt1 > 20 && pt2 > 20 && abs(eta1) < 2.4 && abs(eta2) < 2.4 && ((abs(eta1) < 1.4 || abs(eta1) > 1.6) && (abs(eta2) < 1.4 || abs(eta2) > 1.6) ) && p4.M()>20 && runNr <= 201678 && !(runNr >= 198049 && runNr <= 198522)"
     basicCut0SS="chargeProduct==1 && nJets==0 && pt1 > 20 && pt2 > 20 && deltaR > 0.3 && abs(eta1) < 2.4 && abs(eta2) < 2.4 && ((abs(eta1) < 1.4 || abs(eta1) > 1.6) && (abs(eta2) < 1.4 || abs(eta2) > 1.6) ) && p4.M()>20 && runNr <= 201678 && !(runNr >= 198049 && runNr <= 198522)" # nJets!
     basicCutRSS="chargeProduct==1 && nJets==0 && pt1 > 20 && pt2 > 20 && deltaR > 0.3 && abs(eta1) < 2.4 && abs(eta2) < 2.4 && ((abs(eta1) < 1.4 || abs(eta1) > 1.6) && (abs(eta2) < 1.4 || abs(eta2) > 1.6) ) && p4.M()>20 && runNr <= 201678 && !(runNr >= 198049 && runNr <= 198522)" # nJets!
-
+    
+    met50Cut = "met < 50"
     topCut="met>50 && nBJets>=1 && abs(p4.M()-91)>15" 
     nVerticesCut="nVertices<11 && nVertices >9"
     ptCut="pt2>50"
 
-    basicCutohneN="chargeProduct==-1 && pt1 > 20 && pt2 > 20 && deltaR > 0.3 && abs(eta1) < 2.4 && ((abs(eta1) < 1.4 || abs(eta1) > 1.6) && (abs(eta2) < 1.4 || abs(eta2) > 1.6) ) && abs(eta2) < 2.4 && p4.M()>20 && runNr <= 201678 && !(runNr >= 198049 && runNr <= 198522) && id1 < 0.15 && id2 < 0.15"
+    basicCutohneN="chargeProduct==-1 && pt1 > 20 && pt2 > 20 && deltaR > 0.3 && abs(eta1) < 2.4 && abs(eta2) < 2.4 && ((abs(eta1) < 1.4 || abs(eta1) > 1.6) && (abs(eta2) < 1.4 || abs(eta2) > 1.6) ) && p4.M()>20 && runNr <= 201678 && !(runNr >= 198049 && runNr <= 198522) && id1 < 0.15 && id2 < 0.15"
     basicCutohnePt="chargeProduct==-1 && nJets>=2 && deltaR > 0.3 && abs(eta1) < 2.4 && abs(eta2) < 2.4 && ((abs(eta1) < 1.4 || abs(eta1) > 1.6) && (abs(eta2) < 1.4 || abs(eta2) > 1.6) ) && p4.M()>20 && runNr <= 201678 && !(runNr >= 198049 && runNr <= 198522) && id1 < 0.15 && id2 < 0.15"
     basicCutOhnePtOhneN= "chargeProduct==-1 && deltaR > 0.3 && abs(eta1) < 2.4 && abs(eta2) < 2.4 && ((abs(eta1) < 1.4 || abs(eta1) > 1.6) && (abs(eta2) < 1.4 || abs(eta2) > 1.6) ) && p4.M()>20 && runNr <= 201678 && !(runNr >= 198049 && runNr <= 198522) && id1 < 0.15 && id2 < 0.15"
   
@@ -331,8 +332,10 @@ class Cuts:
         return Constants.emuTrigger
 
     basicPlusInvMassCut = "(%s)*(%s)" %(basicCut,invMassCut)
+    basicPlusInvMassPlusMet50Cut = "(%s)*(%s)*(%s)" %(basicCut,invMassCut,met50Cut)
     basicPlusInvMassCut0 = "(%s)*(%s)" %(basicCut0,invMassCut)
     basicOhneNJetPlusInvMass = "(%s)*(%s)" %(basicCutohneN,invMassCut)
+    basicOhneNJetPlusInvMassPlusMet50Cut = "(%s)*(%s)*(%s)" %(basicCutohneN,invMassCut,met50Cut)
     basicOhnePt50 = "(%s)*(%s)*(pt2>50)" %(basicCutohnePt,invMassCut)
     basicCutOhnePt= "(%s)*(%s)*(pt2>30)" %(basicCutOhnePtOhneN,invMassCut)
  

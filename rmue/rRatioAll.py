@@ -245,7 +245,7 @@ class Ratio_DeltaR_MC(): #m_ll
 	filename = "r-AbhDeltaR"
 	cut=Cuts.basicCutNoDeltaR
 	#binning=range(15,255,5)
-	binning=[0.1*i for i in range(20)]+[2+0.5*i for i in range(7)]
+	binning=[0.2*i for i in range(10)]+[2+0.5*i for i in range(7)]
 	processes=[Processes7TeV.TTJets, Processes7TeV.ZJets,Processes7TeV.SingleT,Processes7TeV.DiBoson]
 	processes8TeV=[Processes8TeV.TTJets]
 	xaxis="#DeltaR"
@@ -256,7 +256,7 @@ class Ratio_DeltaR_MCZ(): #m_ll
 	filename = "r-AbhDeltaR"
 	cut=Cuts.basicCutNoDeltaR
 	#binning=range(15,255,5)
-	binning=[0.1*i for i in range(20)]+[2+0.5*i for i in range(7)]
+	binning=[0.2*i for i in range(10)]+[2+0.5*i for i in range(7)]
 	processes=[Processes7TeV.TTJets, Processes7TeV.ZJets,Processes7TeV.SingleT,Processes7TeV.DiBoson]
 	processes8TeV=[Processes8TeV.ZJets]
 	xaxis="#DeltaR"
@@ -267,7 +267,7 @@ class Ratio_DeltaR_Data(): #m_ll
 	filename = "r-AbhDeltaR"
 	cut=Cuts.basicCutNoDeltaR
 	#binning=range(15,255,5)
-	binning=[0.1*i for i in range(20)]+[2+0.5*i for i in range(7)]
+	binning=[0.2*i for i in range(10)]+[2+0.5*i for i in range(7)]
 	processes=[Processes7TeV.Data]
 	processes8TeV=[Processes8TeV.Data]
 	xaxis="#DeltaR"
