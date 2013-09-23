@@ -180,7 +180,7 @@ def setTDRStyle():
 	# Margins:
 	tdrStyle.SetPadTopMargin(0.05)
 	tdrStyle.SetPadBottomMargin(0.13)
-	tdrStyle.SetPadLeftMargin(0.2)
+	tdrStyle.SetPadLeftMargin(0.15)
 	tdrStyle.SetPadRightMargin(0.05)
 	
 	# For the Global title:
@@ -204,7 +204,7 @@ def setTDRStyle():
 	# tdrStyle->SetTitleXSize(Float_t size = 0.02); # Another way to set the size?
 	# tdrStyle->SetTitleYSize(Float_t size = 0.02);
 	tdrStyle.SetTitleXOffset(0.9)
-	tdrStyle.SetTitleYOffset(1.5)
+	tdrStyle.SetTitleYOffset(1.1)
 	# tdrStyle->SetTitleOffset(1.1, "Y"); # Another way to set the Offset
 	
 	# For the axis labels:
@@ -254,28 +254,15 @@ if (__name__ == "__main__"):
 	setTDRStyle()
 	path = "/home/jan/Trees/sw532v0474/"
 	from sys import argv
-	import pickle	
+	import pickle
+	from numpy import array	
 	from ROOT import TCanvas, TPad, TH1F, TH1I, THStack, TLegend, TF1
 	hCanvas = TCanvas("hCanvas", "Distribution", 800,800)
-	ptCut = "pt1 > 20 && pt2 > 20"#(pt1 > 10 && pt2 > 20 || pt1 > 20 && pt2 > 10)
-	ptCutLabel = "20"#"20(10)"
-	variable = "p4.M()"
-	etaCut = etaCuts[argv[1]]
-	suffix = argv[1]
-	data = False
-	if argv[2] == "Data":
-		data = True
-	#~ cuts = "weight*(chargeProduct < 0 && %s && met < 100 && nJets ==2 && abs(eta1) < 2.4 && abs(eta2) < 2.4 && deltaR > 0.3 && runNr < 201657 && (runNr < 198049 || runNr > 198522))"%ptCut
-	cuts = "weight*(chargeProduct < 0 && %s && p4.M() > 20 && p4.M() < 70 && met > 100 && met < 150 && nJets ==2 && %s && deltaR > 0.3 && runNr <= 201678 && !(runNr >= 198049 && runNr <= 198522) )"%(ptCut,etaCut)
-	cutsTransfer = "weight*(chargeProduct < 0 && %s && p4.M() > 20 && p4.M() < 70 && ((met > 100 && nJets >= 3) ||  (met > 150 && nJets >=2)) && %s && deltaR > 0.3 && runNr <= 201678 && !(runNr >= 198049 && runNr <= 198522) )"%(ptCut,etaCut)
-	print cuts
-	nEvents=-1
-	
-	lumi = 9.2
-	
 
-	minMll = 20
-	legend = TLegend(0.6, 0.7, 0.95, 0.95)
+	
+	hCanvas.DrawFrame(0,0,2,2,"; %s ; %s" %("r_{#mu e}","R_{SF/OF}"))	
+
+	legend = TLegend(0.15, 0.13, 0.5, 0.5)
 	legend.SetFillStyle(0)
 	legend.SetBorderSize(1)
 	ROOT.gStyle.SetOptStat(0)
@@ -293,87 +280,153 @@ if (__name__ == "__main__"):
 	Labelout.SetTextAlign(12)
 	Labelout.SetTextSize(0.07)
 	Labelout.SetTextColor(ROOT.kBlack)
-	nBins = 200
-	firstBin = 0
-	lastBin = 200
-	
-	if data:
-		SampleName = "MergedData"
-	else: 
-		SampleName = "TTJets_MGDecays_Trigger_madgraph_Summer12"
-	
-	for name, tree in EEtrees.iteritems():
-		if name == SampleName:
-			print name
-			EEhist = createHistoFromTree(tree,  variable, cuts, nBins, firstBin, lastBin, nEvents)
-			EEhistTransfer = createHistoFromTree(tree,  variable, cutsTransfer, nBins, firstBin, lastBin, nEvents)
-	for name, tree in MuMutrees.iteritems():
-		if name == SampleName:
 
-			MuMuhist = createHistoFromTree(tree,  variable, cuts, nBins, firstBin, lastBin, nEvents)
-			MuMuhistTransfer = createHistoFromTree(tree,  variable, cutsTransfer, nBins, firstBin, lastBin, nEvents)
-	for name, tree in EMutrees.iteritems():
-		if name == SampleName:
+	x= array([0.9801, 1.1979],"f") 
+ 	#~ y= array("f", [1.175, 1.175]) # 1.237
+ 	#~ y= array([rMuEs[region], rMuEs[region]],"f") # 1.237
+   	y= array([1.,1.],"f")
+   	ey= array([1, 1],"f")
+   	ex= array([0,0],"f")
+   	ge= ROOT.TGraphErrors(2, x, y,ex,ey)
+   	ge.SetFillColor(ROOT.kGreen-3)
+   	ge.SetFillStyle(3008)
+   	ge.SetLineColor(ROOT.kWhite)
+   	ge.Draw("SAME 3")	
 
-			EMuhist = createHistoFromTree(tree,  variable, cuts, nBins, firstBin, lastBin, nEvents)
-			EMuhistTransfer = createHistoFromTree(tree,  variable, cutsTransfer, nBins, firstBin, lastBin, nEvents)
-		
-	SFhist = EEhist.Clone()
-	SFhist.Add(MuMuhist.Clone())
-	SFhistTransfer = EEhistTransfer.Clone()
-	SFhistTransfer.Add(MuMuhistTransfer.Clone())
+	x= array([0, 2],"f") 
+ 	#~ y= array("f", [1.175, 1.175]) # 1.237
+ 	#~ y= array([rMuEs[region], rMuEs[region]],"f") # 1.237
+   	y= array([1.01,1.01],"f")
+   	ey= array([0.07, 0.07],"f")
+   	ex= array([0.0,0.0],"f")
+   	ge2= ROOT.TGraphErrors(2, x, y,ex,ey)
+   	ge2.SetFillColor(ROOT.kBlue-3)
+   	ge2.SetFillStyle(3002)
+   	ge2.SetLineColor(ROOT.kWhite)
+   	ge2.Draw("SAME 3")	
 	
+	rSFOF = TF1("rSFOF","0.5*(x+1./x)*1.01",0.,2.)
+	rSFOF.SetLineColor(ROOT.kRed)
+	rSFOF.SetLineWidth(2)
+	rSFOFTrigUp = TF1("rSFOF","0.5*(x+1./x)*1.08",0.,2.)
+	rSFOFTrigUp.SetLineColor(ROOT.kBlack)
+	rSFOFTrigUp.SetLineWidth(2)
+	rSFOFTrigUp.SetLineStyle(ROOT.kDashed)
+	rSFOFTrigDown = TF1("rSFOF","0.5*(x+1./x)*0.94",0.,2.)
+	rSFOFTrigDown.SetLineColor(ROOT.kBlack)
+	rSFOFTrigDown.SetLineWidth(2)
+	rSFOFTrigDown.SetLineStyle(ROOT.kDashed)
 	
+	rmueline= ROOT.TF1("rmueline","1.01",0, 2)
+	rmueline.SetLineColor(ROOT.kBlue)
+	rmueline.SetLineWidth(3)
+	rmueline.SetLineStyle(2)
+	rmueline.Draw("SAME") 
+
+	line1 = ROOT.TLine(1.089,0,1.089,2)
+	line1.Draw("Same")
+	line1.SetLineWidth(2)
+	line1.SetLineColor(ROOT.kGreen)
 	
-	ee = EEhist.Integral()
-	mm = MuMuhist.Integral()
-	eeTransfer = EEhistTransfer.Integral()
-	mmTransfer = MuMuhistTransfer.Integral()
-	sf = SFhist.Integral() 
-	of = EMuhist.Integral() 
-	sfTransfer = SFhistTransfer.Integral() 
-	ofTransfer = EMuhistTransfer.Integral() 
+	legend.AddEntry(rSFOF,"R_{SF/OF} from r_{#mu e} & trig. eff.","l")
+	legend.AddEntry(rSFOFTrigDown,"R_{SF/OF} #pm 1 #sigma trig. eff. ","l")
+	legend.AddEntry(ge,"r_{#mu e} #pm 1 #sigma","f")
+	legend.AddEntry(ge2,"R_{SF/OF} #pm 1 #sigma","f")
 	
-	rsfof = float(sf)/float(of)
-	rsfofErr = rsfof*(sf/sf**2+of/of**2)**0.5
-	rsfofTransfer = float(sfTransfer)/float(ofTransfer)
-	rsfofErrTransfer = rsfofTransfer*(sfTransfer/sfTransfer**2+ofTransfer/ofTransfer**2)**0.5
-	rEEOF = float(ee)/float(of)
-	rEEOFErr = rEEOF * (ee/ee**2 + of/of**2)**0.5
-	rEEOFTransfer = float(eeTransfer)/float(ofTransfer)
-	rEEOFErrTransfer = rEEOFTransfer * (eeTransfer/eeTransfer**2 + ofTransfer/ofTransfer**2)**0.5
-	rMMOF = float(mm)/float(of)
-	rMMOFErr = rMMOF * (mm/mm**2 + of/of**2)**0.5
-	rMMOFTransfer = float(mmTransfer)/float(ofTransfer)
-	rMMOFErrTransfer = rMMOFTransfer * (mmTransfer/mmTransfer**2 + ofTransfer/ofTransfer**2)**0.5
+	legend.Draw("SAME")
 	
-	transferFaktor = rsfofTransfer/rsfof
-	transferFaktorErr = transferFaktor*((rsfofErr/rsfof)**2+(rsfofErrTransfer/rsfofTransfer)**2)**0.5
-	transferFaktorEE = rEEOFTransfer/rEEOF
-	transferFaktorEEErr = transferFaktorEE*((rEEOFErr/rEEOF)**2+(rEEOFErrTransfer/rEEOFTransfer)**2)**0.5
-	transferFaktorMM = rMMOFTransfer/rMMOF
-	transferFaktorMMErr = transferFaktorMM*((rMMOFErr/rMMOF)**2+(rMMOFErrTransfer/rMMOFTransfer)**2)**0.5
-	result = {}
-	result["EE"] = ee
-	result["MM"] = mm
-	result["SF"] = sf
-	result["OF"] = of
-	result["rSFOF"] = rsfof
-	result["rSFOFErr"] = rsfofErr
-	result["rEEOF"] = rEEOF
-	result["rEEOFErr"] = rEEOFErr
-	result["rMMOF"] = rMMOF
-	result["rMMOFErr"] = rMMOFErr
-	result["transfer"] = transferFaktor
-	result["transferErr"] = transferFaktorErr
-	result["transferEE"] = transferFaktorEE
-	result["transferEEErr"] = transferFaktorEEErr
-	result["transferMM"] = transferFaktorMM
-	result["transferMMErr"] = transferFaktorMMErr
-	if data:
-		outFilePkl = open("shelves/rSFOF_Data_%s.pkl"%suffix,"w")
-	else:
-		outFilePkl = open("shelves/rSFOF_MC_%s.pkl"%suffix,"w")
-	pickle.dump(result, outFilePkl)
-	outFilePkl.close()	
+	rSFOF.Draw("SAME")
+	rSFOFTrigUp.Draw("SAME")
+	rSFOFTrigDown.Draw("SAME")
 	
+	latex = ROOT.TLatex()
+	latex.SetTextSize(0.04)
+	latex.SetNDC(True)
+	latex.DrawLatex(0.15, 0.96, "Central Dilepton Selection")	  	
+
+	
+	hCanvas.Print("rMuEPropaganda_Central.pdf")
+	
+	hCanvas.DrawFrame(0,0,2,2,"; %s ; %s" %("r_{#mu e}","R_{SF/OF}"))	
+
+	legend = TLegend(0.15, 0.13, 0.5, 0.5)
+	legend.SetFillStyle(0)
+	legend.SetBorderSize(1)
+	ROOT.gStyle.SetOptStat(0)
+	EMutrees = readTrees(path, "EMu")
+	EEtrees = readTrees(path, "EE")
+	MuMutrees = readTrees(path, "MuMu")
+	Cutlabel = ROOT.TLatex()
+	Cutlabel.SetTextAlign(12)
+	Cutlabel.SetTextSize(0.03)
+	Labelin = ROOT.TLatex()
+	Labelin.SetTextAlign(12)
+	Labelin.SetTextSize(0.07)
+	Labelin.SetTextColor(ROOT.kRed+2)
+	Labelout = ROOT.TLatex()
+	Labelout.SetTextAlign(12)
+	Labelout.SetTextSize(0.07)
+	Labelout.SetTextColor(ROOT.kBlack)
+
+	x= array([0.9503000000000001, 1.2857],"f") 
+ 	#~ y= array("f", [1.175, 1.175]) # 1.237
+ 	#~ y= array([rMuEs[region], rMuEs[region]],"f") # 1.237
+   	y= array([1.,1.],"f")
+   	ey= array([1, 1],"f")
+   	ex= array([0,0],"f")
+   	ge= ROOT.TGraphErrors(2, x, y,ex,ey)
+   	ge.SetFillColor(ROOT.kGreen-3)
+   	ge.SetFillStyle(3008)
+   	ge.SetLineColor(ROOT.kWhite)
+   	ge.Draw("SAME 3")	
+
+	x= array([0, 2],"f") 
+ 	#~ y= array("f", [1.175, 1.175]) # 1.237
+ 	#~ y= array([rMuEs[region], rMuEs[region]],"f") # 1.237
+   	y= array([1.04,1.04],"f")
+   	ey= array([0.1, 0.1],"f")
+   	ex= array([0.0,0.0],"f")
+   	ge2= ROOT.TGraphErrors(2, x, y,ex,ey)
+   	ge2.SetFillColor(ROOT.kBlue-3)
+   	ge2.SetFillStyle(3002)
+   	ge2.SetLineColor(ROOT.kWhite)
+   	ge2.Draw("SAME 3")	
+	
+	rSFOF = TF1("rSFOF","0.5*(x+1./x)*1.04",0.,2.)
+	rSFOF.SetLineColor(ROOT.kRed)
+	rSFOF.SetLineWidth(2)
+	rSFOFTrigUp = TF1("rSFOF","0.5*(x+1./x)*1.14",0.,2.)
+	rSFOFTrigUp.SetLineColor(ROOT.kBlack)
+	rSFOFTrigUp.SetLineWidth(2)
+	rSFOFTrigUp.SetLineStyle(ROOT.kDashed)
+	rSFOFTrigDown = TF1("rSFOF","0.5*(x+1./x)*0.94",0.,2.)
+	rSFOFTrigDown.SetLineColor(ROOT.kBlack)
+	rSFOFTrigDown.SetLineWidth(2)
+	rSFOFTrigDown.SetLineStyle(ROOT.kDashed)
+	
+	rmueline= ROOT.TF1("rmueline","1.04",0, 2)
+	rmueline.SetLineColor(ROOT.kBlue)
+	rmueline.SetLineWidth(3)
+	rmueline.SetLineStyle(2)
+	rmueline.Draw("SAME") 
+
+	line1 = ROOT.TLine(1.118,0,1.118,2)
+	line1.Draw("Same")
+	line1.SetLineWidth(2)
+	line1.SetLineColor(ROOT.kGreen)
+	
+	legend.AddEntry(rSFOF,"R_{SF/OF} from r_{#mu e} & trig. eff.","l")
+	legend.AddEntry(rSFOFTrigDown,"R_{SF/OF} #pm 1 #sigma trig. eff. ","l")
+	legend.AddEntry(ge,"r_{#mu e} #pm 1 #sigma","f")
+	legend.AddEntry(ge2,"R_{SF/OF} #pm 1 #sigma","f")
+	
+	legend.Draw("SAME")
+	
+	rSFOF.Draw("SAME")
+	rSFOFTrigUp.Draw("SAME")
+	rSFOFTrigDown.Draw("SAME")
+	
+	latex.DrawLatex(0.15, 0.96, "Forward Dilepton Selection")	  	
+
+	
+	hCanvas.Print("rMuEPropaganda_Forward.pdf")

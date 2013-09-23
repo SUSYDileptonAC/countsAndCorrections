@@ -559,7 +559,7 @@ def getTableRare( trees, cuts, Samples,groups,order,titles = None, cutOrder = No
 
 def main():
 	from sys import argv
-	path = "/user/schomakers/trees"
+	path = "/home/jan/Trees/sw532v0474/"
 	EMutrees = readTrees(path, "EMu")
 	EEtrees = readTrees(path, "EE")
 	MuMutrees = readTrees(path, "MuMu")
@@ -621,7 +621,7 @@ def main():
 	#~ base = "weight*(chargeProduct < 0 && ((pt1 > 20 && pt2 > 20 ) || (pt2 > 20 && pt1 > 20 )) && p4.M()>20 && p4.M()< 70 && abs(eta1)<2.4 && abs(eta2)<2.4 && deltaR > 0.3 && nJets >= 2 && ht > 100 && met > 150 ) "
 	base = "weight*(chargeProduct < 0 && ((pt1 > 20 && pt2 > 20 ) || (pt2 > 20 && pt1 > 20 )) && p4.M()>20 && p4.M()< 70 && abs(eta1)<2.4 && abs(eta2)<2.4 && deltaR > 0.3 && ((nJets >= 2 && met > 150) ||(nJets >= 3 && met > 100)) ) "
 	baseCentral = "weight*(chargeProduct < 0 && ((pt1 > 20 && pt2 > 20 ) || (pt2 > 20 && pt1 > 20 )) && p4.M()>20 && p4.M()< 70 && abs(eta1)<2.4 && abs(eta2)<2.4 && deltaR > 0.3 && ((nJets >= 2 && met > 150) ||(nJets >= 3 && met > 100)) && abs(eta1) < 1.4 && abs(eta2) < 1.4 ) "
-	baseForward = "weight*(chargeProduct < 0 && ((pt1 > 20 && pt2 > 20 ) || (pt2 > 20 && pt1 > 20 )) && p4.M()>20 && p4.M()< 70 && abs(eta1)<2.4 && abs(eta2)<2.4 && deltaR > 0.3 && ((nJets >= 2 && met > 150) ||(nJets >= 3 && met > 100)) && 1.4 < TMath::Max(abs(eta1),abs(eta2)) ) "
+	baseForward = "weight*(chargeProduct < 0 && ((pt1 > 20 && pt2 > 20 ) || (pt2 > 20 && pt1 > 20 )) && p4.M()>20 && p4.M()< 70 && abs(eta1)<2.4 && abs(eta2)<2.4 && deltaR > 0.3 && ((nJets >= 2 && met > 150) ||(nJets >= 3 && met > 100)) && 1.6 < TMath::Max(abs(eta1),abs(eta2)) && !((abs(eta1) > 1.4 && abs(eta1) < 1.6) || (abs(eta2) > 1.4 && abs(eta2) < 1.6)) ) "
 	#~ baseBarrel = "weight*(chargeProduct < 0 && ((pt1 > 20 && pt2 > 20 ) || (pt2 > 20 && pt1 > 20 )) && p4.M()>20 && p4.M()< 70 && abs(eta1)<1.4 && abs(eta2)<1.4 && deltaR > 0.3 && nJets >= 2 && ht > 100 && met > 150  ) "
 	#~ base = "weight*(chargeProduct < 0 && ((pt1 > 20 && pt2 > 20 ) || (pt2 > 20 && pt1 > 20 )) && p4.M()>20 && p4.M()< 70 && abs(eta1)<2.4 && abs(eta2)<2.4 && deltaR > 0.3 && nJets >= 3  && met > 100 ) "
 	baseLowMET = "weight*(chargeProduct < 0 && ((pt1 > 20 && pt2 > 20 ) || (pt2 > 20 && pt1 > 20 )) && p4.M()>20 && p4.M()< 70 && abs(eta1)<1.4 && abs(eta2)<1.4 && deltaR > 0.3 && nJets >= 3  && met > 100 ) "

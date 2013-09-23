@@ -119,6 +119,178 @@ def main():
 
 
 	saveTable(tableTemplate%(tableMC,tableData), "Rsfof_Seperated")
+	
+# Table for Inclusive
+
+	tableTemplate =r"""
+\begin{tabular}{|c|c|c|c|}     
+\hline    
+ SF & OF & $\Reeof \pm \sigma_{stat}$ & Transfer $\pm \sigma_{stat}$\\    
+\hline\hline
+ \multicolumn{4}{|c|}{MC} \\
+\hline
+ \multicolumn{4}{|c|}{$|\eta|<2.4$ } \\
+\hline 
+%s    
+    \hline 
+\multicolumn{4}{|c|}{Data} \\
+\hline
+ \multicolumn{4}{|c|}{$|\eta|<2.4$ } \\
+\hline
+%s 
+ \hline     
+\end{tabular}  
+"""
+
+
+	lineTemplate = r" %d & %d & %.3f$\pm$%.3f & %.3f$\pm$%.3f\\"+"\n"
+	lineTemplateData = r" %d & %d & %.3f$\pm$%.3f & -- \\"+"\n"
+
+
+	tableMC =""
+	tableData =""
+	name = "default"
+	run = "Run92"
+
+	tableData += lineTemplateData%(dataPkls["EE"],dataPkls["OF"],dataPkls["rEEOF"],dataPkls["rEEOFErr"])	
+
+
+	run = "Simulation"
+
+	tableMC += lineTemplate%(mcPkls["EE"],mcPkls["OF"],mcPkls["rEEOF"],mcPkls["rEEOFErr"],mcPkls["transferEE"],mcPkls["transferEEErr"])	
+
+
+	
+	saveTable(tableTemplate%(tableMC,tableData), "Reeof_Inclusive")
+
+# Table with Barrel and Endcap seperated
+
+
+	tableTemplate =r"""
+
+\begin{tabular}{|c|c|c|c|c|c|c|c|c|c|}     
+\hline    
+ SF & OF & $\Reeof \pm \sigma_{stat}$ & Transfer $\pm \sigma_{stat}$ &  SF & OF & $\Reeof \pm \sigma_{stat}$ & Transfer $\pm \sigma_{stat}$  \\    
+\hline\hline
+ \multicolumn{8}{|c|}{MC} \\
+\hline
+  \multicolumn{4}{|c|}{$|\eta|<1.4$ } & \multicolumn{4}{|c|}{ at least 1 $|\eta| > 1.6$ } \\
+\hline 
+%s    
+    \hline 
+\multicolumn{8}{|c|}{Data} \\
+\hline
+  \multicolumn{4}{|c|}{$|\eta|<1.4$ } & \multicolumn{4}{|c|}{ at least 1 $|\eta| > 1.6$ }\\
+\hline
+%s 
+ \hline     
+\end{tabular}  
+
+"""
+
+	lineTemplate = r" %d & %d & %.3f$\pm$%.3f & %.3f$\pm$%.3f & %d & %d & %.3f$\pm$%.3f & %.3f$\pm$%.3f \\"+"\n"
+	lineTemplateData = r" %d & %d & %.3f$\pm$%.3f & -- & %d & %d & %.3f$\pm$%.3f & -- \\"+"\n"
+
+
+	tableMC =""
+	tableData =""
+	name = "default"
+	run = "Run92"
+
+	tableData += lineTemplateData%(dataBarrelPkls["EE"],dataBarrelPkls["OF"],dataBarrelPkls["rEEOF"],dataBarrelPkls["rEEOFErr"],dataEndcapPkls["SF"],dataEndcapPkls["EE"],dataEndcapPkls["rEEOF"],dataEndcapPkls["rEEOFErr"])	
+
+	run = "Simulation"
+
+	tableMC += lineTemplate%(mcBarrelPkls["EE"],mcBarrelPkls["OF"],mcBarrelPkls["rEEOF"],mcBarrelPkls["rEEOFErr"],mcBarrelPkls["transferEE"],mcBarrelPkls["transferEEErr"],mcEndcapPkls["EE"],mcEndcapPkls["OF"],mcEndcapPkls["rEEOF"],mcEndcapPkls["rEEOFErr"],mcEndcapPkls["transferEE"],mcEndcapPkls["transferEEErr"])	
+
+
+	saveTable(tableTemplate%(tableMC,tableData), "Reeof_Seperated")
+	
+# Table for Inclusive
+
+	tableTemplate =r"""
+\begin{tabular}{|c|c|c|c|}     
+\hline    
+ SF & OF & $\Rmmof \pm \sigma_{stat}$ & Transfer $\pm \sigma_{stat}$\\    
+\hline\hline
+ \multicolumn{4}{|c|}{MC} \\
+\hline
+ \multicolumn{4}{|c|}{$|\eta|<2.4$ } \\
+\hline 
+%s    
+    \hline 
+\multicolumn{4}{|c|}{Data} \\
+\hline
+ \multicolumn{4}{|c|}{$|\eta|<2.4$ } \\
+\hline
+%s 
+ \hline     
+\end{tabular}  
+"""
+
+
+	lineTemplate = r" %d & %d & %.3f$\pm$%.3f & %.3f$\pm$%.3f\\"+"\n"
+	lineTemplateData = r" %d & %d & %.3f$\pm$%.3f & -- \\"+"\n"
+
+
+	tableMC =""
+	tableData =""
+	name = "default"
+	run = "Run92"
+
+	tableData += lineTemplateData%(dataPkls["MM"],dataPkls["OF"],dataPkls["rMMOF"],dataPkls["rMMOFErr"])	
+
+
+	run = "Simulation"
+
+	tableMC += lineTemplate%(mcPkls["MM"],mcPkls["OF"],mcPkls["rMMOF"],mcPkls["rMMOFErr"],mcPkls["transferMM"],mcPkls["transferMMErr"])	
+
+
+	
+	saveTable(tableTemplate%(tableMC,tableData), "Rmmof_Inclusive")
+
+# Table with Barrel and Endcap seperated
+
+
+	tableTemplate =r"""
+
+\begin{tabular}{|c|c|c|c|c|c|c|c|c|c|}     
+\hline    
+ SF & OF & $\Rmmof \pm \sigma_{stat}$ & Transfer $\pm \sigma_{stat}$ &  SF & OF & $\Rmmof \pm \sigma_{stat}$ & Transfer $\pm \sigma_{stat}$  \\    
+\hline\hline
+ \multicolumn{8}{|c|}{MC} \\
+\hline
+  \multicolumn{4}{|c|}{$|\eta|<1.4$ } & \multicolumn{4}{|c|}{ at least 1 $|\eta| > 1.6$ } \\
+\hline 
+%s    
+    \hline 
+\multicolumn{8}{|c|}{Data} \\
+\hline
+  \multicolumn{4}{|c|}{$|\eta|<1.4$ } & \multicolumn{4}{|c|}{ at least 1 $|\eta| > 1.6$ }\\
+\hline
+%s 
+ \hline     
+\end{tabular}  
+
+"""
+
+	lineTemplate = r" %d & %d & %.3f$\pm$%.3f & %.3f$\pm$%.3f & %d & %d & %.3f$\pm$%.3f & %.3f$\pm$%.3f \\"+"\n"
+	lineTemplateData = r" %d & %d & %.3f$\pm$%.3f & -- & %d & %d & %.3f$\pm$%.3f & -- \\"+"\n"
+
+
+	tableMC =""
+	tableData =""
+	name = "default"
+	run = "Run92"
+
+	tableData += lineTemplateData%(dataBarrelPkls["MM"],dataBarrelPkls["OF"],dataBarrelPkls["rMMOF"],dataBarrelPkls["rMMOFErr"],dataEndcapPkls["SF"],dataEndcapPkls["MM"],dataEndcapPkls["rMMOF"],dataEndcapPkls["rMMOFErr"])	
+
+	run = "Simulation"
+
+	tableMC += lineTemplate%(mcBarrelPkls["MM"],mcBarrelPkls["OF"],mcBarrelPkls["rMMOF"],mcBarrelPkls["rMMOFErr"],mcBarrelPkls["transferMM"],mcBarrelPkls["transferMMErr"],mcEndcapPkls["MM"],mcEndcapPkls["OF"],mcEndcapPkls["rMMOF"],mcEndcapPkls["rMMOFErr"],mcEndcapPkls["transferMM"],mcEndcapPkls["transferMMErr"])	
+
+
+	saveTable(tableTemplate%(tableMC,tableData), "Rmmof_Seperated")
 
 
 main()

@@ -70,8 +70,10 @@ def loadShapePickles(regionName, subcutName, shape = "GT", path = "../EdgeFitter
 #			dyPredRelError = region.dyPredictionErr * 1./region.dyPrediction
 #			result["nCont"] = region.dyPrediction * region.rInOut.val
 		result["nContUncert"] = sqrt( (region.rInOut.err * 1./region.rInOut.val)**2 + (dyPredRelError)**2) * result["nCont"] 
-		result["nCont"] = region.rInOut.val * result["nZ"]
-		result["nContUncert"] = sqrt( (region.rInOut.err * 1./region.rInOut.val)**2 + (result["nZUncert"] * 1./result["nZ"] )**2) * result["nCont"] 
+		#~ result["nCont"] = region.rInOut.val * result["nZ"]
+		result["nCont"] = 0.
+		#~ result["nContUncert"] = sqrt( (region.rInOut.err * 1./region.rInOut.val)**2 + (result["nZUncert"] * 1./result["nZ"] )**2) * result["nCont"] 
+		result["nContUncert"] = 0.
 		if not result["nS"] == "--":
 			result["nSStar"] = result["nS"] -result["nCont"]
 			result["nSStarUncert"] = sqrt( result["nSUncert"]**2 + result["nContUncert"]**2)
@@ -400,11 +402,11 @@ def makeFitTable(data,region, subcuts, name):
 	table = ""
 	notes = ""
 	for subcutName in subcuts:
-		tempData[subcutName]["shapeKernelT"]["title"] = titles[subcutName]
+		tempData[subcutName]["shapeMarcoAndreaT"]["title"] = titles[subcutName]
 		notes += notesTemplate%tempData[subcutName]["edgeMass"]
 		notes += notesLine2Template%tempData[subcutName]
-		if not tempData[subcutName]["shapeKernelT"]["nS"] == "--":
-			table += lineShapeTemplate%tempData[subcutName]["shapeKernelT"]
+		if not tempData[subcutName]["shapeMarcoAndreaT"]["nS"] == "--":
+			table += lineShapeTemplate%tempData[subcutName]["shapeMarcoAndreaT"]
 
 
 		if subcutName == "default" or subcutName =="Ge2BTag" or subcutName =="Endcap" or subcutName =="Pt3030" or subcutName =="HighPU" or subcutName =="MuMu" or subcutName =="HighHT" or subcutName =="RunC" or subcutName =="TightIso" or subcutName =="CaloMET": 
@@ -412,9 +414,9 @@ def makeFitTable(data,region, subcuts, name):
 			table += "\\hline\n"
 	#~ tempDataMET100["default"]["shapeKernelT"]["title"] = "MET triggers and diff. PD"	
 	#~ table += lineShapeTemplate%tempDataMETPD["default"]["shapeKernelT"]
-	tempDataMETPD["default"]["shapeKernelT"]["title"] = "MET triggers and diff. PD"
+	tempDataMETPD["default"]["shapeMarcoAndreaT"]["title"] = "MET triggers and diff. PD"
 	#~ print tempDataMETPD["default"]["shapeKernelT"]	
-	table += lineShapeTemplate%tempDataMETPD["default"]["shapeKernelT"]
+	table += lineShapeTemplate%tempDataMETPD["default"]["shapeMarcoAndreaT"]
 	table += "\\hline\n"
 	#~ table += r"Simultaneous fit of \Rinout &  &   & \\"+"\n"
 	table += "\\hline\n"
@@ -527,8 +529,8 @@ def main():
 	#~ makeFitTable(allPkls,"BarrelHighMET", ["default","0BTag", "1BTag", "Ge2BTag","Pt2010","Pt2020", "Pt3010","Pt3020","Pt3030","Barrel","Endcap","Type1","Tc","Calo","LowPU", "MidPU", "HighPU","LowHT", "HighHT","RunAB", "RunC","TightIso",], "FitTableBarrelHighMET")
 	#~ makeFitTable(allPkls,"SignalLowMET", ["default","0BTag", "1BTag", "Ge2BTag","Pt2010","Pt2020", "Pt3010","Pt3020","Pt3030","Barrel","Endcap","Type1","Tc","Calo","LowPU", "MidPU", "HighPU","LowHT", "HighHT","RunAB", "RunC","TightIso",], "FitTableLowMET")
 	#~ makeFitTable(allPkls,"SignalLowMETFullEta", ["default","0BTag", "1BTag", "Ge2BTag","Pt2010","Pt2020", "Pt3010","Pt3020","Pt3030","Barrel","Endcap","Type1","Tc","Calo","LowPU", "MidPU", "HighPU","LowHT", "HighHT","RunAB", "RunC","TightIso",], "FitTableLowMETFullEta")
-	#~ makeFitTable(allPkls,"SignalNonRectCentral", ["default","0BTag", "1BTag", "Ge2BTag","Pt2010","Pt2020", "Pt3010","Pt3020","Pt3030","Barrel","Endcap","Type1MET","TcMET","CaloMET","LowPU", "MidPU", "HighPU","LowHT", "HighHT","RunAB", "RunC","TightIso",], "FitTableSignalNonRectCentral")
-	#~ makeFitTable(allPkls,"SignalNonRectForward", ["default","0BTag", "1BTag", "Ge2BTag","Pt2010","Pt2020", "Pt3010","Pt3020","Pt3030","Barrel","Endcap","Type1MET","TcMET","CaloMET","LowPU", "MidPU", "HighPU","LowHT", "HighHT","RunAB", "RunC","TightIso",], "FitTableSignalNonRectForward")
+	makeFitTable(allPkls,"SignalNonRectCentral", ["default","0BTag", "1BTag", "Ge2BTag","Pt2010","Pt2020", "Pt3010","Pt3020","Pt3030","Barrel","Endcap","Type1MET","TcMET","CaloMET","LowPU", "MidPU", "HighPU","LowHT", "HighHT","RunAB", "RunC","TightIso",], "FitTableSignalNonRectCentral")
+	makeFitTable(allPkls,"SignalNonRectForward", ["default","0BTag", "1BTag", "Ge2BTag","Pt2010","Pt2020", "Pt3010","Pt3020","Pt3030","Barrel","Endcap","Type1MET","TcMET","CaloMET","LowPU", "MidPU", "HighPU","LowHT", "HighHT","RunAB", "RunC","TightIso",], "FitTableSignalNonRectForward")
 	for regionName in allPkls:
 		allPkls[regionName] = extendPickle(regionName, allPkls[regionName])		
 		makeRegionTables(allPkls[regionName]["default"], regionName)

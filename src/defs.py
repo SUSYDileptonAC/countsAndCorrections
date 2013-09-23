@@ -44,11 +44,11 @@ class Constants:
 				val = 1.0141201251122918
 				err = 0.067*1.0141201251122918
 			class Central(Constant):
-				val = 1.0108872929936177
-				err = 0.067*1.0108872929936177
+				val = 1.01
+				err = 0.07
 			class Forward(Constant):
-				val = 1.0283930366539031
-				err = 0.067*1.0283930366539031
+				val = 1.04
+				err = 0.10
 
 	class Pt2010:## Wrong numbers, redo!
 		class RInOut:
@@ -98,11 +98,40 @@ class Constants:
 			val = 1.02
 			err = 0.07
 		class Central(Constant):
-			val = 1.02
+			val = 1.01
 			err = 0.07
 		class Forward(Constant):
 			val = 1.02
+			err = 0.10
+		class Control(Constant):
+			val = 1.0
+			err = 0.0
+	class R_EEOF:
+		class Inclusive(Constant):
+			val = 0.46
+			err = 0.04
+		class Central(Constant):
+			val = 0.46
+			err = 0.04
+		class Forward(Constant):
+			val = 0.42
+			err = 0.09
+		class Control(Constant):
+			val = 1.0
+			err = 0.0
+	class R_MMOF:
+		class Inclusive(Constant):
+			val = 0.54
+			err = 0.04
+		class Central(Constant):
+			val = 0.54
+			err = 0.08
+		class Forward(Constant):
+			val = 0.57
 			err = 0.12
+		class Control(Constant):
+			val = 1.0
+			err = 0.0
 			
 			
 
@@ -131,6 +160,8 @@ class Regions:
 		rInOut = Constants.Pt2020.RInOut.Inclusive
 		R_SFOF = Constants.R_SFOF.Inclusive
 		R_SFOFTrig = Constants.Trigger.Correction.Inclusive
+		R_EEOF = Constants.R_EEOF.Inclusive
+		R_MMOF = Constants.R_MMOF.Inclusive		
 		dyPrediction = {
 			"default":	( 38.93, 9,13,0),
 			"SingleLetpon":	( sum([32, 16, 7.7, 5.1]), sqrt(sum([i**2 for i in [10, 11, 4.1, 2.8]])),0),
@@ -144,6 +175,8 @@ class Regions:
 		rInOut = Constants.Pt2020.RInOut.Inclusive
 		R_SFOF = Constants.R_SFOF.Inclusive
 		R_SFOFTrig = Constants.Trigger.Correction.Inclusive
+		R_EEOF = Constants.R_EEOF.Inclusive
+		R_MMOF = Constants.R_MMOF.Inclusive		
 		dyPrediction = {
 			"default":	( 100, 0,0),
 			"SingleLetpon":	(100,0,0),
@@ -159,6 +192,8 @@ class Regions:
 		rInOut = Constants.Pt2020.RInOut.Central
 		R_SFOF = Constants.R_SFOF.Central
 		R_SFOFTrig = Constants.Trigger.Correction.Central
+		R_EEOF = Constants.R_EEOF.Central
+		R_MMOF = Constants.R_MMOF.Central		
 		dyPrediction = {
 			"default":	( 80, 0,0),
 			"SingleLetpon":	(80,0,0),
@@ -174,6 +209,8 @@ class Regions:
 		rInOut = Constants.Pt2020.RInOut.Forward
 		R_SFOF = Constants.R_SFOF.Forward
 		R_SFOFTrig = Constants.Trigger.Correction.Forward
+		R_EEOF = Constants.R_EEOF.Forward
+		R_MMOF = Constants.R_MMOF.Forward		
 		dyPrediction = {
 			"default":	( 20, 0,0),
 			"SingleLetpon":	(20,0,0),
@@ -189,6 +226,8 @@ class Regions:
 		rInOut = Constants.Pt2020.RInOut.Central
 		R_SFOF = Constants.R_SFOF.Central
 		R_SFOFTrig = Constants.Trigger.Correction.Forward
+		R_EEOF = Constants.R_EEOF.Forward
+		R_MMOF = Constants.R_MMOF.Forward		
 		dyPrediction = {
 			"default":	( 30, 0,0),
 			"SingleLetpon":	(30,0,0),
@@ -202,6 +241,8 @@ class Regions:
 		rInOut = Constants.Pt2020.RInOut.Forward
 		R_SFOF = Constants.R_SFOF.Forward
 		R_SFOFTrig = Constants.Trigger.Correction.Forward
+		R_EEOF = Constants.R_EEOF.Forward
+		R_MMOF = Constants.R_MMOF.Forward		
 		dyPrediction = {
 			"default":	( 30, 0,0),
 			"SingleLetpon":	(30,0,0),
@@ -215,6 +256,8 @@ class Regions:
 		rInOut = Constants.Pt2020.RInOut.Central
 		R_SFOF = Constants.R_SFOF.Central
 		R_SFOFTrig = Constants.Trigger.Correction.Central
+		R_EEOF = Constants.R_EEOF.Central
+		R_MMOF = Constants.R_MMOF.Central		
 		dyPrediction = {
 			"default":	( 30, 0,0),
 			"SingleLetpon":	(30,0,0),
@@ -228,6 +271,8 @@ class Regions:
 		rInOut = Constants.Pt2020.RInOut.Forward
 		R_SFOF = Constants.R_SFOF.Forward
 		R_SFOFTrig = Constants.Trigger.Correction.Forward
+		R_EEOF = Constants.R_EEOF.Forward
+		R_MMOF = Constants.R_MMOF.Forward		
 		dyPrediction = {
 			"default":	( 30, 0,0),
 			"SingleLetpon":	(30,0,0),
@@ -241,6 +286,8 @@ class Regions:
 		rInOut = Constants.Pt2020.RInOut.Central
 		R_SFOF = Constants.R_SFOF.Central
 		R_SFOFTrig = Constants.Trigger.Correction.Central
+		R_EEOF = Constants.R_EEOF.Central
+		R_MMOF = Constants.R_MMOF.Central		
 		dyPrediction = {
 			"default":	( 30, 0,0),
 			"SingleLetpon":	(30,0,0),
@@ -254,6 +301,8 @@ class Regions:
 		rInOut = Constants.Pt2020.RInOut.Forward
 		R_SFOF = Constants.R_SFOF.Forward
 		R_SFOFTrig = Constants.Trigger.Correction.Forward
+		R_EEOF = Constants.R_EEOF.Forward
+		R_MMOF = Constants.R_MMOF.Forward		
 		dyPrediction = {
 			"default":	( 30, 0,0),
 			"SingleLetpon":	(30,0,0),
@@ -267,6 +316,8 @@ class Regions:
 		rInOut = Constants.Pt2020.RInOut.Central
 		R_SFOF = Constants.R_SFOF.Central
 		R_SFOFTrig = Constants.Trigger.Correction.Central
+		R_EEOF = Constants.R_EEOF.Central
+		R_MMOF = Constants.R_MMOF.Central		
 		dyPrediction = {
 			"default":	( 28.91, 6.72,0),
 			"SingleLetpon":	( sum([32, 16, 7.7, 5.1]), sqrt(sum([i**2 for i in [10, 11, 4.1, 2.8]])),0),
@@ -280,6 +331,8 @@ class Regions:
 		rInOut = Constants.Pt2010.RInOut.Inclusive
 		R_SFOF = Constants.R_SFOF.Inclusive
 		R_SFOFTrig = Constants.Trigger.Correction.Inclusive
+		R_EEOF = Constants.R_EEOF.Inclusive
+		R_MMOF = Constants.R_MMOF.Inclusive		
 		dyPrediction = {
 			"default":	( sum([32, 16, 7.7, 5.1]), sqrt(sum([i**2 for i in [10, 11, 4.1, 2.8]])),0),
 			"RunAB":	( sum([14, 8.9, 4.3, 2.8]), sqrt(sum([i**2 for i in [4.2, 6.3, 2.3, 1.5]])),0),
@@ -294,6 +347,8 @@ class Regions:
 		rInOut = Constants.Pt2010.RInOut.Inclusive
 		R_SFOF = Constants.R_SFOF.Inclusive
 		R_SFOFTrig = Constants.Trigger.Correction.Inclusive
+		R_EEOF = Constants.R_EEOF.Inclusive
+		R_MMOF = Constants.R_MMOF.Inclusive		
 		dyPrediction = {
 			"default":	( 0,0,0),
 			}
@@ -307,6 +362,8 @@ class Regions:
 		rInOut = Constants.Pt2010.RInOut.Inclusive
 		R_SFOF = Constants.R_SFOF.Inclusive
 		R_SFOFTrig = Constants.Trigger.Correction.Inclusive
+		R_EEOF = Constants.R_EEOF.Inclusive
+		R_MMOF = Constants.R_MMOF.Inclusive		
 		dyPrediction = {
 			"default":	( 0,0,0),
 			}
@@ -320,6 +377,8 @@ class Regions:
 		rInOut = Constants.Pt2010.RInOut.Inclusive
 		R_SFOF = Constants.R_SFOF.Inclusive
 		R_SFOFTrig = Constants.Trigger.Correction.Inclusive
+		R_EEOF = Constants.R_EEOF.Inclusive
+		R_MMOF = Constants.R_MMOF.Inclusive		
 		dyPrediction = {
 			"default":	( 0,0,0),
 			}
@@ -334,6 +393,8 @@ class Regions:
 		rInOut = Constants.Pt2020.RInOut.Inclusive
 		R_SFOF = Constants.R_SFOF.Inclusive
 		R_SFOFTrig = Constants.Trigger.Correction.Inclusive
+		R_EEOF = Constants.R_EEOF.Inclusive
+		R_MMOF = Constants.R_MMOF.Inclusive		
 		dyPrediction = {
 	
 			}
@@ -346,6 +407,8 @@ class Regions:
 		rInOut = Constants.Pt2020.RInOut.Inclusive
 		R_SFOF = Constants.R_SFOF.Inclusive
 		R_SFOFTrig = Constants.Trigger.Correction.Inclusive
+		R_EEOF = Constants.R_EEOF.Inclusive
+		R_MMOF = Constants.R_MMOF.Inclusive		
 		dyPrediction = {
 
 			}
@@ -398,6 +461,8 @@ class Regions:
 		rInOut = Constants.Pt2020.RInOut.Inclusive
 		R_SFOF = Constants.R_SFOF.Inclusive
 		R_SFOFTrig = Constants.Trigger.Correction.Inclusive
+		R_EEOF = Constants.R_EEOF.Inclusive
+		R_MMOF = Constants.R_MMOF.Inclusive		
 		dyPrediction = {
 
 			}
@@ -409,10 +474,12 @@ class Regions:
 		latex = "Central Control Region"
 		rMuE = Constants.Pt2020.RMuE.Central
 		rInOut = Constants.Pt2020.RInOut.Central
-		R_SFOF = Constants.R_SFOF.Central
+		R_SFOF = Constants.R_SFOF.Control
 		R_SFOFTrig = Constants.Trigger.Correction.Central
+		R_EEOF = Constants.R_EEOF.Central
+		R_MMOF = Constants.R_MMOF.Central
 		dyPrediction = {
-
+			"default":	( 0,0,0),
 			}
 		color = ROOT.kGray
 		
@@ -422,10 +489,12 @@ class Regions:
 		latex = "Forward Control Region"
 		rMuE = Constants.Pt2020.RMuE.Forward
 		rInOut = Constants.Pt2020.RInOut.Forward
-		R_SFOF = Constants.R_SFOF.Forward
+		R_SFOF = Constants.R_SFOF.Control
 		R_SFOFTrig = Constants.Trigger.Correction.Forward
+		R_EEOF = Constants.R_EEOF.Forward
+		R_MMOF = Constants.R_MMOF.Forward		
 		dyPrediction = {
-
+			"default":	( 0,0,0),
 			}
 		color = ROOT.kGray
 		
@@ -435,8 +504,10 @@ class Regions:
 		latex = "Inclusive Control Region"
 		rMuE = Constants.Pt2020.RMuE.Inclusive
 		rInOut = Constants.Pt2020.RInOut.Inclusive
-		R_SFOF = Constants.R_SFOF.Inclusive
+		R_SFOF = Constants.R_SFOF.Control
 		R_SFOFTrig = Constants.Trigger.Correction.Inclusive
+		R_EEOF = Constants.R_EEOF.Inclusive
+		R_MMOF = Constants.R_MMOF.Inclusive		
 		dyPrediction = {
 
 			}
@@ -461,6 +532,8 @@ class Regions:
 		rInOut = Constants.Pt2020.RInOut.Central
 		R_SFOF = Constants.R_SFOF.Central
 		R_SFOFTrig = Constants.Trigger.Correction.Central
+		R_EEOF = Constants.R_EEOF.Central
+		R_MMOF = Constants.R_MMOF.Central		
 		color = ROOT.kRed-2
 		
 	class SignalLowMETFullEta(Region):
@@ -481,6 +554,8 @@ class Regions:
 		rInOut = Constants.Pt2020.RInOut.Inclusive
 		R_SFOF = Constants.R_SFOF.Inclusive
 		R_SFOFTrig = Constants.Trigger.Correction.Inclusive
+		R_EEOF = Constants.R_EEOF.Inclusive
+		R_MMOF = Constants.R_MMOF.Inclusive		
 		color = ROOT.kRed-2		
 
 	class SignalLowMET_METPD(SignalLowMET):
@@ -509,8 +584,11 @@ class Regions:
 		latex = "Low \MET\ Control Region"
 		rMuE = Constants.Pt2020.RMuE.Central
 		rInOut = Constants.Pt2020.RInOut.Central
-		R_SFOF = Constants.R_SFOF.Central
+		R_SFOF = Constants.R_SFOF.Control
 		R_SFOFTrig = Constants.Trigger.Correction.Central
+		R_EEOF = Constants.R_EEOF.Central
+		R_MMOF = Constants.R_MMOF.Central
+		
 
 	class DrellYan(Region):
 		cut = "nJets == 2  &&  met < 100 && (%s)"%Region.cut

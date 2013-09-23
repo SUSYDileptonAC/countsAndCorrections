@@ -510,13 +510,15 @@ def main():
 	eeLeptons = getDilepton(trees,cuts[subcutName],"EE")
 	setOverflowBin(eeLeptons,305,binWidth)
 	print region.rMuE.val,region.rMuE.err,region.R_SFOFTrig.val,region.R_SFOFTrig.err	
-	eeScale, eeScaleError = getSplitCorrection(region.rMuE.val,region.rMuE.err,"EE")
+	eeScale = region.R_EEOF.val
+	eeScaleError = region.R_EEOF.err/region.R_EEOF.val 
 	ofLeptonsEE.Scale(eeScale)
 	setOverflowBin(ofLeptonsEE,305,binWidth)	
 	
 	mmLeptons = getDilepton(trees,cuts[subcutName],"MuMu")
 	setOverflowBin(mmLeptons,305,binWidth)	
-	mmScale, mmScaleError = getSplitCorrection(region.rMuE.val,region.rMuE.err,"MuMu")
+	mmScale = region.R_MMOF.val
+	mmScaleError = region.R_MMOF.err/region.R_MMOF.val
 	ofLeptonsMuMu.Scale(mmScale)
 	setOverflowBin(ofLeptonsMuMu,305,binWidth)	
 	
