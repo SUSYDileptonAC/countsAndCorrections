@@ -22,7 +22,7 @@ if (__name__ == "__main__"):
 	inputs["rMuECentral"] = 1.089
 	inputs["rMuECentralErr"] = 0.109
 	inputs["rMuEForward"] = 1.188
-	inputs["rMuEForwardErr"] = 0.178
+	inputs["rMuEForwardErr"] = 0.238
 	
 	inputs["trigEECentral"] = 0.968
 	inputs["trigEECentralErr"] = (0.05**2+0.006**2)**0.5 ## Add statistical uncertainty of trigger eff and 5% syst eff in quadrature
@@ -112,22 +112,22 @@ if (__name__ == "__main__"):
 	
 	### weighted average of both methods because Bob said so	
 	result["combinationCentral"] = (result["fromACCentral"]/result["fromACCentralErr"]**2 + result["fromETHCentral"]/result["fromETHCentralErr"]**2) / (1./result["fromACCentralErr"]**2 + 1./result["fromETHCentralErr"]**2)
-	result["combinationCentralErr"] = (1./(1./result["fromACCentralErr"]**2 + 1./result["fromETHCentralErr"]))**0.5
+	result["combinationCentralErr"] = 1./((1./result["fromACCentralErr"]**2 + 1./result["fromETHCentralErr"]**2))**0.5
 	
 	result["combinationForward"] = (result["fromACForward"]/result["fromACForwardErr"]**2 + result["fromETHForward"]/result["fromETHForwardErr"]**2) / (1./result["fromACForwardErr"]**2 + 1./result["fromETHForwardErr"]**2)
-	result["combinationForwardErr"] = (1./(1./result["fromACForwardErr"]**2 + 1./result["fromETHForwardErr"]))**0.5
+	result["combinationForwardErr"] = 1./((1./result["fromACForwardErr"]**2 + 1./result["fromETHForwardErr"]**2))**0.5
 
 	result["combinationCentralMM"] = (result["fromACCentralMM"]/result["fromACCentralMMErr"]**2 + result["fromETHCentralMM"]/result["fromETHCentralMMErr"]**2) / (1./result["fromACCentralMMErr"]**2 + 1./result["fromETHCentralMMErr"]**2)
-	result["combinationCentralMMErr"] = (1./(1./result["fromACCentralMMErr"]**2 + 1./result["fromETHCentralMMErr"]))**0.5
+	result["combinationCentralMMErr"] = 1./((1./result["fromACCentralMMErr"]**2 + 1./result["fromETHCentralMMErr"]**2))**0.5
 	
 	result["combinationForwardMM"] = (result["fromACForwardMM"]/result["fromACForwardMMErr"]**2 + result["fromETHForwardMM"]/result["fromETHForwardMMErr"]**2) / (1./result["fromACForwardMMErr"]**2 + 1./result["fromETHForwardMMErr"]**2)
-	result["combinationForwardMMErr"] = (1./(1./result["fromACForwardMMErr"]**2 + 1./result["fromETHForwardMMErr"]))**0.5
+	result["combinationForwardMMErr"] = 1./((1./result["fromACForwardMMErr"]**2 + 1./result["fromETHForwardMMErr"]**2))**0.5
 
 	result["combinationCentralEE"] = (result["fromACCentralEE"]/result["fromACCentralEEErr"]**2 + result["fromETHCentralEE"]/result["fromETHCentralEEErr"]**2) / (1./result["fromACCentralEEErr"]**2 + 1./result["fromETHCentralEEErr"]**2)
-	result["combinationCentralEEErr"] = (1./(1./result["fromACCentralEEErr"]**2 + 1./result["fromETHCentralEEErr"]))**0.5
+	result["combinationCentralEEErr"] = 1./((1./result["fromACCentralEEErr"]**2 + 1./result["fromETHCentralEEErr"]**2))**0.5
 	
 	result["combinationForwardEE"] = (result["fromACForwardEE"]/result["fromACForwardEEErr"]**2 + result["fromETHForwardEE"]/result["fromETHForwardEEErr"]**2) / (1./result["fromACForwardEEErr"]**2 + 1./result["fromETHForwardEEErr"]**2)
-	result["combinationForwardEEErr"] = (1./(1./result["fromACForwardEEErr"]**2 + 1./result["fromETHForwardEEErr"]))**0.5
+	result["combinationForwardEEErr"] = 1./((1./result["fromACForwardEEErr"]**2 + 1./result["fromETHForwardEEErr"]**2))**0.5
 
 	
 	

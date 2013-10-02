@@ -33,9 +33,9 @@ centralValues = {"SS":0.2,
 relUncertainties = {"SS":0.1,
 				 "IsoSideBand":0.1,
 				 "Central":0.1,
-				 "Forward":0.15,
-				 "BothEndcap":0.15,
-				 "BothVeryEndcap":0.15,
+				 "Forward":0.2,
+				 "BothEndcap":0.2,
+				 "BothVeryEndcap":0.2,
 				 "ExcludingGap":0.1,
 				 "default":0.1,
 				}
@@ -197,7 +197,7 @@ class Ratio_ht_Data():
 class Ratio_pt_MC(): # p_t1
 	variable = "pt1"
 	filename = "r-Abhpt"
-	cut=Cuts.basicCutOhnePt
+	cut=Cuts.basicCutOhnePtOhneN
 	#binning=range(0,60,20)+range(60,100,5) # 7TeV
 	binning=range(20,30,5)+range(30,60,5)+range(60,100,10)
 	processes=[Processes7TeV.TTJets, Processes7TeV.ZJets,Processes7TeV.SingleT,Processes7TeV.DiBoson]
@@ -208,7 +208,7 @@ class Ratio_pt_MC(): # p_t1
 class Ratio_pt_Data():
 	variable = "pt1"
 	filename = "r-AbhptData"
-	cut=Cuts.basicCutOhnePt
+	cut=Cuts.basicCutOhnePtOhneN
 	#binning=range(0,60,20)+range(60,100,5) # 7TeV
 	binning=range(20,30,5)+range(30,60,5)+range(60,100,10)
 	processes=[Processes7TeV.Data]
@@ -220,7 +220,7 @@ class Ratio_pt_Data():
 class Ratio_pt2_MC(): # p_t1
 	variable = "pt2"
 	filename = "r-Abhpt2"
-	cut=Cuts.basicPlusInvMassCut
+	cut=Cuts.basicOhneNJetPlusInvMass
 	#binning=range(0,60,20)+range(60,100,5) # 7TeV
 	binning=range(20,30,5)+range(30,60,5)+range(60,100,10)
 	processes=[Processes7TeV.TTJets, Processes7TeV.ZJets,Processes7TeV.SingleT,Processes7TeV.DiBoson]
@@ -231,7 +231,7 @@ class Ratio_pt2_MC(): # p_t1
 class Ratio_pt2_Data():
 	variable = "pt2"
 	filename = "r-Abhpt2Data"
-	cut=Cuts.basicPlusInvMassCut
+	cut=Cuts.basicOhneNJetPlusInvMass
 	#binning=range(0,60,20)+range(60,100,5) # 7TeV
 	binning=range(20,30,5)+range(30,60,5)+range(60,100,10)
 	processes=[Processes7TeV.Data]
@@ -243,7 +243,7 @@ class Ratio_pt2_Data():
 class Ratio_DeltaR_MC(): #m_ll
 	variable = "deltaR"
 	filename = "r-AbhDeltaR"
-	cut=Cuts.basicCutNoDeltaR
+	cut=Cuts.basicCutNoDeltaRNoNJets
 	#binning=range(15,255,5)
 	binning=[0.2*i for i in range(10)]+[2+0.5*i for i in range(7)]
 	processes=[Processes7TeV.TTJets, Processes7TeV.ZJets,Processes7TeV.SingleT,Processes7TeV.DiBoson]
@@ -254,7 +254,7 @@ class Ratio_DeltaR_MC(): #m_ll
 class Ratio_DeltaR_MCZ(): #m_ll
 	variable = "deltaR"
 	filename = "r-AbhDeltaR"
-	cut=Cuts.basicCutNoDeltaR
+	cut=Cuts.basicCutNoDeltaRNoNJets
 	#binning=range(15,255,5)
 	binning=[0.2*i for i in range(10)]+[2+0.5*i for i in range(7)]
 	processes=[Processes7TeV.TTJets, Processes7TeV.ZJets,Processes7TeV.SingleT,Processes7TeV.DiBoson]
@@ -265,7 +265,7 @@ class Ratio_DeltaR_MCZ(): #m_ll
 class Ratio_DeltaR_Data(): #m_ll
 	variable = "deltaR"
 	filename = "r-AbhDeltaR"
-	cut=Cuts.basicCutNoDeltaR
+	cut=Cuts.basicCutNoDeltaRNoNJets
 	#binning=range(15,255,5)
 	binning=[0.2*i for i in range(10)]+[2+0.5*i for i in range(7)]
 	processes=[Processes7TeV.Data]
@@ -280,7 +280,7 @@ class Ratio_p4M_MC(): #m_ll
 	filename = "r-Abhp4M"
 	cut=Cuts.basicCut
 	#binning=range(15,255,5)
-	binning=range(20,60,20)+range(60,120,20)+range(120,270,30)
+	binning=range(20,60,10)+range(60,120,10)+range(120,270,10)
 	processes=[Processes7TeV.TTJets, Processes7TeV.ZJets,Processes7TeV.SingleT,Processes7TeV.DiBoson]
 	processes8TeV=[Processes8TeV.TTJets]
 	xaxis=Titles.p4M
@@ -344,9 +344,9 @@ class Ratio_p4M_MCtt(): #m_ll nur tt
 class Ratio_p4M_Data():
 	variable = "p4.M()"
 	filename = "r-Abhp4MData"
-	cut=Cuts.basicCut
+	cut=Cuts.basicCutohneN
 	#binning=range(15,255,5)
-	binning=range(20,60,20)+range(60,120,20)+range(120,270,30)
+	binning=range(20,60,10)+range(60,120,10)+range(120,270,10)
 	processes=[Processes7TeV.Data]
 	processes8TeV=[Processes8TeV.Data]
 	xaxis="%s from data" %Titles.p4M
@@ -953,8 +953,8 @@ def main():
 		nBJetsMC, nBJetsData=rRatioDataVsMC(Ratio_nBJets_MC, Ratio_nBJets_Data, variante=2,selectionModifier=selectionModifier)
 		iso1MC, iso1Data = rRatioDataVsMC(Ratio_id1_MC, Ratio_id1_Data, variante=2,selectionModifier=selectionModifier)
 		iso2MC, iso2Data = rRatioDataVsMC(Ratio_id2_MC, Ratio_id2_Data, variante=2,selectionModifier=selectionModifier)
-	#~ #	iso1_002_MC, iso1_002_Data = rRatioDataVsMC(Ratio_id1_002_MC, Ratio_id1_002_Data, variante=2,selectionModifier=selectionModifier)
-	#~ #	iso2_002_MC, iso2_002_Data = rRatioDataVsMC(Ratio_id2_002_MC, Ratio_id2_002_Data, variante=2,selectionModifier=selectionModifier)
+	#	iso1_002_MC, iso1_002_Data = rRatioDataVsMC(Ratio_id1_002_MC, Ratio_id1_002_Data, variante=2,selectionModifier=selectionModifier)
+	#	iso2_002_MC, iso2_002_Data = rRatioDataVsMC(Ratio_id2_002_MC, Ratio_id2_002_Data, variante=2,selectionModifier=selectionModifier)
 		mllMC, mllData=rRatioDataVsMC(Ratio_p4M_MC, Ratio_p4M_Data, variante=2,selectionModifier=selectionModifier)
 		mllMCZ, mllDataZ=rRatioDataVsMC(Ratio_p4M_MCZ, Ratio_p4M_Data, variante=2,selectionModifier=selectionModifier)
 		mllMCtt, mllDataZtt=rRatioDataVsMC(Ratio_p4M_MCtt, Ratio_p4M_Data, variante=2,selectionModifier=selectionModifier)
@@ -963,10 +963,10 @@ def main():
 		
 		
 		MllNonIsoMC, MllNonIsoData=rRatioDataVsMC(Ratio_p4M_MCIsoSideband, Ratio_p4M_DataIsoSideband, variante=2,selectionModifier=selectionModifier)
-
-	#	mllMC, mllData=rRatioDataVsMC(None, Ratio_p4M_Data, variante=2,selectionModifier=selectionModifier)
-	#	mllMCZ, mllDataZ=rRatioDataVsMC(Ratio_p4M_MCZ, None, variante=2,selectionModifier=selectionModifier)
-	#	mllMCtt, mllDataZtt=rRatioDataVsMC(Ratio_p4M_MCtt, None, variante=2,selectionModifier=selectionModifier)
+#~ 
+	#~ #	mllMC, mllData=rRatioDataVsMC(None, Ratio_p4M_Data, variante=2,selectionModifier=selectionModifier)
+	#~ #	mllMCZ, mllDataZ=rRatioDataVsMC(Ratio_p4M_MCZ, None, variante=2,selectionModifier=selectionModifier)
+	#~ #	mllMCtt, mllDataZtt=rRatioDataVsMC(Ratio_p4M_MCtt, None, variante=2,selectionModifier=selectionModifier)
 		tableDependency(ptMC, ptData, htMC, htData, metMC, metData, nVerticesMC, nVerticesData, nJetsMC, nJetsData, etaMC, etaData, mllMC, mllData)
 	
 		#~ 

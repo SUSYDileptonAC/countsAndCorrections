@@ -351,7 +351,7 @@ def main():
 
 	#	cut= "  chargeProduct < 0 && ((pt1 > 20 && pt2 > 10 ) || (pt2 > 20 && pt1 > 10 )) && nJets >= 2 && ht > 100 & met > 150"
 #	base = "chargeProduct < 0 && ((pt1 > 20 && pt2 > 10 ) || (pt2 > 20 && pt1 > 10 )) && abs(eta1)<2.4  && abs(eta2)<2.4 "
-	base = "chargeProduct < 0 && ((pt1 > 20 && pt2 > 20 ) || (pt2 > 20 && pt1 > 20 )) && abs(eta1)<2.4  && abs(eta2) < 2.4 && p4.M() > 20 && deltaR > 0.3 && ((nJets >= 2 && met > 150) ||(nJets >= 3 && met > 100)) && runNr < 201657 && (runNr < 198049 || runNr > 198522) && id1 < 0.15 && id2 < 0.15"
+	base = "chargeProduct < 0 && ((pt1 > 20 && pt2 > 20 ) || (pt2 > 20 && pt1 > 20 )) && abs(eta1)<2.4  && abs(eta2) < 2.4 && !( (abs(eta1) > 1.4 && abs(eta1) < 1.6) || (abs(eta2)) > 1.4 && abs(eta2) < 2.4 ) && p4.M() > 20 && deltaR > 0.3 && ((nJets >= 2 && met > 150) ||(nJets >= 3 && met > 100)) && runNr < 201657 && (runNr < 198049 || runNr > 198522) && id1 < 0.15 && id2 < 0.15"
 	baseSS = base.replace("chargeProduct < 0", "chargeProduct > 0")
 	baseNonIso = base+"&& id1 > 0.15 && id1 < 1 && id2 > 0.15 && id2 < 1"
 	edgeMass = "(20 < inv && inv < 70)"
@@ -376,6 +376,11 @@ def main():
 	forward = "1.4 < TMath::Max(abs(eta1),abs(eta2))"
 
 	cuts= {
+		"SignalNonRectInclusive_inclusiveMass": [base],
+		"SignalNonRectInclusive_edgeMass": [base, edgeMass],
+		"SignalNonRectInclusive_zMass": [base, zMass],
+		"SignalNonRectInclusive_highMass": [base, highMass],
+		
 		"SignalNonRectCentral_inclusiveMass": [base, central],
 		"SignalNonRectCentral_edgeMass": [base, central, edgeMass],
 		"SignalNonRectCentral_zMass": [base, central, zMass],
@@ -444,6 +449,7 @@ def main():
 				}
 	
 	titles = {
+		"SignalNonRectInclusive": "Inclusive Signal Region",
 		"SignalNonRectCentral": "Central Signal Region",
 		"SignalNonRectForward": "Forward Signal Region",
 		"inclusiveMass": "m_{ll} > 20 GeV",
@@ -477,8 +483,9 @@ def main():
 
 	selections = []
 	#~ selections += ["HighMET_METStudy","METStudyControl"]
-	selections += ["SignalNonRectCentral_inclusiveMass", "SignalNonRectCentral_edgeMass", "SignalNonRectCentral_zMass", "SignalNonRectCentral_highMass",]#
-	selections += ["SignalNonRectForward_inclusiveMass", "SignalNonRectForward_edgeMass", "SignalNonRectForward_zMass", "SignalNonRectForward_highMass",]#
+	#~ selections += ["SignalNonRectCentral_inclusiveMass", "SignalNonRectCentral_edgeMass", "SignalNonRectCentral_zMass", "SignalNonRectCentral_highMass",]#
+	#~ selections += ["SignalNonRectCentral_inclusiveMass", "SignalNonRectCentral_edgeMass", "SignalNonRectCentral_zMass", "SignalNonRectCentral_highMass",]#
+	selections += ["SignalNonRectInclusive_inclusiveMass", "SignalNonRectInclusive_edgeMass", "SignalNonRectInclusive_zMass", "SignalNonRectInclusive_highMass",]#
 	#~ selections += ["highMET_inclusiveMass", "highMET_edgeMass", "highMET_zMass", "highMET_highMass",]
 	#~ selections += ["highMETBarrel_inclusiveMass", "highMETBarrel_edgeMass", "highMETBarrel_zMass", "highMETBarrel_highMass",]#
 	#~ selections += ["Signal2011_inclusiveMass", "Signal2011_edgeMass", "Signal2011_zMass", "Signal2011_highMass",]#

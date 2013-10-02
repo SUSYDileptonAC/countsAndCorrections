@@ -346,7 +346,7 @@ if (__name__ == "__main__"):
 
 	
 	hCanvas.Print("rMuEPropaganda_Central.pdf")
-	
+	hCanvas.Clear()
 	hCanvas.DrawFrame(0,0,2,2,"; %s ; %s" %("r_{#mu e}","R_{SF/OF}"))	
 
 	legend = TLegend(0.15, 0.13, 0.5, 0.5)
@@ -368,7 +368,7 @@ if (__name__ == "__main__"):
 	Labelout.SetTextSize(0.07)
 	Labelout.SetTextColor(ROOT.kBlack)
 
-	x= array([0.9503000000000001, 1.2857],"f") 
+	x= array([0.9503000000000001, 1.4256],"f") 
  	#~ y= array("f", [1.175, 1.175]) # 1.237
  	#~ y= array([rMuEs[region], rMuEs[region]],"f") # 1.237
    	y= array([1.,1.],"f")
@@ -410,11 +410,11 @@ if (__name__ == "__main__"):
 	rmueline.SetLineStyle(2)
 	rmueline.Draw("SAME") 
 
-	line1 = ROOT.TLine(1.118,0,1.118,2)
-	line1.Draw("Same")
+	line1 = ROOT.TLine(1.188,0,1.188,2)
+
 	line1.SetLineWidth(2)
 	line1.SetLineColor(ROOT.kGreen)
-	
+	line1.Draw("Same")	
 	legend.AddEntry(rSFOF,"R_{SF/OF} from r_{#mu e} & trig. eff.","l")
 	legend.AddEntry(rSFOFTrigDown,"R_{SF/OF} #pm 1 #sigma trig. eff. ","l")
 	legend.AddEntry(ge,"r_{#mu e} #pm 1 #sigma","f")

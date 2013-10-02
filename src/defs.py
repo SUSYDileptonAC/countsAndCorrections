@@ -99,10 +99,10 @@ class Constants:
 			err = 0.07
 		class Central(Constant):
 			val = 1.01
-			err = 0.07
+			err = 0.05
 		class Forward(Constant):
 			val = 1.02
-			err = 0.10
+			err = 0.08
 		class Control(Constant):
 			val = 1.0
 			err = 0.0
@@ -115,7 +115,7 @@ class Constants:
 			err = 0.04
 		class Forward(Constant):
 			val = 0.42
-			err = 0.09
+			err = 0.07
 		class Control(Constant):
 			val = 1.0
 			err = 0.0
@@ -125,11 +125,12 @@ class Constants:
 			err = 0.04
 		class Central(Constant):
 			val = 0.54
-			err = 0.08
+			err = 0.04
 		class Forward(Constant):
 			val = 0.57
-			err = 0.12
-		class Control(Constant):
+			err = 0.08
+		class Control(
+		Constant):
 			val = 1.0
 			err = 0.0
 			
@@ -195,7 +196,7 @@ class Regions:
 		R_EEOF = Constants.R_EEOF.Central
 		R_MMOF = Constants.R_MMOF.Central		
 		dyPrediction = {
-			"default":	( 80, 0,0),
+			"default":	( 38, 11,0),
 			"SingleLetpon":	(80,0,0),
 			"RunAB": (0,0,0),
 			"RunC": (0,0,0),
@@ -212,7 +213,7 @@ class Regions:
 		R_EEOF = Constants.R_EEOF.Forward
 		R_MMOF = Constants.R_MMOF.Forward		
 		dyPrediction = {
-			"default":	( 20, 0,0),
+			"default":	( 16, 6,0),
 			"SingleLetpon":	(20,0,0),
 			"RunAB": (0,0,0),
 			"RunC": (0,0,0),

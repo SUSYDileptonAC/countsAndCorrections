@@ -33,9 +33,9 @@ centralValues = {"SS":0.2,
 relUncertainties = {"SS":0.1,
 				 "IsoSideBand":0.1,
 				 "Central":0.1,
-				 "Forward":0.15,
-				 "BothEndcap":0.15,
-				 "BothVeryEndcap":0.15,
+				 "Forward":0.2,
+				 "BothEndcap":0.2,
+				 "BothVeryEndcap":0.2,
 				 "ExcludingGap":0.1,
 				 "default":0.1,
 				}
@@ -280,7 +280,7 @@ class Ratio_p4M_MC(): #m_ll
 	filename = "r-Abhp4M"
 	cut=Cuts.basicCut
 	#binning=range(15,255,5)
-	binning=range(20,60,20)+range(60,120,20)+range(120,270,30)
+	binning=range(20,60,10)+range(60,120,10)+range(120,270,10)
 	processes=[Processes7TeV.TTJets, Processes7TeV.ZJets,Processes7TeV.SingleT,Processes7TeV.DiBoson]
 	processes8TeV=[Processes8TeV.TTJets]
 	xaxis=Titles.p4M
@@ -335,7 +335,7 @@ class Ratio_p4M_MCtt(): #m_ll nur tt
 	filename = "r-Abhp4M"
 	cut=Cuts.basicCut
 #	binning=range(15,255,5)
-	binning=range(20,60,10)+range(60,120,10)+range(120,250,25)
+	binning=range(20,60,5)+range(60,120,5)+range(120,270,5)
 	processes=[Processes7TeV.TTJets, Processes7TeV.ZJets,Processes7TeV.SingleT,Processes7TeV.DiBoson]
 	processes8TeV=[Processes8TeV.TTJets]
 	xaxis=Titles.p4M
@@ -346,7 +346,7 @@ class Ratio_p4M_Data():
 	filename = "r-Abhp4MData"
 	cut=Cuts.basicCut
 	#binning=range(15,255,5)
-	binning=range(20,60,20)+range(60,120,20)+range(120,270,30)
+	binning=range(20,60,10)+range(60,120,10)+range(120,270,10)
 	processes=[Processes7TeV.Data]
 	processes8TeV=[Processes8TeV.Data]
 	xaxis="%s from data" %Titles.p4M
@@ -953,8 +953,8 @@ def main():
 		nBJetsMC, nBJetsData=rRatioDataVsMC(Ratio_nBJets_MC, Ratio_nBJets_Data, variante=2,selectionModifier=selectionModifier)
 		iso1MC, iso1Data = rRatioDataVsMC(Ratio_id1_MC, Ratio_id1_Data, variante=2,selectionModifier=selectionModifier)
 		iso2MC, iso2Data = rRatioDataVsMC(Ratio_id2_MC, Ratio_id2_Data, variante=2,selectionModifier=selectionModifier)
-	#~ #	iso1_002_MC, iso1_002_Data = rRatioDataVsMC(Ratio_id1_002_MC, Ratio_id1_002_Data, variante=2,selectionModifier=selectionModifier)
-	#~ #	iso2_002_MC, iso2_002_Data = rRatioDataVsMC(Ratio_id2_002_MC, Ratio_id2_002_Data, variante=2,selectionModifier=selectionModifier)
+	#	iso1_002_MC, iso1_002_Data = rRatioDataVsMC(Ratio_id1_002_MC, Ratio_id1_002_Data, variante=2,selectionModifier=selectionModifier)
+	#	iso2_002_MC, iso2_002_Data = rRatioDataVsMC(Ratio_id2_002_MC, Ratio_id2_002_Data, variante=2,selectionModifier=selectionModifier)
 		mllMC, mllData=rRatioDataVsMC(Ratio_p4M_MC, Ratio_p4M_Data, variante=2,selectionModifier=selectionModifier)
 		mllMCZ, mllDataZ=rRatioDataVsMC(Ratio_p4M_MCZ, Ratio_p4M_Data, variante=2,selectionModifier=selectionModifier)
 		mllMCtt, mllDataZtt=rRatioDataVsMC(Ratio_p4M_MCtt, Ratio_p4M_Data, variante=2,selectionModifier=selectionModifier)
@@ -967,7 +967,7 @@ def main():
 	#	mllMC, mllData=rRatioDataVsMC(None, Ratio_p4M_Data, variante=2,selectionModifier=selectionModifier)
 	#	mllMCZ, mllDataZ=rRatioDataVsMC(Ratio_p4M_MCZ, None, variante=2,selectionModifier=selectionModifier)
 	#	mllMCtt, mllDataZtt=rRatioDataVsMC(Ratio_p4M_MCtt, None, variante=2,selectionModifier=selectionModifier)
-		tableDependency(ptMC, ptData, htMC, htData, metMC, metData, nVerticesMC, nVerticesData, nJetsMC, nJetsData, etaMC, etaData, mllMC, mllData)
+		#~ tableDependency(ptMC, ptData, htMC, htData, metMC, metData, nVerticesMC, nVerticesData, nJetsMC, nJetsData, etaMC, etaData, mllMC, mllData)
 	
 		#~ 
 	else:
