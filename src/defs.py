@@ -81,8 +81,8 @@ class Constants:
 				val =0.072
 				err =0.072*0.25
 			class Forward(Constant):
-				val =0.063
-				err =0.063*0.25
+				val =0.065
+				err =0.065*0.25
 		class RMuE:
 			class Inclusive(Constant):
 				val =1.144
@@ -102,20 +102,20 @@ class Constants:
 			err = 0.05
 		class Forward(Constant):
 			val = 1.02
-			err = 0.08
+			err = 0.10
 		class Control(Constant):
 			val = 1.0
 			err = 0.0
 	class R_EEOF:
 		class Inclusive(Constant):
-			val = 0.46
-			err = 0.04
+			val = 0.47
+			err = 0.03
 		class Central(Constant):
-			val = 0.46
-			err = 0.04
+			val = 0.47
+			err = 0.03
 		class Forward(Constant):
-			val = 0.42
-			err = 0.07
+			val = 0.43
+			err = 0.06
 		class Control(Constant):
 			val = 1.0
 			err = 0.0
@@ -167,6 +167,14 @@ class Regions:
 			"default":	( 38.93, 9,13,0),
 			"SingleLetpon":	( sum([32, 16, 7.7, 5.1]), sqrt(sum([i**2 for i in [10, 11, 4.1, 2.8]])),0),
 			}
+		rarePrediction = {
+			"default":	( 0, 0,0),
+			"SingleLetpon":	(0,0,0),
+			"RunAB": (0,0,0),
+			"RunC": (0,0,0),
+			"MuMu": (0,0,0),
+			"EE": (0,0,0)			
+			}				
 		color = ROOT.kAzure-4
 	class SignalNonRectInclusive(Region):
 		cut = "((nJets >= 2 && met > 150) || (nJets >=3 && met > 100)) && (%s)"%Region.cut
@@ -184,6 +192,14 @@ class Regions:
 			"RunAB": (0,0,0),
 			"RunC": (0,0,0),
 			}
+		rarePrediction = {
+			"default":	( 0, 0,0),
+			"SingleLetpon":	(0,0,0),
+			"RunAB": (0,0,0),
+			"RunC": (0,0,0),
+			"MuMu": (0,0,0),
+			"EE": (0,0,0)			
+			}				
 		color = ROOT.kAzure-4
 	class SignalNonRectCentral(Region):
 		cut = "((nJets >= 2 && met > 150) || (nJets >=3 && met > 100)) && abs(eta1)< 1.4 && abs(eta2) < 1.4 && (%s)"%Region.cut
@@ -196,10 +212,20 @@ class Regions:
 		R_EEOF = Constants.R_EEOF.Central
 		R_MMOF = Constants.R_MMOF.Central		
 		dyPrediction = {
-			"default":	( 38, 11,0),
+			"default":	( 38, 8.7,6.6),
 			"SingleLetpon":	(80,0,0),
 			"RunAB": (0,0,0),
 			"RunC": (0,0,0),
+			"EE": (25,7.0,4.3),
+			"MuMu": (13,5.1,2.3)			
+			}
+		rarePrediction = {
+			"default":	( 1.2, 0.7,0),
+			"SingleLetpon":	(0,0,0),
+			"RunAB": (0,0,0),
+			"RunC": (0,0,0),
+			"MuMu": (0.7,0.4,0),
+			"EE": (0.6,0.3,0)			
 			}
 		color = ROOT.kAzure-4
 	class SignalNonRectForward(Region):
@@ -213,11 +239,21 @@ class Regions:
 		R_EEOF = Constants.R_EEOF.Forward
 		R_MMOF = Constants.R_MMOF.Forward		
 		dyPrediction = {
-			"default":	( 16, 6,0),
+			"default":	( 16, 5.7,2.9),
 			"SingleLetpon":	(20,0,0),
 			"RunAB": (0,0,0),
 			"RunC": (0,0,0),
+			"EE": (8,4.0,1.4),
+			"MuMu": (8,4.0,1.4)			
 			}
+		rarePrediction = {
+			"default":	( 0.3, 0.2,0),
+			"SingleLetpon":	(0,0,0),
+			"RunAB": (0,0,0),
+			"RunC": (0,0,0),
+			"MuMu": (0.2,0.1,0),
+			"EE": (0.1,0.1,0)			
+			}			
 		color = ROOT.kAzure-4
 	class SignalHighMETLowNJetsCentral(Region):
 		cut = "nJets == 2 && met > 150  && abs(eta1)< 1.4 && abs(eta2) < 1.4 && (%s)"%Region.cut
@@ -233,6 +269,14 @@ class Regions:
 			"default":	( 30, 0,0),
 			"SingleLetpon":	(30,0,0),
 			}
+		rarePrediction = {
+			"default":	( 0, 0,0),
+			"SingleLetpon":	(0,0,0),
+			"RunAB": (0,0,0),
+			"RunC": (0,0,0),
+			"MuMu": (0,0,0),
+			"EE": (0,0,0)			
+			}				
 		color = ROOT.kAzure-4
 	class SignalHighMETLowNJetsForward(Region):
 		cut = "nJets == 2 && met > 150  && 1.6 <= TMath::Max(abs(eta1),abs(eta2)) && (%s)"%Region.cut
@@ -248,6 +292,14 @@ class Regions:
 			"default":	( 30, 0,0),
 			"SingleLetpon":	(30,0,0),
 			}
+		rarePrediction = {
+			"default":	( 0, 0,0),
+			"SingleLetpon":	(0,0,0),
+			"RunAB": (0,0,0),
+			"RunC": (0,0,0),
+			"MuMu": (0,0,0),
+			"EE": (0,0,0)			
+			}				
 		color = ROOT.kAzure-4
 	class SignalHighMETHighNJetsCentral(Region):
 		cut = "nJets >= 3 && met > 150  && abs(eta1)< 1.4 && abs(eta2) < 1.4 && (%s)"%Region.cut
@@ -263,6 +315,14 @@ class Regions:
 			"default":	( 30, 0,0),
 			"SingleLetpon":	(30,0,0),
 			}
+		rarePrediction = {
+			"default":	( 0, 0,0),
+			"SingleLetpon":	(0,0,0),
+			"RunAB": (0,0,0),
+			"RunC": (0,0,0),
+			"MuMu": (0,0,0),
+			"EE": (0,0,0)			
+			}				
 		color = ROOT.kAzure-4
 	class SignalHighMETHighNJetsForward(Region):
 		cut = "nJets >= 3 && met > 150  && 1.6 <= TMath::Max(abs(eta1),abs(eta2)) && (%s)"%Region.cut
@@ -278,6 +338,14 @@ class Regions:
 			"default":	( 30, 0,0),
 			"SingleLetpon":	(30,0,0),
 			}
+		rarePrediction = {
+			"default":	( 0, 0,0),
+			"SingleLetpon":	(0,0,0),
+			"RunAB": (0,0,0),
+			"RunC": (0,0,0),
+			"MuMu": (0,0,0),
+			"EE": (0,0,0)			
+			}				
 		color = ROOT.kAzure-4
 	class SignalLowMETHighNJetsCentral(Region):
 		cut = "nJets >= 3 &&  met > 100 && met < 150  && abs(eta1)< 1.4 && abs(eta2) < 1.4 && (%s)"%Region.cut
@@ -293,6 +361,14 @@ class Regions:
 			"default":	( 30, 0,0),
 			"SingleLetpon":	(30,0,0),
 			}
+		rarePrediction = {
+			"default":	( 0, 0,0),
+			"SingleLetpon":	(0,0,0),
+			"RunAB": (0,0,0),
+			"RunC": (0,0,0),
+			"MuMu": (0,0,0),
+			"EE": (0,0,0)			
+			}				
 		color = ROOT.kAzure-4
 	class SignalLowMETHighNJetsForward(Region):
 		cut = "nJets >= 3 && met > 100 &&  met < 150  && 1.6 <= TMath::Max(abs(eta1),abs(eta2)) && (%s)"%Region.cut
@@ -308,6 +384,14 @@ class Regions:
 			"default":	( 30, 0,0),
 			"SingleLetpon":	(30,0,0),
 			}
+		rarePrediction = {
+			"default":	( 0, 0,0),
+			"SingleLetpon":	(0,0,0),
+			"RunAB": (0,0,0),
+			"RunC": (0,0,0),
+			"MuMu": (0,0,0),
+			"EE": (0,0,0)			
+			}				
 		color = ROOT.kAzure-4
 	class BarrelHighMET(Region):
 		cut = " nJets >= 2 && ht > 100 && met > 150 && abs(eta1)< 1.4 && abs(eta2) < 1.4 && (%s)"%Region.cut
@@ -323,6 +407,14 @@ class Regions:
 			"default":	( 28.91, 6.72,0),
 			"SingleLetpon":	( sum([32, 16, 7.7, 5.1]), sqrt(sum([i**2 for i in [10, 11, 4.1, 2.8]])),0),
 			}
+		rarePrediction = {
+			"default":	( 0, 0,0),
+			"SingleLetpon":	(0,0,0),
+			"RunAB": (0,0,0),
+			"RunC": (0,0,0),
+			"MuMu": (0,0,0),
+			"EE": (0,0,0)			
+			}				
 		color = ROOT.kAzure-4		
 	class Pt2010HighMET(Region):
 		cut = "nJets >= 2 && ht > 100 && met > 150 &&  (%s)"%Region.cut2010
@@ -339,6 +431,14 @@ class Regions:
 			"RunAB":	( sum([14, 8.9, 4.3, 2.8]), sqrt(sum([i**2 for i in [4.2, 6.3, 2.3, 1.5]])),0),
 			"RunC":	( sum([18, 7.1, 3.4, 2.3]), sqrt(sum([i**2 for i in [6.0, 5.1, 1.8, 1.2]])),0),
 			}
+		rarePrediction = {
+			"default":	( 0, 0,0),
+			"SingleLetpon":	(0,0,0),
+			"RunAB": (0,0,0),
+			"RunC": (0,0,0),
+			"MuMu": (0,0,0),
+			"EE": (0,0,0)			
+			}				
 		color = ROOT.kAzure-4
 	class Pt3010HighMET(Region):
 		cut = "nJets >= 2 && ht > 100 && met > 150 &&  (%s)"%Region.cut3010
@@ -353,6 +453,14 @@ class Regions:
 		dyPrediction = {
 			"default":	( 0,0,0),
 			}
+		rarePrediction = {
+			"default":	( 0, 0,0),
+			"SingleLetpon":	(0,0,0),
+			"RunAB": (0,0,0),
+			"RunC": (0,0,0),
+			"MuMu": (0,0,0),
+			"EE": (0,0,0)			
+			}				
 		color = ROOT.kAzure-4
 		
 	class Pt3020HighMET(Region):
@@ -368,6 +476,14 @@ class Regions:
 		dyPrediction = {
 			"default":	( 0,0,0),
 			}
+		rarePrediction = {
+			"default":	( 0, 0,0),
+			"SingleLetpon":	(0,0,0),
+			"RunAB": (0,0,0),
+			"RunC": (0,0,0),
+			"MuMu": (0,0,0),
+			"EE": (0,0,0)			
+			}				
 		color = ROOT.kAzure-4
 		
 	class Pt3030HighMET(Region):
@@ -383,6 +499,14 @@ class Regions:
 		dyPrediction = {
 			"default":	( 0,0,0),
 			}
+		rarePrediction = {
+			"default":	( 0, 0,0),
+			"SingleLetpon":	(0,0,0),
+			"RunAB": (0,0,0),
+			"RunC": (0,0,0),
+			"MuMu": (0,0,0),
+			"EE": (0,0,0)			
+			}				
 		color = ROOT.kAzure-4
 
 
@@ -399,6 +523,14 @@ class Regions:
 		dyPrediction = {
 	
 			}
+		rarePrediction = {
+			"default":	( 0, 0,0),
+			"SingleLetpon":	(0,0,0),
+			"RunAB": (0,0,0),
+			"RunC": (0,0,0),
+			"MuMu": (0,0,0),
+			"EE": (0,0,0)			
+			}				
 		color = ROOT.kAzure-4
 	class SignalHighMET2011(Region):
 		cut = " nJets >= 2 && ht > 300 && ht < 300 && met > 150 && (%s)"%Region.cut
@@ -413,6 +545,14 @@ class Regions:
 		dyPrediction = {
 
 			}
+		rarePrediction = {
+			"default":	( 0, 0,0),
+			"SingleLetpon":	(0,0,0),
+			"RunAB": (0,0,0),
+			"RunC": (0,0,0),
+			"MuMu": (0,0,0),
+			"EE": (0,0,0)			
+			}				
 		color = ROOT.kAzure-4
 		
 	class SignalNonRectInclusive_METPD(SignalNonRectInclusive):
@@ -467,6 +607,14 @@ class Regions:
 		dyPrediction = {
 
 			}
+		rarePrediction = {
+			"default":	( 0, 0,0),
+			"SingleLetpon":	(0,0,0),
+			"RunAB": (0,0,0),
+			"RunC": (0,0,0),
+			"MuMu": (0,0,0),
+			"EE": (0,0,0)			
+			}				
 		color = ROOT.kGray
 		
 	class ControlCentral(Region):
@@ -482,6 +630,14 @@ class Regions:
 		dyPrediction = {
 			"default":	( 0,0,0),
 			}
+		rarePrediction = {
+			"default":	( 0, 0,0),
+			"SingleLetpon":	(0,0,0),
+			"RunAB": (0,0,0),
+			"RunC": (0,0,0),
+			"MuMu": (0,0,0),
+			"EE": (0,0,0)			
+			}				
 		color = ROOT.kGray
 		
 	class ControlForward(Region):
@@ -497,6 +653,14 @@ class Regions:
 		dyPrediction = {
 			"default":	( 0,0,0),
 			}
+		rarePrediction = {
+			"default":	( 0, 0,0),
+			"SingleLetpon":	(0,0,0),
+			"RunAB": (0,0,0),
+			"RunC": (0,0,0),
+			"MuMu": (0,0,0),
+			"EE": (0,0,0)			
+			}				
 		color = ROOT.kGray
 		
 	class ControlInclusive(Region):
@@ -512,6 +676,14 @@ class Regions:
 		dyPrediction = {
 
 			}
+		rarePrediction = {
+			"default":	( 0, 0,0),
+			"SingleLetpon":	(0,0,0),
+			"RunAB": (0,0,0),
+			"RunC": (0,0,0),
+			"MuMu": (0,0,0),
+			"EE": (0,0,0)			
+			}				
 		color = ROOT.kGray
 
 	class SignalLowMET(Region):
@@ -528,6 +700,14 @@ class Regions:
 
 
 			}
+		rarePrediction = {
+			"default":	( 0, 0,0),
+			"SingleLetpon":	(0,0,0),
+			"RunAB": (0,0,0),
+			"RunC": (0,0,0),
+			"MuMu": (0,0,0),
+			"EE": (0,0,0)			
+			}				
 
 		rMuE = Constants.Pt2020.RMuE.Central
 		rInOut = Constants.Pt2020.RInOut.Central
@@ -550,6 +730,14 @@ class Regions:
 			"default":	( 53.33, 10.39,0),
 
 			}
+		rarePrediction = {
+			"default":	( 0, 0,0),
+			"SingleLetpon":	(0,0,0),
+			"RunAB": (0,0,0),
+			"RunC": (0,0,0),
+			"MuMu": (0,0,0),
+			"EE": (0,0,0)			
+			}				
 
 		rMuE = Constants.Pt2020.RMuE.Inclusive
 		rInOut = Constants.Pt2020.RInOut.Inclusive
@@ -589,7 +777,14 @@ class Regions:
 		R_SFOFTrig = Constants.Trigger.Correction.Central
 		R_EEOF = Constants.R_EEOF.Central
 		R_MMOF = Constants.R_MMOF.Central
-		
+		rarePrediction = {
+			"default":	( 0, 0,0),
+			"SingleLetpon":	(0,0,0),
+			"RunAB": (0,0,0),
+			"RunC": (0,0,0),
+			"MuMu": (0,0,0),
+			"EE": (0,0,0)			
+			}			
 
 	class DrellYan(Region):
 		cut = "nJets == 2  &&  met < 100 && (%s)"%Region.cut

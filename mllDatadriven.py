@@ -532,16 +532,33 @@ def main():
 		relDYError = 0
 		relDYErrorPeak = 0
 		relDYErrorLowMass = 0
+	if regionName == "SignalNonRectCentral" or regionName == "SignalNonRectForward":
+		relDYErrorEE = sqrt(region.dyPrediction["EE"][1]**2 + region.dyPrediction["EE"][2]**2) * 1./ region.dyPrediction["EE"][0]
+		relDYErrorPeakEE = sqrt(region.dyPrediction["EE"][1]**2 + region.dyPrediction["EE"][2]**2) * 1./region.dyPrediction["EE"][0]
+		relDYErrorLowMassEE = sqrt((sqrt(region.dyPrediction["EE"][1]**2 + region.dyPrediction["EE"][2]**2)*Rinout+(0.25*Rinout*region.dyPrediction["EE"][0])**2)) * (region.dyPrediction["EE"][0]*Rinout/ofLeptons.Integral(ofLeptons.FindBin(15),ofLeptons.FindBin(70)))		
+		relDYErrorMM = sqrt(region.dyPrediction["MM"][1]**2 + region.dyPrediction["MM"][2]**2) * 1./ region.dyPrediction["MM"][0]
+		relDYErrorPeakMM = sqrt(region.dyPrediction["MM"][1]**2 + region.dyPrediction["MM"][2]**2) * 1./region.dyPrediction["MM"][0]
+		relDYErrorLowMassMM = sqrt((sqrt(region.dyPrediction["MM"][1]**2 + region.dyPrediction["MM"][2]**2)*Rinout+(0.25*Rinout*region.dyPrediction["MM"][0])**2)) * (region.dyPrediction["MM"][0]*Rinout/ofLeptons.Integral(ofLeptons.FindBin(15),ofLeptons.FindBin(70)))		
+	
+	else:
+		relDYErrorEE = relDYError
+		relDYErrorPeakEE = relDYErrorPeak
+		relDYErrorLowMassEE = relDYErrorLowMass		
+		relDYErrorMM = relDYError
+		relDYErrorPeakMM = relDYErrorPeak
+		relDYErrorLowMassMM = relDYErrorLowMass		
 	dyErrors, errorList = getSysErrorGraph(dyLineShape, relDYError)
+	dyErrorsEE, errorListEE = getSysErrorGraph(dyLineShape, relDYErrorEE)
+	dyErrorsMM, errorListMM = getSysErrorGraph(dyLineShape, relDYErrorMM)
 	print ofScaleError, eeScaleError, mmScaleError
 	ofErrors, errorListOF = getSysErrorGraph(ofLeptons, ofScaleError, errorList,dyLineShape)
-	ofErrorsEE, errorListEE = getSysErrorGraph(ofLeptonsEE, eeScaleError, errorList,dyLineShape)
-	ofErrorsMM, errorListMM = getSysErrorGraph(ofLeptonsMuMu, mmScaleError, errorList,dyLineShape)
+	ofErrorsEE, errorListEE = getSysErrorGraph(ofLeptonsEE, eeScaleError, errorListEE,dyLineShape)
+	ofErrorsMM, errorListMM = getSysErrorGraph(ofLeptonsMuMu, mmScaleError, errorListMM,dyLineShape)
 
 
 	DrawPlot(sfLeptons,ofLeptons,dyLineShape,ofErrors,binWidth,regionName,subcutName,maxY,plotSignal,relDYError,relDYErrorPeak,relDYErrorLowMass,ofScaleError,lumi)
-	DrawPlot(eeLeptons,ofLeptonsEE,dyLineShape,ofErrorsEE,binWidth,regionName,subcutName,maxY,plotSignal,relDYError,relDYErrorPeak,relDYErrorLowMass,eeScaleError,lumi,dilepton="EE")
-	DrawPlot(mmLeptons,ofLeptonsMuMu,dyLineShape,ofErrorsMM,binWidth,regionName,subcutName,maxY,plotSignal,relDYError,relDYErrorPeak,relDYErrorLowMass,mmScaleError,lumi,dilepton="MuMu")
+	DrawPlot(eeLeptons,ofLeptonsEE,dyLineShape,ofErrorsEE,binWidth,regionName,subcutName,maxY,plotSignal,relDYErrorEE,relDYErrorPeakEE,relDYErrorLowMassEE,eeScaleError,lumi,dilepton="EE")
+	DrawPlot(mmLeptons,ofLeptonsMuMu,dyLineShape,ofErrorsMM,binWidth,regionName,subcutName,maxY,plotSignal,relDYErrorMM,relDYErrorPeakMM,relDYErrorLowMassMM,mmScaleError,lumi,dilepton="MuMu")
 	
 
 main()

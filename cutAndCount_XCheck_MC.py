@@ -9,6 +9,13 @@ selection & $ee$ & $\mu\mu$ & $e\mu$ & $SF$ & $OF prediction$ & measured $n_{SF,
 %s
 \end{tabular}
 """
+tableTemplateSplit = r"""
+\begin{tabular}{l|ccc|cc|c}
+selection & $ee$ & $\mu\mu$ & $e\mu$ & prediction SF & prediction $\mu\mu$ & prediction $ee$\\
+\hline
+%s
+\end{tabular}
+"""
 
 	
 def readWeightedEntries(tree, variable, cut):
@@ -166,11 +173,12 @@ def getCounts(trees, cut,Samples,group,groupmembers):
 	cut = cut.replace("inv", "p4.M()")
 	#~ nllPredictionScale =  0.5* sqrt(trigger["EE"]*trigger["MuMu"])*1./trigger["EMu"] *(rmue+1./(rmue))
 	#~ snllPredictionScale = sqrt((0.5* sqrt(trigger["EE"]*trigger["MuMu"])*1./trigger["EMu"] *(1.-1./(rmue)**2)*0.1*rmue)**2 + (0.05*0.5*(rmue+1./rmue))**2*((1/trigger["EE"])**2 + (1/2*trigger["MuMu"])**2 +(1/2*trigger["EMu"])**2))
-	nllPredictionScale = 1.02
+	nllPredictionScale = 1.01
 	if "TMath" in cut:
-		snllPredictionScale = 0.12
+		nllPredictionScale = 1.02
+		snllPredictionScale = 0.10
 	else:
-		snllPredictionScale = 0.07
+		snllPredictionScale = 0.05
 	
 	n = {
 		"MuMu" : 0.,
@@ -218,7 +226,7 @@ def getCounts(trees, cut,Samples,group,groupmembers):
 		
 
 	"""
-	4% Z 15% TTbar 6% ST 4% Diboson 50% Rares
+	4% Z 7% TTbar 6% ST 4% Diboson 50% Rares
 	"""
 	"""
 	4.5% JES, 4.5% Luminosity error, 10% r_emu
@@ -349,11 +357,20 @@ def getCountsRare(trees, cut,Samples,group,groupmembers):
 	cut = cut.replace("inv", "p4.M()")
 	#~ nllPredictionScale =  0.5* sqrt(trigger["EE"]*trigger["MuMu"])*1./trigger["EMu"] *(rmue+1./(rmue))
 	#~ snllPredictionScale = sqrt((0.5* sqrt(trigger["EE"]*trigger["MuMu"])*1./trigger["EMu"] *(1.-1./(rmue)**2)*0.1*rmue)**2 + (0.05*0.5*(rmue+1./rmue))**2*((1/trigger["EE"])**2 + (1/2*trigger["MuMu"])**2 +(1/2*trigger["EMu"])**2))
-	nllPredictionScale = 1.02
+	nllPredictionScale = 1.01
+	nmmPredictionScale = 0.54
+	neePredictionScale = 0.47
 	if "TMath" in cut:
-		snllPredictionScale = 0.12
+		nllPredictionScale = 1.02
+		nmmPredictionScale = 0.57
+		neePredictionScale = 0.43
+		snllPredictionScale = 0.10
+		snmmPredictionScale = 0.08
+		sneePredictionScale = 0.06
 	else:
-		snllPredictionScale = 0.07
+		snllPredictionScale = 0.05
+		snmmPredictionScale = 0.04
+		sneePredictionScale = 0.03
 	
 	n = {
 		"MuMu" : 0.,
@@ -473,6 +490,8 @@ def getCountsRare(trees, cut,Samples,group,groupmembers):
 	#~ n["systEMu"] = 0.5*n["EMu"]
 	
 	n["nS"] = n["EE"]  + n["MuMu"] - n["EMu"]*nllPredictionScale
+	n["nSEE"] = n["EE"] - n["EMu"]*neePredictionScale
+	n["nSMM"] = n["MuMu"] - n["EMu"]*nmmPredictionScale
 	n["nSF"] = n["EE"] + n["MuMu"]
 	#~ n["systSF"] = sqrt(n["systMuMu"]**2 + n["systEE"]**2)
 	n["systSF"] = 0.5*n["nSF"]
@@ -500,7 +519,12 @@ def getCountsRare(trees, cut,Samples,group,groupmembers):
 	#~ n["totalsS"] = 	sqrt(n["EE"]+n["MuMu"]+n["EMu"]*nllPredictionScale**2 + n["EMu"]*snllPredictionScale + max(abs((n["EE"]+n["MuMu"]-n["nOF"])-(n["EEJESDown"]+n["MuMuJESDown"]-n["EMuJESDown"]*nllPredictionScale)),abs((n["EE"]+n["MuMu"]-n["nOF"])-(n["EEJESUp"]+n["MuMuJESUp"]-n["EMuJESUp"]*nllPredictionScale))))
 	n["statS"] = 	sqrt(n["sEE"]**2 + n["sMuMu"]**2 + (n["sEMu"]*nllPredictionScale)**2)
 	#~ n["systS"] = 	sqrt((n["EMu"]*snllPredictionScale)**2+ (max(abs((n["EE"]+n["MuMu"]-n["nOF"])-(n["EEJESDown"]+n["MuMuJESDown"]-n["EMuJESDown"]*nllPredictionScale)),abs((n["EE"]+n["MuMu"]-n["nOF"])-(n["EEJESUp"]+n["MuMuJESUp"]-n["EMuJESUp"]*nllPredictionScale))))**2 + (n["xsecEE"]+n["xsecMuMu"]-n["xsecEMu"])**2)
-	n["systS"] = sqrt(n["systSF"]**2+n["systOF"]**2)
+	n["systS"] = 0.5*n["nS"]
+	n["systSEE"] = 0.5*n["nSEE"]
+	n["systSMM"] = 0.5*n["nSMM"]
+	n["statSEE"] = sqrt(n["sEE"]**2 +(n["sEMu"]*neePredictionScale)**2)
+	n["statSMM"] = sqrt(n["sMuMu"]**2 +(n["sEMu"]*nmmPredictionScale)**2)
+
 	
 	
 
@@ -546,7 +570,7 @@ def getTableRare( trees, cuts, Samples,groups,order,titles = None, cutOrder = No
 	for name in cutOrder:
 		n = {}
 		#~ lineTemplate = r"%(title)50s & $%(EE)4i\pm%(sEE)4i^{+%(JESEEdown)4i}_{%(JESEEup)4i}$ &$ %(MuMu)4i\pm%(sMuMu)4i^{+%(JESMuMudown)4i}_{%(JESMuMuup)4i}$ &$ %(EMu)4i\pm%(sEMu)4i^{+%(JESEMudown)4i}_{%(JESEMuup)4i}$ &$ %(nSF)4i\pm%(sSF)4i^{+%(snSFup)4i}_{%(snSFdown)4i}$ &$ %(nOF)4i\pm%(sOF)4i^{+%(snOFup)4i}_{%(snOFdown)4i} $& $%(rmueSR)5.2f$ ($%(rmueSR-reldiff)3.2f$) & $%(nS)3.1f$ \\"+"\n"
-		lineTemplate = r"%(title)50s & $%(EE).1f\pm%(totalsEE).1f$ &$ %(MuMu).1f\pm%(totalsMuMu).1f$ &$ %(EMu).1f\pm%(totalsEMu).1f$ &$ %(nSF).1f\pm%(statSF).1f\pm%(systSF).1f$ &$ %(nOF).1f\pm%(statOF).1f\pm%(systOF).1f$& $%(nS)3.2f\pm%(statS).2f\pm%(systS).2f$ \\"+"\n"
+		lineTemplate = r"%(title)50s & $%(EE).1f\pm%(totalsEE).1f$ &$ %(MuMu).1f\pm%(totalsMuMu).1f$ &$ %(EMu).1f\pm%(totalsEMu).1f$ & $%(nS)3.2f\pm%(statS).2f\pm%(systS).2f$ & $%(nSMM)3.2f\pm%(statSMM).2f\pm%(systSMM).2f$ & $%(nSEE)3.2f\pm%(statSEE).2f\pm%(systSEE).2f$ \\"+"\n"
 		
 		for group in order:
 			repMap = { "title": group[1]}
@@ -555,7 +579,7 @@ def getTableRare( trees, cuts, Samples,groups,order,titles = None, cutOrder = No
 			result += lineTemplate%repMap
 		
 		
-	return tableTemplate%result
+	return tableTemplateSplit%result
 
 def main():
 	from sys import argv
@@ -575,7 +599,7 @@ def main():
 	eventCounts = totalNumberOfGeneratedEvents(path)
 	Samples = { 
 		"ZJets"         : [eventCounts["ZJets_madgraph_Summer12"],3503.71,0.04],
-		"TT_Powheg_Summer12_v2"        : [eventCounts["TT_Powheg_Summer12_v2"], 225.2,0.15], 
+		"TT_Powheg_Summer12_v2"        : [eventCounts["TT_Powheg_Summer12_v2"], 225.2,0.07], 
 		"ZZJetsTo2L2Q"  : [eventCounts["ZZJetsTo2L2Q_madgraph_Summer12"],2.46,0.5], 
 		"ZZJetsTo2L2Nu" : [eventCounts["ZZJetsTo2L2Nu_madgraph_Summer12"],0.365,0.5], 
 		"ZZJetsTo4L"    : [eventCounts["ZZJetsTo4L_madgraph_Summer12"],0.177,0.5],
@@ -668,7 +692,7 @@ def main():
 		titles[name+"2020"] = "$p_T > 20 GeV \wedge$ %s"%titles[name]
 		titles[name+"2020"] = titles[name+"2020"].replace(r"\wedge$ --","$")
 
-
+#~ 
 	cutAndCount = getTable(trees, baseCentral,Samples,groups,order, titles = titles, cutOrder = ["SignalNonRectCentral"])
 
 	print cutAndCount
@@ -682,7 +706,7 @@ def main():
 	outFile = open("tab/table_cutAndCountCrosscheckSignalNonRectForward.tex","w")
 	outFile.write(cutAndCount)
 	outFile.close()
-
+#~ 
 	order = [["Diboson","WZ,ZZ"],["Rare","ttZ"],["TTWJets","TTWJets"],["All","All Backgrounds"]]
 	groups ={
 		"All":["ZZJetsTo2L2Q","ZZJetsTo2L2Nu","ZZJetsTo4L","WZJetsTo3LNu","TTZJets"],
@@ -707,6 +731,20 @@ def main():
 
 	print cutAndCount
 	outFile = open("tab/table_cutAndCountCrosscheck_Rares_SignalNonRectForward.tex","w")
+	outFile.write(cutAndCount)
+	outFile.close()
+	#~ 
+	cutAndCount = getTableRare(trees, baseCentral, Samples,groups,order, titles = titles, cutOrder = ["SignalNonRectCentral"])
+
+	print cutAndCount
+	outFile = open("tab/table_cutAndCountCrosscheck_Rares_SignalNonRectCentral_Split.tex","w")
+	outFile.write(cutAndCount)
+	outFile.close()
+	
+	cutAndCount = getTableRare(trees, baseForward, Samples,groups,order, titles = titles, cutOrder = ["SignalNonRectForward"])
+
+	print cutAndCount
+	outFile = open("tab/table_cutAndCountCrosscheck_Rares_SignalNonRectForward_Split.tex","w")
 	outFile.write(cutAndCount)
 	outFile.close()
 	

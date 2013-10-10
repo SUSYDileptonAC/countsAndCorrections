@@ -8,7 +8,7 @@ ROOT.gStyle.SetOptStat(0)
 
 etaCuts = {
 			"Barrel":"abs(eta1) < 1.4 && abs(eta2) < 1.4",
-			"Endcap":"(abs(eta1) < 1.4 || abs(eta1) > 1.6) && (abs(eta2) < 1.4 || abs(eta2) > 1.6) && 1.6 <= TMath::Max(abs(eta1),abs(eta2))",
+			"Endcap":"(abs(eta1) < 1.4 || abs(eta1) > 1.6) && (abs(eta2) < 1.4 || abs(eta2) > 1.6) && 1.6 <= TMath::Max(abs(eta1),abs(eta2)) && abs(eta1) < 2.4 && abs(eta2) < 2.4",
 			"BothEndcap":"abs(eta1) > 1.6 && abs(eta2) > 1.6",
 			"Inclusive":"abs(eta1) < 2.4 && abs(eta2) < 2.4 && ((abs(eta1) < 1.4 || abs(eta1) > 1.6) && (abs(eta2) < 1.4 || abs(eta2) > 1.6))"
 			}
@@ -256,7 +256,7 @@ if (__name__ == "__main__"):
 	hCanvas = TCanvas("hCanvas", "Distribution", 800,800)
 	from sys import argv		
 	etaCut = etaCuts[argv[1]]
-	suffix = argv[1]
+	suffix = argv[1] + "_" + argv[2]
 	ptCut = "pt1 > 20 && pt2 > 20"#(pt1 > 10 && pt2 > 20 || pt1 > 20 && pt2 > 10)
 	ptCutLabel = "20"#"20(10)"
 	variable = "p4.M()"
@@ -270,7 +270,7 @@ if (__name__ == "__main__"):
 	MuMutrees = readTrees(path, "MuMu")
 
 
-	nBins = 200
+	nBins = 1000
 	firstBin = 0
 	lastBin = 200
 
@@ -287,8 +287,32 @@ if (__name__ == "__main__"):
 
 			EMuhist = createHistoFromTree(tree,  variable, cuts, nBins, firstBin, lastBin, nEvents)
 		
-	SFhist = EEhist.Clone()
-	SFhist.Add(MuMuhist.Clone())
+	if argv[2] == "SF":	
+		SFhist = EEhist.Clone()
+		SFhist.Add(MuMuhist.Clone())
+		if "TMath" in cuts:
+			nllPredictionScale = 1.02
+			snllPredictionScale = 0.10
+		else:
+			nllPredictionScale = 1.01
+			snllPredictionScale = 0.05				
+			
+	elif argv[2] == "EE":
+		SFhist = EEhist.Clone()	
+		if "TMath" in cuts:
+			nllPredictionScale = 0.43
+			snllPredictionScale = 0.06
+		else:
+			nllPredictionScale = 0.47
+			snllPredictionScale = 0.03		
+	else:
+		SFhist = MuMuhist.Clone()	
+		if "TMath" in cuts:
+			nllPredictionScale = 0.57
+			snllPredictionScale = 0.08
+		else:
+			nllPredictionScale = 0.54
+			snllPredictionScale = 0.04	
 	
 	
 	rmue = 1.21
@@ -299,17 +323,13 @@ if (__name__ == "__main__"):
 		}
 	#~ nllPredictionScale =  0.5* sqrt(trigger["EE"]*trigger["MuMu"])*1./trigger["EMu"] *(rmue+1./(rmue))
 	#~ snllPredictionScale = 0.5* sqrt(trigger["EE"]*trigger["MuMu"])*1./trigger["EMu"] *(1.-1./(rmue)**2)*0.1*rmue
-	nllPredictionScale =  1.02
-	if "Endcap" in suffix:
-		snllPredictionScale = 0.12
-	else:
-		snllPredictionScale = 0.07
+
 
 	
-	peak = (SFhist.Integral(SFhist.FindBin(81),SFhist.FindBin(101))- EMuhist.Integral(EMuhist.FindBin(81),EMuhist.FindBin(101))*nllPredictionScale) 
-	peakError = sqrt(sqrt(SFhist.Integral(SFhist.FindBin(81),SFhist.FindBin(101)))**2 + sqrt(EMuhist.Integral(EMuhist.FindBin(81),EMuhist.FindBin(101))*nllPredictionScale)**2)
-	continuum = (SFhist.Integral(SFhist.FindBin(minMll),SFhist.FindBin(70)) - EMuhist.Integral(EMuhist.FindBin(minMll),EMuhist.FindBin(70))*nllPredictionScale )
-	continuumError = sqrt(sqrt(SFhist.Integral(SFhist.FindBin(minMll),SFhist.FindBin(70)))**2 + sqrt(EMuhist.Integral(EMuhist.FindBin(minMll),EMuhist.FindBin(70))*nllPredictionScale)**2) 
+	peak = (SFhist.Integral(SFhist.FindBin(81+0.01),SFhist.FindBin(101-0.01))- EMuhist.Integral(EMuhist.FindBin(81+0.01),EMuhist.FindBin(101-0.01))*nllPredictionScale) 
+	peakError = sqrt(sqrt(SFhist.Integral(SFhist.FindBin(81),SFhist.FindBin(101)))**2 + sqrt(EMuhist.Integral(EMuhist.FindBin(81+0.01),EMuhist.FindBin(101+0.01))*nllPredictionScale)**2)
+	continuum = (SFhist.Integral(SFhist.FindBin(minMll+0.01),SFhist.FindBin(70-0.01)) - EMuhist.Integral(EMuhist.FindBin(minMll+0.01),EMuhist.FindBin(70-0.01))*nllPredictionScale )
+	continuumError = sqrt(sqrt(SFhist.Integral(SFhist.FindBin(minMll+0.01),SFhist.FindBin(70+0.01)))**2 + sqrt(EMuhist.Integral(EMuhist.FindBin(minMll+0.01),EMuhist.FindBin(70+0.01))*nllPredictionScale)**2) 
 	Rinout =   continuum / peak
 	ErrRinoutSyst = (snllPredictionScale*EMuhist.Integral(SFhist.FindBin(minMll),SFhist.FindBin(70))/peak) + (snllPredictionScale*(continuum*SFhist.Integral(EMuhist.FindBin(81),SFhist.FindBin(101)))/(peak**2))
 
@@ -317,7 +337,8 @@ if (__name__ == "__main__"):
 
 	ErrRinout = sqrt((continuumError/peak)**2 + (continuum*peakError/peak**2)**2)
 
-
+	if argv[2] == "SF" and "TMath" in cuts:
+		Rinout = 0.063
 
 	legend = TLegend(0.2, 0.65, 0.65, 0.90)
 	legend.SetFillStyle(0)

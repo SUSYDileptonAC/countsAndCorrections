@@ -48,7 +48,7 @@ def loadShapePickles(regionName, subcutName, shape = "GT", path = "../EdgeFitter
 	result = {}
 	for varName, template in picklePaths.iteritems():
 		pklPath = os.path.join(path, template%(regionName, shape))
-		print pklPath
+		#~ print pklPath
 		result[varName] = "--"
 		#~ print pklPath
 		if os.path.exists(pklPath):
@@ -192,6 +192,13 @@ def extendPickle( name, pkl):
 			result[subcut]["nZSysUncert"] = region.dyPrediction[subcut][1]
 			result[subcut]["nZStatUncert"] = region.dyPrediction[subcut][2]
 			result[subcut]["nZUncert"] = sqrt(sum([i**2 for i in [result[subcut]["nZStatUncert"], result[subcut]["nZSysUncert"]]]))
+		#~ print subcut
+		if not subcut in region.rarePrediction:
+			result[subcut]["nRare"] = 0.
+			result[subcut]["nRareUncert"] = 0.
+		else:
+			result[subcut]["nRare"] = region.rarePrediction[subcut][0]
+			result[subcut]["nRareUncert"] = region.rarePrediction[subcut][1]		
 		result[subcut]["nCont"] = result[subcut]["nZ"] * region.rInOut.val
 		result[subcut]["nContSysUncert"] = sqrt(sum([i**2 for i in [result[subcut]["nCont"] * region.rInOut.err * 1./region.rInOut.val, result[subcut]["nZSysUncert"]* region.rInOut.val ]]))
 		result[subcut]["nContStatUncert"] = result[subcut]["nZStatUncert"] * region.rInOut.val
@@ -200,8 +207,8 @@ def extendPickle( name, pkl):
 		for i in ["nS", "nSUncert", "nSSysUncert", "nSStatUncert"]:
 			result[subcut][i] = result[subcut]["edgeMass"][i]
 		
-		result[subcut]["nSStar"] = result[subcut]["edgeMass"]["nS"] - result[subcut]["nCont"]
-		result[subcut]["nSStarSysUncert"] = sqrt( result[subcut]["edgeMass"]["nSSysUncert"]**2 + result[subcut]["nContUncert"]**2)
+		result[subcut]["nSStar"] = result[subcut]["edgeMass"]["nS"] - result[subcut]["nCont"] - result[subcut]["nRare"]
+		result[subcut]["nSStarSysUncert"] = sqrt( result[subcut]["edgeMass"]["nSSysUncert"]**2 + result[subcut]["nContUncert"]**2 + result[subcut]["nRareUncert"]**2)
 		result[subcut]["nSStarStatUncert"] = result[subcut]["edgeMass"]["nSStatUncert"]
 		result[subcut]["nSStarUncert"] = sqrt(result[subcut]["nSStarStatUncert"]**2 + result[subcut]["nSStarSysUncert"]**2)
 		result[subcut]["nSStar-debug"] = "%.4f - %.4f = %.4f (Uncert sqrt(sum(i**2 for i in [%.4f, %.4f, %.4f] ) = %.4f"%(result[subcut]["edgeMass"]["nS"], result[subcut]["nCont"], result[subcut]["nSStar"], result[subcut]["edgeMass"]["nSSysUncert"], result[subcut]["nContUncert"], result[subcut]["edgeMass"]["nSStatUncert"], result[subcut]["nSStarUncert"])
@@ -218,8 +225,13 @@ def extendPickleSeparated( name, pkl,dilepton):
 			result[subcut][mllcut] =  extendBasics(n, region)
 
 
-		scale, scaleError = getSplitCorrection(region.rMuE.val,region.rMuE.err,dilepton)
-
+		#~ scale, scaleError = getSplitCorrection(region.rMuE.val,region.rMuE.err,dilepton)
+		if dilepton == "MuMu":
+			scale = region.R_MMOF.val
+			scaleError = region.R_MMOF.err
+		else:	
+			scale = region.R_EEOF.val
+			scaleError = region.R_EEOF.err
 		result[subcut]["nBEdge"] = result[subcut]["edgeMass"]["nB%s"%dilepton]
 		#~ print subcut, result[subcut]["nBEdge"] 
 		result[subcut]["nBEdgeSysUncert"] = result[subcut]["edgeMass"]["nB%sSysUncert"%dilepton]
@@ -241,6 +253,14 @@ def extendPickleSeparated( name, pkl,dilepton):
 			result[subcut]["nZSysUncert"] = ((region.dyPrediction[subcut][1]*scale)**2 + (region.dyPrediction[subcut][1]*scale*scaleError)**2)**0.5
 			result[subcut]["nZStatUncert"] = ((region.dyPrediction[subcut][2]*scale)**2 + (region.dyPrediction[subcut][2]*scale*scaleError)**2)**0.5
 			result[subcut]["nZUncert"] = sqrt(sum([i**2 for i in [result[subcut]["nZStatUncert"], result[subcut]["nZSysUncert"]]]))
+		if not subcut == "default":
+			result[subcut]["nRare"] = 0.
+			result[subcut]["nRareUncert"] = 0.
+		else:
+			result[subcut]["nRare"] = region.rarePrediction[dilepton][0]
+			result[subcut]["nRareUncert"] = region.rarePrediction[dilepton][1]
+
+		
 		result[subcut]["nCont"] = result[subcut]["nZ"] * region.rInOut.val
 		result[subcut]["nContSysUncert"] = sqrt(sum([i**2 for i in [result[subcut]["nCont"] * region.rInOut.err * 1./region.rInOut.val, result[subcut]["nZSysUncert"]* region.rInOut.val ]]))
 		result[subcut]["nContStatUncert"] = result[subcut]["nZStatUncert"] * region.rInOut.val
@@ -254,8 +274,8 @@ def extendPickleSeparated( name, pkl,dilepton):
 		result[subcut]["nSSysUncert"] = result[subcut]["edgeMass"]["nS%sSysUncert"%dilepton]
 		result[subcut]["nSUncert"] = result[subcut]["edgeMass"]["nS%sUncert"%dilepton]
 		
-		result[subcut]["nSStar"] = result[subcut]["edgeMass"]["nS%s"%dilepton] - result[subcut]["nCont"]
-		result[subcut]["nSStarSysUncert"] = sqrt( result[subcut]["edgeMass"]["nS%sSysUncert"%dilepton]**2 + result[subcut]["nContUncert"]**2)
+		result[subcut]["nSStar"] = result[subcut]["edgeMass"]["nS%s"%dilepton] - result[subcut]["nCont"] - result[subcut]["nRare"]
+		result[subcut]["nSStarSysUncert"] = sqrt( result[subcut]["edgeMass"]["nS%sSysUncert"%dilepton]**2 + result[subcut]["nContUncert"]**2 + result[subcut]["nRareUncert"]**2)
 		result[subcut]["nSStarStatUncert"] = result[subcut]["edgeMass"]["nS%sStatUncert"%dilepton]
 		result[subcut]["nSStarUncert"] = sqrt(result[subcut]["nSStarStatUncert"]**2 + result[subcut]["nSStarSysUncert"]**2)
 		result[subcut]["nSStar-debug"] = "%.4f - %.4f = %.4f (Uncert sqrt(sum(i**2 for i in [%.4f, %.4f, %.4f] ) = %.4f"%(result[subcut]["edgeMass"]["nS"], result[subcut]["nCont"], result[subcut]["nSStar"], result[subcut]["edgeMass"]["nSSysUncert"], result[subcut]["nContUncert"], result[subcut]["edgeMass"]["nSStatUncert"], result[subcut]["nSStarUncert"])
@@ -271,8 +291,8 @@ def saveTable(table, name):
 def makeSummaryTable(data, subcuts, regionName, name,dilepton=""):
 	tableTemplate =r"""
 %s
-\begin{tabular}{ll|ccc|cc}
-selection & approach & $N_S$ & $N_B$ ( low \mll ) & $N_Z$ & $N_{\text{Continuum}}$ & \nsstar\\
+\begin{tabular}{ll|cc|ccc}
+selection & approach & $N_S$ & $N_B$ ( low \mll ) & $N_{\text{Continuum}}$ & $N_{Rare}$ & \nsstar\\
 \hline
 \hline
 %s
@@ -314,8 +334,8 @@ selection & approach & $N_S$ & $N_B$ ( low \mll ) & $N_Z$ & $N_{\text{Continuum}
 		}
 	notesTemplate = "%% %(nS-debug)s\n%% %(cut)s \n"
 	notesLine2Template = r"%% %(nSStar-debug)s"+"\n"
-	lineCountTemplate = r"%(title)50s &    count    & $%(nS)3.1f \pm %(nSUncert)3.1f$ & $%(nB)3.1f \pm %(nBUncert)3.1f$  ($%(nBEdge)3.1f \pm %(nBEdgeStatUncert)3.1f \pm %(nBEdgeSysUncert)3.1f$) & $%(nZ)3.1f \pm %(nZUncert)3.1f$  & $%(nCont)3.1f \pm %(nContUncert)3.1f$ & $%(nSStar)3.1f \pm %(nSStarStatUncert)3.1f \pm %(nSStarSysUncert)3.1f$ \\"+"\n"
-	lineShapeTemplate = r"%(title)50s & %(shape)10s & $%(nS)3.1f \pm %(nSUncert)3.1f$ & $%(nB)3.1f \pm %(nBUncert)3.1f$                  & $%(nZ)3.1f \pm %(nZUncert)3.1f$  & $%(nCont)3.1f \pm %(nContUncert)3.1f$ & $%(nSStar)3.1f \pm %(nSStarUncert)3.1f$\\"+"\n"
+	lineCountTemplate = r"%(title)50s &    count    & $%(nS)3.1f \pm %(nSUncert)3.1f$ & $%(nB)3.1f \pm %(nBUncert)3.1f$  ($%(nBEdge)3.1f \pm %(nBEdgeStatUncert)3.1f \pm %(nBEdgeSysUncert)3.1f$)  & $%(nCont)3.1f \pm %(nContUncert)3.1f$ & $%(nRare)3.1f \pm %(nRareUncert)3.1f$ & $%(nSStar)3.1f \pm %(nSStarStatUncert)3.1f \pm %(nSStarSysUncert)3.1f$ \\"+"\n"
+	lineShapeTemplate = r"%(title)50s & %(shape)10s & $%(nS)3.1f \pm %(nSUncert)3.1f$ & $%(nB)3.1f \pm %(nBUncert)3.1f$                    & -- & -- & $%(nSStar)3.1f \pm %(nSStarUncert)3.1f$\\"+"\n"
 	
 
 	table = ""

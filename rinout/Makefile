@@ -1,27 +1,33 @@
 MAKERinout = python RinOut_Syst.py
 MAKERinoutMC = python RinOut_Syst_MC.py
 MAKERinoutPlot = python RinOut.py
-AN_PATH = /user/schomakers/DileptonAN
+AN_PATH = /home/jan/Doktorarbeit/Dilepton/projects/DileptonAN
 AN_TABLES=$(AN_PATH)/tables
 AN_PLOTS=$(AN_PATH)/plots
 
 
 RinoutPlot: RinOut.py
-		$(MAKERinoutPlot) Barrel
-		$(MAKERinoutPlot) Endcap
-		$(MAKERinoutPlot) Inclusive	
-		$(MAKERinoutPlot) BothEndcap		
+		$(MAKERinoutPlot) Barrel SF
+		$(MAKERinoutPlot) Endcap SF
+		$(MAKERinoutPlot) Barrel EE
+		$(MAKERinoutPlot) Endcap EE
+		$(MAKERinoutPlot) Barrel MM
+		$(MAKERinoutPlot) Endcap MM
+		
 		
 RinoutSyst: RinOut_Syst.py
-		$(MAKERinout) Barrel
-		$(MAKERinout) Endcap
-		$(MAKERinout) Inclusive	
-		$(MAKERinout) BothEndcap		
+		$(MAKERinout) Barrel SF
+		$(MAKERinout) Endcap SF
+		$(MAKERinout) Barrel EE
+		$(MAKERinout) Endcap EE
+		$(MAKERinout) Barrel MM
+		$(MAKERinout) Endcap MM
+	
 		
 RinoutMC: RinOut.py
 		$(MAKERinoutMC)
 		
 copyAN:
-	cp Rinout_Barrel.pdf Rinout_Endcap.pdf Rinout_NoLog_Barrel.pdf Rinout_NoLog_Endcap.pdf RinoutSystMET_Barrel.pdf RinoutSystMET_Endcap.pdf RinoutSystNJets_Barrel.pdf RinoutSystNJets_Endcap.pdf $(AN_PLOTS)
+	cp Rinout_Barrel_SF.pdf Rinout_Endcap_SF.pdf Rinout_NoLog_Barrel_SF.pdf Rinout_NoLog_Endcap_SF.pdf RinoutSystMET_Barrel_SF.pdf RinoutSystMET_Endcap_SF.pdf RinoutSystNJets_Barrel_SF.pdf RinoutSystNJets_Endcap_SF.pdf $(AN_PLOTS)
 	
 

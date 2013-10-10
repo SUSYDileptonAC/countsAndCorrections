@@ -10,7 +10,7 @@ ROOT.gStyle.SetOptStat(0)
 
 etaCuts = {
 			"Barrel":"abs(eta1) < 1.4 && abs(eta2) < 1.4",
-			"Endcap":"(((abs(eta1) < 1.4 || abs(eta1) > 1.6) && (abs(eta2) < 1.4 || abs(eta2) > 1.6)) && 1.6 <= TMath::Max(abs(eta1),abs(eta2)))",
+			"Endcap":"(((abs(eta1) < 1.4 || abs(eta1) > 1.6) && (abs(eta2) < 1.4 || abs(eta2) > 1.6)) && 1.6 < TMath::Max(abs(eta1),abs(eta2)) && abs(eta1) < 2.4 && abs(eta2) < 2.4)",
 			"BothEndcap":"abs(eta1) > 1.6 && abs(eta2) > 1.6",
 			"Inclusive":"abs(eta1) < 2.4 && abs(eta2) < 2.4 && ((abs(eta1) < 1.4 || abs(eta1) > 1.6) && (abs(eta2) < 1.4 || abs(eta2) > 1.6))"
 			}
@@ -260,7 +260,7 @@ if (__name__ == "__main__"):
 	ptCutLabel = "20"#"20(10)"
 	variable = "p4.M()"
 	etaCut = etaCuts[argv[1]]
-	suffix = argv[1]
+	suffix = argv[1] + "_" + argv[2]
 	#~ cuts = "weight*(chargeProduct < 0 && %s && met < 100 && nJets ==2 && abs(eta1) < 2.4 && abs(eta2) < 2.4 && deltaR > 0.3 && runNr < 201657 && (runNr < 198049 || runNr > 198522))"%ptCut
 	cuts = "weight*(chargeProduct < 0 && %s && met < 50 && nJets >=2 && %s && deltaR > 0.3 && runNr <= 201678 && !(runNr >= 198049 && runNr <= 198522) )"%(ptCut,etaCut)
 	print cuts
@@ -288,13 +288,13 @@ if (__name__ == "__main__"):
 	Labelout.SetTextAlign(12)
 	Labelout.SetTextSize(0.07)
 	Labelout.SetTextColor(ROOT.kBlack)
-	nBins = 200
+	nBins = 1000
 	firstBin = 0
 	lastBin = 200
 
 	for name, tree in EEtrees.iteritems():
 		if name == "MergedData":
-			print name
+			#~ print name
 			EEhist = createHistoFromTree(tree,  variable, cuts, nBins, firstBin, lastBin, nEvents)
 	for name, tree in MuMutrees.iteritems():
 		if name == "MergedData":
@@ -304,10 +304,32 @@ if (__name__ == "__main__"):
 		if name == "MergedData":
 
 			EMuhist = createHistoFromTree(tree,  variable, cuts, nBins, firstBin, lastBin, nEvents)
-		
-	SFhist = EEhist.Clone()
-	SFhist.Add(MuMuhist.Clone())
-	
+	if argv[2] == "SF":	
+		SFhist = EEhist.Clone()
+		SFhist.Add(MuMuhist.Clone())
+		if "TMath" in cuts:
+			nllPredictionScale = 1.02
+			snllPredictionScale = 0.10
+		else:
+			nllPredictionScale = 1.01
+			snllPredictionScale = 0.05				
+			
+	elif argv[2] == "EE":
+		SFhist = EEhist.Clone()	
+		if "TMath" in cuts:
+			nllPredictionScale = 0.43
+			snllPredictionScale = 0.06
+		else:
+			nllPredictionScale = 0.47
+			snllPredictionScale = 0.03		
+	else:
+		SFhist = MuMuhist.Clone()	
+		if "TMath" in cuts:
+			nllPredictionScale = 0.57
+			snllPredictionScale = 0.08
+		else:
+			nllPredictionScale = 0.54
+			snllPredictionScale = 0.04		
 	
 	rmue = 1.21
 	trigger = {
@@ -317,47 +339,46 @@ if (__name__ == "__main__"):
 		}
 	#~ nllPredictionScale =  0.5* sqrt(trigger["EE"]*trigger["MuMu"])*1./trigger["EMu"] *(rmue+1./(rmue))
 	#~ snllPredictionScale = 0.5* sqrt(trigger["EE"]*trigger["MuMu"])*1./trigger["EMu"] *(1.-1./(rmue)**2)*0.1*rmue
-	nllPredictionScale =  1.02
-	if "Endcap" in suffix:
-		snllPredictionScale = 0.12
-	else:
-		snllPredictionScale = 0.07
 
-	fitHist = SFhist.Clone()
-	fitHist.Add(EMuhist,-1)
+
+	#~ fitHist = SFhist.Clone()
+	#~ fitHist.Add(EMuhist,-1)
+	#~ 
+	#~ expo = TF1("expo","exp([0]+[1]*x)",20,35)
+	#~ expo.SetParameter(0,0)
+	#~ expo.SetParameter(1,-0.2)
+	#~ fitHist.Fit("expo","R")
+	#~ fitHist.Draw("p")
+	#~ expo.Draw("same")
+	#~ hCanvas.SetLogy()
+	#~ hCanvas.Print("fit.pdf")
+	#~ hCanvas.SetLogy(0)
+	#~ print expo.GetParameter(0), expo.GetParameter(1)
 	
-	expo = TF1("expo","exp([0]+[1]*x)",20,35)
-	expo.SetParameter(0,0)
-	expo.SetParameter(1,-0.2)
-	fitHist.Fit("expo","R")
-	fitHist.Draw("p")
-	expo.Draw("same")
-	hCanvas.SetLogy()
-	hCanvas.Print("fit.pdf")
-	hCanvas.SetLogy(0)
-	print expo.GetParameter(0), expo.GetParameter(1)
-	
-	peak = (SFhist.Integral(SFhist.FindBin(81),SFhist.FindBin(101))- EMuhist.Integral(EMuhist.FindBin(81),EMuhist.FindBin(101))*nllPredictionScale) 
+	peak = (SFhist.Integral(SFhist.FindBin(81+0.01),SFhist.FindBin(101-0.01))- EMuhist.Integral(EMuhist.FindBin(81+0.01),EMuhist.FindBin(101-0.01))*nllPredictionScale) 
 	peakError = sqrt(sqrt(SFhist.Integral(SFhist.FindBin(81),SFhist.FindBin(101)))**2 + sqrt(EMuhist.Integral(EMuhist.FindBin(81),EMuhist.FindBin(101))*nllPredictionScale)**2)
-	continuum = (SFhist.Integral(SFhist.FindBin(minMll),SFhist.FindBin(70)) - EMuhist.Integral(EMuhist.FindBin(minMll),EMuhist.FindBin(70))*nllPredictionScale )
+	continuum = (SFhist.Integral(SFhist.FindBin(minMll+0.01),SFhist.FindBin(70-0.01)) - EMuhist.Integral(EMuhist.FindBin(minMll),EMuhist.FindBin(70-0.01))*nllPredictionScale )
 	continuumError = sqrt(sqrt(SFhist.Integral(SFhist.FindBin(minMll),SFhist.FindBin(70)))**2 + sqrt(EMuhist.Integral(EMuhist.FindBin(minMll),EMuhist.FindBin(70))*nllPredictionScale)**2) 
 	Rinout =   continuum / peak
-	ErrRinoutSyst = (snllPredictionScale*EMuhist.Integral(SFhist.FindBin(minMll),SFhist.FindBin(70))/peak) + (snllPredictionScale*(continuum*SFhist.Integral(EMuhist.FindBin(81),SFhist.FindBin(101)))/(peak**2))
+	#~ ErrRinoutSyst = (snllPredictionScale*EMuhist.Integral(SFhist.FindBin(minMll),SFhist.FindBin(70))/peak) + (snllPredictionScale*(continuum*SFhist.Integral(EMuhist.FindBin(81),SFhist.FindBin(101)))/(peak**2))
 
 	ErrRinoutSyst = Rinout*0.25
 
 	ErrRinout = sqrt((continuumError/peak)**2 + (continuum*peakError/peak**2)**2)
-	
+	print "Peak SF: %.1f"%SFhist.Integral(SFhist.FindBin(81+0.01),SFhist.FindBin(101+0.01))
+	print "Peak OF: %.1f"%(EMuhist.Integral(EMuhist.FindBin(81+0.01),EMuhist.FindBin(101+0.01))*nllPredictionScale)
+	print "Continuum SF: %.1f"%SFhist.Integral(SFhist.FindBin(minMll+0.01),SFhist.FindBin(70+0.01))
+	print "Continuum OF: %.1f"%(EMuhist.Integral(EMuhist.FindBin(minMll+0.01),EMuhist.FindBin(70+0.01))*nllPredictionScale)
 	print "R_{in,out} = %f \pm %f (stat.) \pm \%f (syst) "%(Rinout,ErrRinout,ErrRinoutSyst) 	
-	print sqrt(ErrRinout**2+ErrRinoutSyst**2)
+	#~ print sqrt(ErrRinout**2+ErrRinoutSyst**2)
 	ErrRinoutTotal = sqrt(ErrRinoutSyst**2 + ErrRinout**2)
 	inPeak = 34
 	inPeakError = 4.4
 	prediction = inPeak*Rinout
 	predictionError = sqrt((inPeak*ErrRinoutTotal**2) + (Rinout*inPeakError)**2)
 	
-	print prediction
-	print predictionError
+	#~ print prediction
+	#~ print predictionError
 	
 	
 	
@@ -370,7 +391,7 @@ if (__name__ == "__main__"):
 	EMuhist.Draw("samehist")
 	#EMuhist.SetLineColor(855)
 	EMuhist.SetFillColor(855)
-	legend.AddEntry(SFhist,"SF events","p")
+	legend.AddEntry(SFhist,"%s events"%argv[2],"p")
 	legend.AddEntry(EMuhist,"OF events","f")
 	legend.Draw("same")
 	#hCanvas.SetLogy()
@@ -436,7 +457,7 @@ if (__name__ == "__main__"):
 	line4.Draw("same")
 	Labelin.DrawLatex(82.25,SFhist.GetBinContent(SFhist.GetMaximumBin())/12,"In")
 	Labelout.DrawLatex(37.25,SFhist.GetBinContent(SFhist.GetMaximumBin())/12,"Out")
-	Cutlabel.DrawLatex(120,SFhist.GetBinContent(SFhist.GetMaximumBin())/10,"#splitline{p_{T}^{lepton} > %s GeV}{MET < 100 GeV, nJets ==2}"%ptCutLabel)
+	Cutlabel.DrawLatex(120,SFhist.GetBinContent(SFhist.GetMaximumBin())/10,"#splitline{p_{T}^{lepton} > %s GeV}{MET < 50 GeV, nJets >=2}"%ptCutLabel)
 	latex.DrawLatex(0.05, 0.96, "CMS Preliminary  #sqrt{s} = 8 TeV,     #scale[0.6]{#int}Ldt = %s fb^{-1}"%lumi)
 	hCanvas.Print("Rinout_%s.pdf"%suffix)	
 	

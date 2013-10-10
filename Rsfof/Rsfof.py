@@ -330,7 +330,7 @@ if (__name__ == "__main__"):
 	eeTransfer = EEhistTransfer.Integral()
 	mmTransfer = MuMuhistTransfer.Integral()
 	sf = SFhist.Integral() 
-	of = EMuhist.Integral() 
+	of = EMuhist.Integral()-1 
 	sfTransfer = SFhistTransfer.Integral() 
 	ofTransfer = EMuhistTransfer.Integral() 
 	

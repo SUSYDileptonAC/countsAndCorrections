@@ -37,22 +37,21 @@ def main():
 # Table for Inclusive
 
 	tableTemplate =r"""
-\begin{tabular}{|c|c|c|c|}     
-\hline    
+\begin{tabular}{c|c|c|c}     
+  
  SF & OF & $\Rsfof \pm \sigma_{stat}$ & Transfer $\pm \sigma_{stat}$\\    
-\hline\hline
- \multicolumn{4}{|c|}{MC} \\
 \hline
- \multicolumn{4}{|c|}{$|\eta|<2.4$ } \\
+ \multicolumn{4}{c}{MC} \\
+\hline
+ \multicolumn{4}{c}{$|\eta|<2.4$ } \\
 \hline 
 %s    
     \hline 
-\multicolumn{4}{|c|}{Data} \\
+\multicolumn{4}{c}{Data} \\
 \hline
- \multicolumn{4}{|c|}{$|\eta|<2.4$ } \\
+ \multicolumn{4}{c}{$|\eta|<2.4$ } \\
 \hline
-%s 
- \hline     
+%s    
 \end{tabular}  
 """
 
@@ -82,22 +81,21 @@ def main():
 
 	tableTemplate =r"""
 
-\begin{tabular}{|c|c|c|c|c|c|c|c|c|c|}     
-\hline    
+\begin{tabular}{c|c|c|c|c|c|c|c}     
  SF & OF & $\Rsfof \pm \sigma_{stat}$ & Transfer $\pm \sigma_{stat}$ &  SF & OF & $\Rsfof \pm \sigma_{stat}$ & Transfer $\pm \sigma_{stat}$  \\    
-\hline\hline
- \multicolumn{8}{|c|}{MC} \\
 \hline
-  \multicolumn{4}{|c|}{$|\eta|<1.4$ } & \multicolumn{4}{|c|}{ at least 1 $|\eta| > 1.6$ } \\
+ \multicolumn{8}{c}{MC} \\
+\hline
+  \multicolumn{4}{c|}{$|\eta|<1.4$ } & \multicolumn{4}{|c}{ at least 1 $|\eta| > 1.6$ } \\
 \hline 
 %s    
     \hline 
-\multicolumn{8}{|c|}{Data} \\
+\multicolumn{8}{c}{Data} \\
 \hline
-  \multicolumn{4}{|c|}{$|\eta|<1.4$ } & \multicolumn{4}{|c|}{ at least 1 $|\eta| > 1.6$ }\\
+  \multicolumn{4}{c|}{$|\eta|<1.4$ } & \multicolumn{4}{|c}{ at least 1 $|\eta| > 1.6$ }\\
 \hline
 %s 
- \hline     
+  
 \end{tabular}  
 
 """
@@ -123,22 +121,22 @@ def main():
 # Table for Inclusive
 
 	tableTemplate =r"""
-\begin{tabular}{|c|c|c|c|}     
-\hline    
+\begin{tabular}{c|c|c|c}     
+ 
  SF & OF & $\Reeof \pm \sigma_{stat}$ & Transfer $\pm \sigma_{stat}$\\    
-\hline\hline
- \multicolumn{4}{|c|}{MC} \\
 \hline
- \multicolumn{4}{|c|}{$|\eta|<2.4$ } \\
+ \multicolumn{4}{c}{MC} \\
+\hline
+ \multicolumn{4}{c}{$|\eta|<2.4$ } \\
 \hline 
 %s    
     \hline 
-\multicolumn{4}{|c|}{Data} \\
+\multicolumn{4}{c}{Data} \\
 \hline
- \multicolumn{4}{|c|}{$|\eta|<2.4$ } \\
+ \multicolumn{4}{c}{$|\eta|<2.4$ } \\
 \hline
 %s 
- \hline     
+ 
 \end{tabular}  
 """
 
@@ -168,22 +166,21 @@ def main():
 
 	tableTemplate =r"""
 
-\begin{tabular}{|c|c|c|c|c|c|c|c|c|c|}     
-\hline    
+\begin{tabular}{c|c|c|c|c|c|c|c}     
+ 
  SF & OF & $\Reeof \pm \sigma_{stat}$ & Transfer $\pm \sigma_{stat}$ &  SF & OF & $\Reeof \pm \sigma_{stat}$ & Transfer $\pm \sigma_{stat}$  \\    
-\hline\hline
- \multicolumn{8}{|c|}{MC} \\
 \hline
-  \multicolumn{4}{|c|}{$|\eta|<1.4$ } & \multicolumn{4}{|c|}{ at least 1 $|\eta| > 1.6$ } \\
+ \multicolumn{8}{c}{MC} \\
+\hline
+  \multicolumn{4}{c|}{$|\eta|<1.4$ } & \multicolumn{4}{|c}{ at least 1 $|\eta| > 1.6$ } \\
 \hline 
 %s    
     \hline 
-\multicolumn{8}{|c|}{Data} \\
+\multicolumn{8}{c}{Data} \\
 \hline
-  \multicolumn{4}{|c|}{$|\eta|<1.4$ } & \multicolumn{4}{|c|}{ at least 1 $|\eta| > 1.6$ }\\
+  \multicolumn{4}{c|}{$|\eta|<1.4$ } & \multicolumn{4}{|c}{ at least 1 $|\eta| > 1.6$ }\\
 \hline
-%s 
- \hline     
+%s  
 \end{tabular}  
 
 """
@@ -197,7 +194,7 @@ def main():
 	name = "default"
 	run = "Run92"
 
-	tableData += lineTemplateData%(dataBarrelPkls["EE"],dataBarrelPkls["OF"],dataBarrelPkls["rEEOF"],dataBarrelPkls["rEEOFErr"],dataEndcapPkls["SF"],dataEndcapPkls["EE"],dataEndcapPkls["rEEOF"],dataEndcapPkls["rEEOFErr"])	
+	tableData += lineTemplateData%(dataBarrelPkls["EE"],dataBarrelPkls["OF"],dataBarrelPkls["rEEOF"],dataBarrelPkls["rEEOFErr"],dataEndcapPkls["EE"],dataEndcapPkls["OF"],dataEndcapPkls["rEEOF"],dataEndcapPkls["rEEOFErr"])	
 
 	run = "Simulation"
 
@@ -209,22 +206,21 @@ def main():
 # Table for Inclusive
 
 	tableTemplate =r"""
-\begin{tabular}{|c|c|c|c|}     
-\hline    
+\begin{tabular}{c|c|c|c}     
+ 
  SF & OF & $\Rmmof \pm \sigma_{stat}$ & Transfer $\pm \sigma_{stat}$\\    
-\hline\hline
- \multicolumn{4}{|c|}{MC} \\
 \hline
- \multicolumn{4}{|c|}{$|\eta|<2.4$ } \\
+ \multicolumn{4}{c}{MC} \\
+\hline
+ \multicolumn{4}{c}{$|\eta|<2.4$ } \\
 \hline 
 %s    
     \hline 
-\multicolumn{4}{|c|}{Data} \\
+\multicolumn{4}{c}{Data} \\
 \hline
- \multicolumn{4}{|c|}{$|\eta|<2.4$ } \\
+ \multicolumn{4}{c}{$|\eta|<2.4$ } \\
 \hline
-%s 
- \hline     
+%s   
 \end{tabular}  
 """
 
@@ -254,22 +250,21 @@ def main():
 
 	tableTemplate =r"""
 
-\begin{tabular}{|c|c|c|c|c|c|c|c|c|c|}     
+\begin{tabular}{c|c|c|c|c|c|c|c}     
 \hline    
  SF & OF & $\Rmmof \pm \sigma_{stat}$ & Transfer $\pm \sigma_{stat}$ &  SF & OF & $\Rmmof \pm \sigma_{stat}$ & Transfer $\pm \sigma_{stat}$  \\    
-\hline\hline
- \multicolumn{8}{|c|}{MC} \\
 \hline
-  \multicolumn{4}{|c|}{$|\eta|<1.4$ } & \multicolumn{4}{|c|}{ at least 1 $|\eta| > 1.6$ } \\
+ \multicolumn{8}{c}{MC} \\
+\hline
+  \multicolumn{4}{c|}{$|\eta|<1.4$ } & \multicolumn{4}{|c}{ at least 1 $|\eta| > 1.6$ } \\
 \hline 
 %s    
     \hline 
-\multicolumn{8}{|c|}{Data} \\
+\multicolumn{8}{c}{Data} \\
 \hline
-  \multicolumn{4}{|c|}{$|\eta|<1.4$ } & \multicolumn{4}{|c|}{ at least 1 $|\eta| > 1.6$ }\\
+  \multicolumn{4}{c|}{$|\eta|<1.4$ } & \multicolumn{4}{|c}{ at least 1 $|\eta| > 1.6$ }\\
 \hline
-%s 
- \hline     
+%s     
 \end{tabular}  
 
 """
@@ -283,7 +278,7 @@ def main():
 	name = "default"
 	run = "Run92"
 
-	tableData += lineTemplateData%(dataBarrelPkls["MM"],dataBarrelPkls["OF"],dataBarrelPkls["rMMOF"],dataBarrelPkls["rMMOFErr"],dataEndcapPkls["SF"],dataEndcapPkls["MM"],dataEndcapPkls["rMMOF"],dataEndcapPkls["rMMOFErr"])	
+	tableData += lineTemplateData%(dataBarrelPkls["MM"],dataBarrelPkls["OF"],dataBarrelPkls["rMMOF"],dataBarrelPkls["rMMOFErr"],dataEndcapPkls["MM"],dataEndcapPkls["OF"],dataEndcapPkls["rMMOF"],dataEndcapPkls["rMMOFErr"])	
 
 	run = "Simulation"
 
