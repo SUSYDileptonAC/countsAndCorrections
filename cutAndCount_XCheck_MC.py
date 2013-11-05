@@ -18,13 +18,16 @@ selection & $ee$ & $\mu\mu$ & $e\mu$ & prediction SF & prediction $\mu\mu$ & pre
 """
 
 	
-def readWeightedEntries(tree, variable, cut):
-	
-	nBins=55
-	firstBin=15
+def readWeightedEntries(tree, variable, cut,Reweight=False):
+	weightNorm = 1./0.99
+	nBins=50
+	firstBin=20
 	lastBin=70
 	nEvents = -1
-	histo = createHistoFromTree(tree,  variable, cut, nBins, firstBin, lastBin, nEvents)
+	if Reweight:
+		histo = createHistoFromTree(tree, variable , "%f*sqrt(exp(0.156-0.00137*genPtTop1)*exp(0.148-0.00129*genPtTop2))*"%weightNorm+cut , nBins, firstBin, lastBin, nEvents)
+	else:
+		histo = createHistoFromTree(tree,  variable, cut, nBins, firstBin, lastBin, nEvents)
 	#(weight*(chargeProduct < 0 && ((pt1 > 20 && pt2 > 10 ) || (pt2 > 20 && pt1 > 10 )) && p4.M()>15 && abs(eta1)<2.4 && abs(eta2)<2.4 && deltaR > 0.3) ) && (nJets >= 2 && ht > 100 && met > 150) && ((p4.M() < 70))
 	events = histo.Integral()
 	error =0
@@ -204,23 +207,35 @@ def getCounts(trees, cut,Samples,group,groupmembers):
 		for name, tree in trees["EEtrees"].iteritems():
 			if name[0:sample.__len__()] == sample:
 					#~ print name
-					counts = readWeightedEntries(tree, "p4.M()", cut)		
-					n["EE"] += counts["events"]*Samples[sample][1]*lumi/Samples[sample][0] 
+					if "TTJets" in sample:
+						
+						counts = readWeightedEntries(tree, "p4.M()", cut,Reweight=True)	
+					else:		
+						counts = readWeightedEntries(tree, "p4.M()", cut)		
+					n["EE"] += counts["events"]*Samples[sample][1]*lumi/Samples[sample][0]*0.95 
 					n["xsecEE"] += counts["events"]*Samples[sample][1]*lumi/Samples[sample][0]*Samples[sample][2]
 					#~ n["sEE"] += sqrt(n["sEE"]**2 + (counts["error"]*Samples[sample][1]*lumi/Samples[sample][0])**2)
 					n["sEE"] = sqrt(n["sEE"]**2 + (counts["error"]*Samples[sample][1]*lumi/Samples[sample][0])**2)
 					
 		for name, tree in trees["MuMutrees"].iteritems():
 			if name[0:sample.__len__()] == sample: 
-					counts = readWeightedEntries(tree, "p4.M()", cut)
-					n["MuMu"] += counts["events"]*Samples[sample][1]*lumi/Samples[sample][0]
+					if "TTJets" in sample:
+						
+						counts = readWeightedEntries(tree, "p4.M()", cut,Reweight=True)	
+					else:		
+						counts = readWeightedEntries(tree, "p4.M()", cut)						
+					n["MuMu"] += counts["events"]*Samples[sample][1]*lumi/Samples[sample][0]*0.95
 					n["xsecMuMu"] += counts["events"]*Samples[sample][1]*lumi/Samples[sample][0]*Samples[sample][2] 
 					n["sMuMu"] = sqrt(n["sMuMu"]**2 + (counts["error"]*Samples[sample][1]*lumi/Samples[sample][0])**2)
 					
 		for name, tree in trees["EMutrees"].iteritems():
 			if name[0:sample.__len__()] == sample: 
-					counts = readWeightedEntries(tree, "p4.M()", cut)
-					n["EMu"] += counts["events"]*Samples[sample][1]*lumi/Samples[sample][0]
+					if "TTJets" in sample:
+						
+						counts = readWeightedEntries(tree, "p4.M()", cut,Reweight=True)	
+					else:		
+						counts = readWeightedEntries(tree, "p4.M()", cut)					
+					n["EMu"] += counts["events"]*Samples[sample][1]*lumi/Samples[sample][0]*0.94
 					n["xsecEMu"] += counts["events"]*Samples[sample][1]*lumi/Samples[sample][0]*Samples[sample][2] 
 					n["sEMu"] = sqrt(n["sEMu"]**2 + (counts["error"]*Samples[sample][1]*lumi/Samples[sample][0])**2)
 		
@@ -249,20 +264,32 @@ def getCounts(trees, cut,Samples,group,groupmembers):
 		
 		for name, tree in trees["EEtrees"].iteritems():
 			if name[0:sample.__len__()] == sample:
-					counts = readWeightedEntries(tree, "p4.M()", cut)
-					n["EEJESDown"] += counts["events"]*Samples[sample][1]*lumi/Samples[sample][0] 
+					if "TTJets" in sample:
+						
+						counts = readWeightedEntries(tree, "p4.M()", cut,Reweight=True)	
+					else:		
+						counts = readWeightedEntries(tree, "p4.M()", cut)
+					n["EEJESDown"] += counts["events"]*Samples[sample][1]*lumi/Samples[sample][0]*0.95 
 					
 		for name, tree in trees["MuMutrees"].iteritems():
 			
 			if name[0:sample.__len__()] == sample:
-					counts = readWeightedEntries(tree, "p4.M()", cut)
-					n["MuMuJESDown"] += counts["events"]*Samples[sample][1]*lumi/Samples[sample][0] 
+					if "TTJets" in sample:
+						
+						counts = readWeightedEntries(tree, "p4.M()", cut,Reweight=True)	
+					else:		
+						counts = readWeightedEntries(tree, "p4.M()", cut)
+					n["MuMuJESDown"] += counts["events"]*Samples[sample][1]*lumi/Samples[sample][0]*0.95 
 					
 		for name, tree in trees["EMutrees"].iteritems():
 			
 			if name[0:sample.__len__()] == sample:
-					counts = readWeightedEntries(tree, "p4.M()", cut)
-					n["EMuJESDown"] += counts["events"]*Samples[sample][1]*lumi/Samples[sample][0] 
+					if "TTJets" in sample:
+						
+						counts = readWeightedEntries(tree, "p4.M()", cut,Reweight=True)	
+					else:		
+						counts = readWeightedEntries(tree, "p4.M()", cut)
+					n["EMuJESDown"] += counts["events"]*Samples[sample][1]*lumi/Samples[sample][0]*0.94 
 	
 	cut = cut.replace("met*1.01" , "met*0.99")
 	cut = cut.replace("ht*1.01" , "ht*0.99")
@@ -272,18 +299,30 @@ def getCounts(trees, cut,Samples,group,groupmembers):
 		for name, tree in trees["EEtrees"].iteritems():
 			
 			if name[0:sample.__len__()] == sample:
-					counts = readWeightedEntries(tree, "p4.M()", cut)
-					n["EEJESUp"] += counts["events"]*Samples[sample][1]*lumi/Samples[sample][0] 
+					if "TTJets" in sample:
+						
+						counts = readWeightedEntries(tree, "p4.M()", cut,Reweight=True)	
+					else:		
+						counts = readWeightedEntries(tree, "p4.M()", cut)
+					n["EEJESUp"] += counts["events"]*Samples[sample][1]*lumi/Samples[sample][0]*0.95 
 					
 		for name, tree in trees["MuMutrees"].iteritems():
 			if name[0:sample.__len__()] == sample: 
-					counts = readWeightedEntries(tree, "p4.M()", cut)
-					n["MuMuJESUp"] += counts["events"]*Samples[sample][1]*lumi/Samples[sample][0] 
+					if "TTJets" in sample:
+						
+						counts = readWeightedEntries(tree, "p4.M()", cut,Reweight=True)	
+					else:		
+						counts = readWeightedEntries(tree, "p4.M()", cut)
+					n["MuMuJESUp"] += counts["events"]*Samples[sample][1]*lumi/Samples[sample][0]*0.95 
 					
 		for name, tree in trees["EMutrees"].iteritems():
 			if name[0:sample.__len__()] == sample:
-					counts = readWeightedEntries(tree, "p4.M()", cut)
-					n["EMuJESUp"] += counts["events"]*Samples[sample][1]*lumi/Samples[sample][0] 
+					if "TTJets" in sample:
+						
+						counts = readWeightedEntries(tree, "p4.M()", cut,Reweight=True)	
+					else:		
+						counts = readWeightedEntries(tree, "p4.M()", cut)
+					n["EMuJESUp"] += counts["events"]*Samples[sample][1]*lumi/Samples[sample][0]*0.94 
 	
 
 	#~ n["systEE"] = sqrt((max(abs(n["EEJESDown"]-n["EE"]),abs(n["EEJESUp"]-n["EE"])))**2 + n["xsecEE"]**2 + n["LumiEE"]**2)
@@ -600,6 +639,7 @@ def main():
 	Samples = { 
 		"ZJets"         : [eventCounts["ZJets_madgraph_Summer12"],3503.71,0.04],
 		"TT_Powheg_Summer12_v2"        : [eventCounts["TT_Powheg_Summer12_v2"], 225.2,0.07], 
+		"TTJets_MGDecays_madgraph_Summer12"        : [eventCounts["TTJets_MGDecays_madgraph_Summer12"], 22.4,0.07], 
 		"ZZJetsTo2L2Q"  : [eventCounts["ZZJetsTo2L2Q_madgraph_Summer12"],2.46,0.5], 
 		"ZZJetsTo2L2Nu" : [eventCounts["ZZJetsTo2L2Nu_madgraph_Summer12"],0.365,0.5], 
 		"ZZJetsTo4L"    : [eventCounts["ZZJetsTo4L_madgraph_Summer12"],0.177,0.5],
@@ -625,15 +665,15 @@ def main():
 
 		
 		
-	order = [["TT_Powheg_Summer12_v2","\ttbar"],["DY","Drell-Yan"],["Diboson","Diboson"],["SingleTop","Single top"],["Rare","Other SM"],["All","All Backgrounds"]]
+	order = [["TTJets_MGDecays_madgraph_Summer12","\ttbar"],["DY","Drell-Yan"],["Diboson","Diboson"],["SingleTop","Single top"],["Rare","Other SM"],["All","All Backgrounds"]]
 	groups ={
-		"All":["AStar","ZJets","TT_Powheg_Summer12_v2","ZZJetsTo2L2Q","ZZJetsTo2L2Nu","ZZJetsTo4L","WZJetsTo3LNu","WZJetsTo2L2Q","WWJetsTo2L2Nu","TBar_tWChannel","TBar_tChannel","TBar_sChannel","T_tWChannel","T_tChannel","T_sChannel","WWWJets","WWGJets","WWZNoGstarJets","TTGJets","WZZNoGstar","TTWJets","TTZJets","TTWWJets"],
+		"All":["AStar","ZJets","TTJets_MGDecays_madgraph_Summer12","ZZJetsTo2L2Q","ZZJetsTo2L2Nu","ZZJetsTo4L","WZJetsTo3LNu","WZJetsTo2L2Q","WWJetsTo2L2Nu","TBar_tWChannel","TBar_tChannel","TBar_sChannel","T_tWChannel","T_tChannel","T_sChannel","WWWJets","WWGJets","WWZNoGstarJets","TTGJets","WZZNoGstar","TTWJets","TTZJets","TTWWJets"],
 		"Rare":["WWWJets","WWGJets","WWZNoGstarJets","TTGJets","WZZNoGstar","TTWJets","TTZJets","TTWWJets"],		
 		#~ "Rare":["TTWJets","TTZJets"],		
 		"SingleTop":["TBar_tWChannel","TBar_tChannel","TBar_sChannel","T_tWChannel","T_tChannel","T_sChannel"],
 		"Diboson":["ZZJetsTo2L2Q","ZZJetsTo2L2Nu","ZZJetsTo4L","WZJetsTo3LNu","WZJetsTo2L2Q","WWJetsTo2L2Nu"],		
 		"DY":["AStar","ZJets"],
-		"TT_Powheg_Summer12_v2":["TT_Powheg_Summer12_v2"]
+		"TTJets_MGDecays_madgraph_Summer12":["TTJets_MGDecays_madgraph_Summer12"]
 		
 	}
 

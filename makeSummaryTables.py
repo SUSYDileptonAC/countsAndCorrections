@@ -1,18 +1,18 @@
 #!/usr/bin/env python
 
-def getSplitCorrection(rmue,rmueErr,dilepton):
-	from src.defs import Constants
-	result = 0.
-	resultErr = 0.
-	if dilepton == "EE":
-		result = 1./(2*rmue)*(Constants.Trigger.EffEE.val/Constants.Trigger.EffEMu.val)
-		resultErr = (2*(rmueErr/rmue)**2+(0.071)**2)**0.5
-	elif dilepton == "MuMu":
-		result =(1.*rmue/2)*(Constants.Trigger.EffMuMu.val/Constants.Trigger.EffEMu.val)
-		resultErr = (2*(rmueErr/rmue)**2+(0.071**2))**0.5
-	return result,resultErr
+#~ def getSplitCorrection(rmue,rmueErr,dilepton):
+	#~ from src.defs import Constants
+	#~ result = 0.
+	#~ resultErr = 0.
+	#~ if dilepton == "EE":
+		#~ result = 1./(2*rmue)*(Constants.Trigger.EffEE.val/Constants.Trigger.EffEMu.val)
+		#~ resultErr = (2*(rmueErr/rmue)**2+(0.071)**2)**0.5
+	#~ elif dilepton == "MuMu":
+		#~ result =(1.*rmue/2)*(Constants.Trigger.EffMuMu.val/Constants.Trigger.EffEMu.val)
+		#~ resultErr = (2*(rmueErr/rmue)**2+(0.071**2))**0.5
+	#~ return result,resultErr
 
-def loadShapePickles(regionName, subcutName, shape = "GT", path = "../EdgeFitter/shelves"):
+def loadShapePickles(regionName, subcutName, shape = "GT", path = "../test/EdgeFitter/shelves"):
 	import os
 	import pickle
 	from math import sqrt
@@ -81,10 +81,12 @@ def loadShapePickles(regionName, subcutName, shape = "GT", path = "../EdgeFitter
 	    	result["shape"] = "anal. shape"
 	elif shape == "HistT":
 		result["shape"] = "binned shape"
-        elif shape == "KernelT":
-                result["shape"] = "KDE"
-        elif shape == "MarcoAndreaT":
-                result["shape"] = "anal. shape"
+	elif shape == "KernelT":
+		result["shape"] = "KDE"
+	elif shape == "MarcoAndreaT":
+		result["shape"] = "anal. shape"
+	elif shape == "PetarT":
+		result["shape"] = "3 Gaussians"
 	else:
 		result["shape"] = shape
 	result["title"] = ""
@@ -123,25 +125,31 @@ def extendBasics(pkl, region):
 	n["nOFUncert"] = sqrt(n["nOFStatUncert"]**2+n["nOFSysUncert"]**2)
 
 
-	eeScale, eeScaleError = getSplitCorrection(region.rMuE.val,region.rMuE.err,"EE")
-	mmScale, mmScaleError = getSplitCorrection(region.rMuE.val,region.rMuE.err,"MuMu")
+	eeScale = region.R_EEOF.val
+	eeScaleError = region.R_EEOF.err
+	mmScale = region.R_MMOF.val
+	mmScaleError = region.R_MMOF.err
 
 	n["nBEE"] = n["EMu"]*eeScale
 	n["nBEEStatUncert"] = sqrt(n["EMu"])*eeScale
-	n["nBEESysUncert"] = n["EMu"] * eeScale * eeScaleError
+	n["nBEESysUncert"] = sqrt( (n["EMu"] * eeScale * eeScaleError )**2 + (sqrt(n["EMu"])* eeScale)**2)
 	n["nBEEUncert"] = sqrt(n["nBEEStatUncert"]**2 + n["nBEESysUncert"]**2)
 	n["nSEE"] = n["EE"] - n["EMu"]*eeScale
-	n["nSEESysUncert"] = n["EMu"] * eeScale * eeScaleError
-	n["nSEEStatUncert"] = sqrt((sqrt(n["EMu"])* eeScale)**2+n["EE"]) 
+	#~ n["nSEESysUncert"] = n["EMu"] * eeScale * eeScaleError
+	#~ n["nSEEStatUncert"] = sqrt((sqrt(n["EMu"])* eeScale)**2+n["EE"]) 
+	n["nSEESysUncert"] = sqrt((n["EMu"] * eeScale * eeScaleError)**2 + (sqrt(n["EMu"])* eeScale)**2) 
+	n["nSEEStatUncert"] = sqrt(n["EE"]) 
 	n["nSEEUncert"] = sqrt(n["nSEEStatUncert"]**2+n["nSEESysUncert"]**2)	
 	
 	n["nBMuMu"] = n["EMu"]*mmScale
 	n["nBMuMuStatUncert"] = sqrt(n["EMu"])*mmScale
-	n["nBMuMuSysUncert"] = n["EMu"] * mmScale * mmScaleError
+	n["nBMuMuSysUncert"] = sqrt( (n["EMu"] * mmScale * mmScaleError )**2 + (sqrt(n["EMu"]) * mmScale)**2)
 	n["nBMuMuUncert"] = sqrt(n["nBMuMuStatUncert"]**2 + n["nBMuMuSysUncert"]**2)
 	n["nSMuMu"] = n["MuMu"] - n["EMu"]*mmScale
-	n["nSMuMuSysUncert"] = n["EMu"] * mmScale * mmScaleError
-	n["nSMuMuStatUncert"] = sqrt((sqrt(n["EMu"])** mmScale)+n["MuMu"]) 
+	#~ n["nSMuMuSysUncert"] = n["EMu"] * mmScale * mmScaleError
+	#~ n["nSMuMuStatUncert"] = sqrt((sqrt(n["EMu"])** mmScale)+n["MuMu"]) 
+	n["nSMuMuSysUncert"] = sqrt((n["EMu"] * mmScale * mmScaleError)**2 + (sqrt(n["EMu"])* mmScale)**2) 
+	n["nSMuMuStatUncert"] = sqrt(n["MuMu"])  
 	n["nSMuMuUncert"] = sqrt(n["nSMuMuStatUncert"]**2+n["nSMuMuSysUncert"]**2)	
 		
 	n["nS-debug"] = "nS=%s + %s - %s = %s"%(n["EE"] , n["MuMu"], n["nOF"], n["nS"])
@@ -170,6 +178,7 @@ def extendPickle( name, pkl):
 		result[subcut]["shapeHistT"] = loadShapePickles(name, subcut, shape = "HistT")
 		result[subcut]["shapeKernelT"] = loadShapePickles(name, subcut, shape = "KernelT")
 		result[subcut]["shapeMarcoAndreaT"] = loadShapePickles(name, subcut, shape = "MarcoAndreaT")
+		result[subcut]["shapePetarT"] = loadShapePickles(name, subcut, shape = "PetarT")
 		result[subcut]["nBEdge"] = result[subcut]["edgeMass"]["nOF"]
 		#~ print subcut, result[subcut]["nBEdge"]
 		result[subcut]["nBEdgeSysUncert"] = result[subcut]["edgeMass"]["nOFSysUncert"]
@@ -357,6 +366,8 @@ selection & approach & $N_S$ & $N_B$ ( low \mll ) & $N_{\text{Continuum}}$ & $N_
 				table += lineShapeTemplate%data[subcutName]["shapeKernelT"]
 			if not data[subcutName]["shapeHistT"]["nS"] == "--":
 				table += lineShapeTemplate%data[subcutName]["shapeHistT"]
+			if not data[subcutName]["shapePetarT"]["nS"] == "--":
+				table += lineShapeTemplate%data[subcutName]["shapePetarT"]
                 #~ if not data[subcutName]["shapeKernelT"]["nS"] == "--":
 			#~ table += lineShapeTemplate%data[subcutName]["shapeKernelT"]
 		table += "\\hline\n"

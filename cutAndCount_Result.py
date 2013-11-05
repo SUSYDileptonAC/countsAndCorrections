@@ -78,7 +78,9 @@ def cutAndCountForRegion(trees, cut, name):
 	highPU = "16 <= nVertices"
 	bTag0 = "nBJets == 0"
 	bTag1 = "nBJets == 1"
+	bTag2 = "nBJets == 2"
 	bTagGe2 = "nBJets >= 2"
+	bTagGe3 = "nBJets >= 3"
 	lowHT = "100 < ht && ht < 300"
 	highHT = "ht > 300"
 	tightIso = "id1 < 0.05 && id2 < 0.05"
@@ -113,7 +115,9 @@ def cutAndCountForRegion(trees, cut, name):
 		"HighPU": [base, cut, highPU],
 		"0BTag":[base, cut, bTag0],
 		"1BTag":[base, cut, bTag1],
+		"2BTag":[base, cut, bTag2],
 		"Ge2BTag":[base, cut, bTagGe2],
+		"Ge3BTag":[base, cut, bTagGe3],
 		#~ "Barrel":[base, cut, tightEta],
 		"LowHT": [base, cut, lowHT],
 		"HighHT": [base, cut, highHT],
@@ -148,7 +152,9 @@ def cutAndCountForRegion(trees, cut, name):
 			"HighPU": [base, cut, highPU],
 			"0BTag":[base, cut, bTag0],
 			"1BTag":[base, cut, bTag1],
+			"2BTag":[base, cut, bTag2],
 			"Ge2BTag":[base, cut, bTagGe2],
+			"Ge3BTag":[base, cut, bTagGe3],
 			#~ "Barrel":[gc.collect()base, cut, tightEta],
 			"LowHT": [base, cut, lowHT],
 			"HighHT": [base, cut, highHT],
@@ -217,7 +223,7 @@ def main():
 		cuts["%s_METPD"%cut] = cuts[cut]
 		cuts["%s_SingleLepton"%cut] = cuts[cut]
 
-	preselection = "met > 50 && nJets >= 2 && deltaR > 0.3"
+	preselection = "nJets >= 2 && deltaR > 0.3"
 	if "SingleLepton" in argv[2]:
 		trees = {
 			"MuMu": readTreeFromFile(argv[1], "MuMu", preselection,SingleLepton=True),

@@ -78,11 +78,11 @@ class Constants:
 				val =0.069
 				err =0.069*0.25
 			class Central(Constant):
-				val =0.072
-				err =0.072*0.25
+				val =0.071
+				err =0.071*0.25
 			class Forward(Constant):
-				val =0.065
-				err =0.065*0.25
+				val =0.066
+				err =0.066*0.25
 		class RMuE:
 			class Inclusive(Constant):
 				val =1.144
@@ -122,7 +122,7 @@ class Constants:
 	class R_MMOF:
 		class Inclusive(Constant):
 			val = 0.54
-			err = 0.04
+			err = 0.05
 		class Central(Constant):
 			val = 0.54
 			err = 0.04
@@ -164,7 +164,7 @@ class Regions:
 		R_EEOF = Constants.R_EEOF.Inclusive
 		R_MMOF = Constants.R_MMOF.Inclusive		
 		dyPrediction = {
-			"default":	( 38.93, 9,13,0),
+			"default":	( 49.7, 11.1 ,0,0),
 			"SingleLetpon":	( sum([32, 16, 7.7, 5.1]), sqrt(sum([i**2 for i in [10, 11, 4.1, 2.8]])),0),
 			}
 		rarePrediction = {
@@ -212,12 +212,12 @@ class Regions:
 		R_EEOF = Constants.R_EEOF.Central
 		R_MMOF = Constants.R_MMOF.Central		
 		dyPrediction = {
-			"default":	( 38, 8.7,6.6),
+			"default":	( 49.7, 11.1 ,0,0),
 			"SingleLetpon":	(80,0,0),
 			"RunAB": (0,0,0),
 			"RunC": (0,0,0),
-			"EE": (25,7.0,4.3),
-			"MuMu": (13,5.1,2.3)			
+			"EE": (28.6,6.2,0),
+			"MuMu": (23.6,6.1,0)			
 			}
 		rarePrediction = {
 			"default":	( 1.2, 0.7,0),
@@ -239,12 +239,12 @@ class Regions:
 		R_EEOF = Constants.R_EEOF.Forward
 		R_MMOF = Constants.R_MMOF.Forward		
 		dyPrediction = {
-			"default":	( 16, 5.7,2.9),
+			"default":	( 22.3, 5.4 ,0,0),
 			"SingleLetpon":	(20,0,0),
 			"RunAB": (0,0,0),
 			"RunC": (0,0,0),
-			"EE": (8,4.0,1.4),
-			"MuMu": (8,4.0,1.4)			
+			"EE": ( 11.5,2.7,0),
+			"MuMu": (12.5,3.3,0)			
 			}
 		rarePrediction = {
 			"default":	( 0.3, 0.2,0),
@@ -790,6 +790,11 @@ class Regions:
 		cut = "nJets == 2  &&  met < 100 && (%s)"%Region.cut
 		title = "Drell-Yan Enhanced"
 		latex = "Drell-Yan Enhanced"
+		
+	class TwoJets(Region):
+		cut = "nJets >= 2  && (%s)"%Region.cut
+		title = "More than 2 Jets"
+		latex = "More than 2 Jets"
 	
 
 def getRegion(name):
