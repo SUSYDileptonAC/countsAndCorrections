@@ -1,7 +1,7 @@
 #DATA_TREES=../../../sw532v0458/processedTrees/sw532v0460.processed.MergedData.root
 TREE_PATH=/user/edelhoff/trees/edgeAnalysis/sw532v0474/
 DATA_TREES=$(TREE_PATH)/sw532v0474.processed.MergedData.root
-DATA_TREES_2011=$(TREE_PATH)/sw532v0470.processed.MergedData2011.root
+DATA_TREES_2011=$(TREE_PATH)/sw532v0471.processed.MergedData_2011.root
 DATA_TREES_METPD=$(TREE_PATH)/sw532v0474.processed.MergedData_METPD.root
 DATA_TREES_SingleLepton=$(TREE_PATH)/sw532v0470.processed.MergedData_SingleLepton.root
 SIGNAL_TREES=$(TREE_PATH)/sw532v0470.processed.SUSY_CMSSM_4610_202_Summer12.root
@@ -49,7 +49,7 @@ slides_ofVsSf_XCheck.tex: $(MAKESLIDES)
 		$(MAKESLIDES) $(DATA_TREES) 2012
 
 slides_ofVsSf_XCheck_2011.tex: $(MAKESLIDES)
-		$(MAKESLIDES) $(DATA_TREES_2011) 2011
+		$(MAKESLIDES) $(DATA_TREES_2011)
 
 slides_cutAndCount_XCheck_MC.tex: $(MAKECandCMC)
 		$(MAKECandCMC)
@@ -59,6 +59,9 @@ tables: $(foreach region,$(COUNTING_REGIONS), shelves/cutAndCount_$(region).pkl)
 
 tables2011: $(foreach region,$(COUNTING_REGIONS_2011), shelves/cutAndCount_$(region).pkl)
 	$(MAKETABLES)
+
+shelves/cutAndCount_%_2011.pkl:
+	$(COUNTER) $(DATA_TREES_2011) $(subst shelves/cutAndCount_,,$(subst .pkl,,$@))
 
 shelves/cutAndCount_%_METPD.pkl:
 	$(COUNTER) $(DATA_TREES_METPD) $(subst shelves/cutAndCount_,,$(subst .pkl,,$@))
