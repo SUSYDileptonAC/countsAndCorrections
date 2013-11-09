@@ -2,8 +2,6 @@ from math import sqrt
 import ROOT
 from ROOT import TMath
 
-
-
 	
 class Signals:
 	
@@ -129,19 +127,62 @@ class Constants:
 		class Forward(Constant):
 			val = 0.57
 			err = 0.08
-		class Control(
-		Constant):
+		class Control(Constant):
 			val = 1.0
 			err = 0.0
-			
+class Constants2011(Constants):
+	class Trigger:
+                class EffEE(Constant):
+			val = 1.0
+			err = 0.02
+		class EffEMu(Constant):
+			val = 0.95
+			err = 0.02
+
+		class EffMuMu(Constant):
+			val = 0.90
+			err = 0.02
+                #not actually used?
+		class Correction:
+			class Inclusive(Constant):
+                                pass
+			class Central(Constant):
+                                pass
+				
+			class Forward(Constant):
+                                pass	
+	class Pt2020:
+                #still 2012 numbers
+		class RInOut:
+			class Inclusive(Constant):
+				val =0.069
+				err =0.069*0.25
+			class Central(Constant):
+				val =0.071
+				err =0.071*0.25
+			class Forward(Constant):
+				val =0.066
+				err =0.066*0.25
+                #just using inclusive numbers from SUS-11-011
+		class RMuE:
+			class Inclusive(Constant):
+				val =1.11
+				err =0.05
+			class Central(Constant):
+				val =1.11
+				err =0.05
+			class Forward(Constant):
+				val =1.11
+				err =0.05
 			
 
-class Region:
+class Region(object):
 	cut = "chargeProduct < 0 && pt1 > 20 && pt2 > 20 && abs(eta1)<2.4 && ((abs(eta1) < 1.4 || abs(eta1) > 1.6) && (abs(eta2) < 1.4 || abs(eta2) > 1.6)) && abs(eta2) < 2.4 && deltaR > 0.3 && p4.M() > 20  && !(runNr >= 198049 && runNr <= 198522) && runNr <= 201678 && !(runNr == 195649 && lumiSec == 49 && eventNr == 75858433) && !(runNr == 195749 && lumiSec == 108 && eventNr == 216906941)"
 	cut2010 = "chargeProduct < 0 && ((pt1 > 20 && pt2 > 10 ) || (pt2 > 20 && pt1 > 10 )) && abs(eta1)<2.4  && abs(eta2) < 2.4 && ((abs(eta1) < 1.4 || abs(eta1) > 1.6) && (abs(eta2) < 1.4 || abs(eta2) > 1.6)) && deltaR > 0.3 && p4.M() > 15  && !(runNr >= 198049 && runNr <= 198522) && runNr < 201678 && !(runNr == 195649 && lumiSec == 49 && eventNr == 75858433) && !(runNr == 195749 && lumiSec == 108 && eventNr == 216906941)"
 	cut3020 = "chargeProduct < 0 && ((pt1 > 30 && pt2 > 20 ) || (pt2 > 30 && pt1 > 20 )) && abs(eta1)<2.4  && abs(eta2) < 2.4 && ((abs(eta1) < 1.4 || abs(eta1) > 1.6) && (abs(eta2) < 1.4 || abs(eta2) > 1.6)) && deltaR > 0.3 && p4.M() > 20  && !(runNr >= 198049 && runNr <= 198522) && runNr < 201678 && !(runNr == 195649 && lumiSec == 49 && eventNr == 75858433) && !(runNr == 195749 && lumiSec == 108 && eventNr == 216906941)"
 	cut3010 = "chargeProduct < 0 && ((pt1 > 30 && pt2 > 10 ) || (pt2 > 30 && pt1 > 10 )) && abs(eta1)<2.4  && abs(eta2) < 2.4 && ((abs(eta1) < 1.4 || abs(eta1) > 1.6) && (abs(eta2) < 1.4 || abs(eta2) > 1.6)) && deltaR > 0.3 && p4.M() > 20  && !(runNr >= 198049 && runNr <= 198522) && runNr < 201678 && !(runNr == 195649 && lumiSec == 49 && eventNr == 75858433) && !(runNr == 195749 && lumiSec == 108 && eventNr == 216906941)"
 	cut3030 = "chargeProduct < 0 && ((pt1 > 30 && pt2 > 30 ) || (pt2 > 30 && pt1 > 30 )) && abs(eta1)<2.4  && abs(eta2) < 2.4 && ((abs(eta1) < 1.4 || abs(eta1) > 1.6) && (abs(eta2) < 1.4 || abs(eta2) > 1.6)) && deltaR > 0.3 && p4.M() > 20  && !(runNr >= 198049 && runNr <= 198522) && runNr < 201678 && !(runNr == 195649 && lumiSec == 49 && eventNr == 75858433) && !(runNr == 195749 && lumiSec == 108 && eventNr == 216906941)"
+        cut2011 = "chargeProduct < 0 && pt1 > 20 && pt2 > 20 && abs(eta1)<2.4 && ((abs(eta1) < 1.4 || abs(eta1) > 1.6) && (abs(eta2) < 1.4 || abs(eta2) > 1.6)) && abs(eta2) < 2.4 && deltaR > 0.3 && p4.M() > 20 && jet1pt > 40 && jet2pt > 40"
 	title = "everything"
 	latex = "everything"
 	dyPrediction = {}
@@ -510,50 +551,50 @@ class Regions:
 		color = ROOT.kAzure-4
 
 
-	class SignalHighMETControl2011(Region):
-		cut = " nJets >= 2 && ht > 100 && ht <= 300 && met > 150 && (%s)"%Region.cut
-		title = "High E_{T}^{miss} SR"
-		latex = "High \MET\ 2011 Controll Region"
-		rMuE = Constants.Pt2020.RMuE.Inclusive
-		rInOut = Constants.Pt2020.RInOut.Inclusive
-		R_SFOF = Constants.R_SFOF.Inclusive
-		R_SFOFTrig = Constants.Trigger.Correction.Inclusive
-		R_EEOF = Constants.R_EEOF.Inclusive
-		R_MMOF = Constants.R_MMOF.Inclusive		
-		dyPrediction = {
-	
-			}
-		rarePrediction = {
-			"default":	( 0, 0,0),
-			"SingleLetpon":	(0,0,0),
-			"RunAB": (0,0,0),
-			"RunC": (0,0,0),
-			"MuMu": (0,0,0),
-			"EE": (0,0,0)			
-			}				
-		color = ROOT.kAzure-4
-	class SignalHighMET2011(Region):
-		cut = " nJets >= 2 && ht > 300 && ht < 300 && met > 150 && (%s)"%Region.cut
-		title = "High E_{T}^{miss} SR"
-		latex = "High \MET\ 2011 Signal Region"
-		rMuE = Constants.Pt2020.RMuE.Inclusive
-		rInOut = Constants.Pt2020.RInOut.Inclusive
-		R_SFOF = Constants.R_SFOF.Inclusive
-		R_SFOFTrig = Constants.Trigger.Correction.Inclusive
-		R_EEOF = Constants.R_EEOF.Inclusive
-		R_MMOF = Constants.R_MMOF.Inclusive		
-		dyPrediction = {
-
-			}
-		rarePrediction = {
-			"default":	( 0, 0,0),
-			"SingleLetpon":	(0,0,0),
-			"RunAB": (0,0,0),
-			"RunC": (0,0,0),
-			"MuMu": (0,0,0),
-			"EE": (0,0,0)			
-			}				
-		color = ROOT.kAzure-4
+#	class SignalControl2011(Region):
+#		cut = " nJets >= 2 && ht > 100 && ht <= 300 && met > 150 && (%s)"%Region.cut
+#		title = "High E_{T}^{miss} SR"
+#		latex = "High \MET\ 2011 Controll Region"
+#		rMuE = Constants.Pt2020.RMuE.Inclusive
+#		rInOut = Constants.Pt2020.RInOut.Inclusive
+#		R_SFOF = Constants.R_SFOF.Inclusive
+#		R_SFOFTrig = Constants.Trigger.Correction.Inclusive
+#		R_EEOF = Constants.R_EEOF.Inclusive
+#		R_MMOF = Constants.R_MMOF.Inclusive		
+#		dyPrediction = {
+#	
+#			}
+#		rarePrediction = {
+#			"default":	( 0, 0,0),
+#			"SingleLetpon":	(0,0,0),
+#			"RunAB": (0,0,0),
+#			"RunC": (0,0,0),
+#			"MuMu": (0,0,0),
+#			"EE": (0,0,0)			
+#			}				
+#		color = ROOT.kAzure-4
+#	class SignalHighMET2011(Region):
+#		cut = " nJets >= 2 && ht > 300 && ht < 300 && met > 150 && (%s)"%Region.cut
+#		title = "High E_{T}^{miss} SR"
+#		latex = "High \MET\ 2011 Signal Region"
+#		rMuE = Constants.Pt2020.RMuE.Inclusive
+#		rInOut = Constants.Pt2020.RInOut.Inclusive
+#		R_SFOF = Constants.R_SFOF.Inclusive
+#		R_SFOFTrig = Constants.Trigger.Correction.Inclusive
+#		R_EEOF = Constants.R_EEOF.Inclusive
+#		R_MMOF = Constants.R_MMOF.Inclusive		
+#		dyPrediction = {
+#
+#			}
+#		rarePrediction = {
+#			"default":	( 0, 0,0),
+#			"SingleLetpon":	(0,0,0),
+#			"RunAB": (0,0,0),
+#			"RunC": (0,0,0),
+#			"MuMu": (0,0,0),
+#			"EE": (0,0,0)			
+#			}				
+#		color = ROOT.kAzure-4
 		
 	class SignalNonRectInclusive_METPD(SignalNonRectInclusive):
 		title = "High E_{T}^{miss} SR (MET PD)"
@@ -573,7 +614,7 @@ class Regions:
 		color = ROOT.kAzure-2
 		@staticmethod
 		def getPath(path): return path.replace(".root", "_METPD.root")
-		
+				
 	class SignalHighMET_METPD(SignalHighMET):
 		title = "High E_{T}^{miss} SR (MET PD)"
 		latex = "High \MET\ Signal Region (MET PD)"
@@ -685,6 +726,80 @@ class Regions:
 			"EE": (0,0,0)			
 			}				
 		color = ROOT.kGray
+
+	class SignalNonRectInclusive_2011(SignalNonRectInclusive):
+		cut = "((nJets >= 2 && met > 150) || (nJets >=3 && met > 100 && jet3pt > 40)) && (%s)"%Region.cut2011
+		title = "Inclusive SR (2011)"
+		latex = "Inclusive Signal Region (2011)"
+#		R_SFOFTrig = Constants2011.Trigger.Correction.Inclusive
+		R_SFOF = Constants2011.R_SFOF.Inclusive
+		R_EEOF = Constants2011.R_EEOF.Inclusive
+		R_MMOF = Constants2011.R_MMOF.Inclusive
+		dyPrediction = {}
+		rarePrediction = {"default":	( 0, 0,0),}
+		color = ROOT.kAzure-2
+		@staticmethod
+		def getPath(path): return path.replace(".root", "_2011.root").replace("sw532v0474", "sw532v0471")
+	class SignalNonRectCentral_2011(SignalNonRectCentral):
+		cut = "((nJets >= 2 && met > 150) || (nJets >=3 && met > 100 && jet3pt > 40)) && abs(eta1)< 1.4 && abs(eta2) < 1.4 && (%s)"%Region.cut2011
+		title = "Central SR (2011)"
+		latex = "Central Signal Region (2011)"
+		R_SFOF = Constants2011.R_SFOF.Central
+		R_EEOF = Constants2011.R_EEOF.Central
+		R_MMOF = Constants2011.R_MMOF.Central
+		dyPrediction = {}
+		rarePrediction = {"default":	( 0, 0,0),}
+		color = ROOT.kAzure-2
+		@staticmethod
+		def getPath(path): return path.replace(".root", "_2011.root").replace("sw532v0474", "sw532v0471")
+	class SignalNonRectForward_2011(SignalNonRectForward):
+		cut = "((nJets >= 2 && met > 150) || (nJets >=3 && met > 100 && jet3pt > 40)) && 1.6 <= TMath::Max(abs(eta1),abs(eta2)) && (%s)"%Region.cut2011
+		title = "Forward SR (2011)"
+		latex = "Forward Signal Region (2011)"
+		R_SFOF = Constants2011.R_SFOF.Forward
+		R_EEOF = Constants2011.R_EEOF.Forward
+		R_MMOF = Constants2011.R_MMOF.Forward
+		dyPrediction = {}
+		rarePrediction = {"default":	( 0, 0,0),}
+		color = ROOT.kAzure-2
+		@staticmethod
+		def getPath(path): return path.replace(".root", "_2011.root").replace("sw532v0474", "sw532v0471")
+	class ControlInclusive_2011(ControlInclusive):
+		cut = "nJets == 2  && 100 <  met && met < 150 && (%s)"%Region.cut2011
+		title = "Inclusive CR (2011)"
+		latex = "Inclusive Control Region (2011)"
+		R_SFOF = Constants2011.R_SFOF.Inclusive
+		R_EEOF = Constants2011.R_EEOF.Inclusive
+		R_MMOF = Constants2011.R_MMOF.Inclusive
+		dyPrediction = {}
+		rarePrediction = {"default":	( 0, 0,0),}
+		color = ROOT.kAzure-2
+		@staticmethod
+		def getPath(path): return path.replace(".root", "_2011.root").replace("sw532v0474", "sw532v0471")
+	class ControlCentral_2011(ControlCentral):
+		cut = "nJets == 2  && 100 <  met && met < 150 && abs(eta1)< 1.4 && abs(eta2) < 1.4 && (%s)"%Region.cut2011
+		R_SFOF = Constants2011.R_SFOF.Central
+		R_EEOF = Constants2011.R_EEOF.Central
+		R_MMOF = Constants2011.R_EEOF.Central
+		dyPrediction = {}
+		rarePrediction = {"default":	( 0, 0,0),}
+		title = "Central CR (2011)"
+		latex = "Central Control Region (2011)"
+		color = ROOT.kAzure-2
+		@staticmethod
+		def getPath(path): return path.replace(".root", "_2011.root").replace("sw532v0474", "sw532v0471")
+	class ControlForward_2011(ControlForward):
+		cut = "nJets == 2  && 100 <  met && met < 150 && 1.6 <= TMath::Max(abs(eta1),abs(eta2)) && (%s)"%Region.cut2011
+		title = "Forward CR (2011)"
+		latex = "Forward Control Region (2011)"
+		R_SFOF = Constants2011.R_SFOF.Forward
+		R_EEOF = Constants2011.R_EEOF.Forward
+		R_MMOF = Constants2011.R_EEOF.Forward
+		dyPrediction = {}
+		rarePrediction = {}
+		color = ROOT.kAzure-2
+		@staticmethod
+		def getPath(path): return path.replace(".root", "_2011.root").replace("sw532v0474", "sw532v0471")
 
 	class SignalLowMET(Region):
 		cut = "pt1 > 20 && pt2 > 20 && p4.M() > 20 && nJets >= 3  && met > 100 && abs(eta1) < 1.4 && abs(eta2) < 1.4 && (%s)"%Region.cut

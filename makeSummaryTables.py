@@ -265,6 +265,10 @@ def extendPickleSeparated( name, pkl,dilepton):
 		if not subcut == "default":
 			result[subcut]["nRare"] = 0.
 			result[subcut]["nRareUncert"] = 0.
+                elif  not dilepton in region.rarePrediction:
+                        print "WARNING: Ignoring rare for '%s'"%(region.title)
+			result[subcut]["nRare"] = 0.
+			result[subcut]["nRareUncert"] = 0.
 		else:
 			result[subcut]["nRare"] = region.rarePrediction[dilepton][0]
 			result[subcut]["nRareUncert"] = region.rarePrediction[dilepton][1]
@@ -559,7 +563,11 @@ def main():
 	#~ makeFitTable(allPkls,"SignalHighMET", ["default","0BTag", "1BTag", "Ge2BTag","Pt2010","Pt2020", "Pt3010","Pt3020","Pt3030","Barrel","Endcap","Type1","Tc","MHT","LowPU", "MidPU", "HighPU","LowHT", "HighHT","RunAB", "RunC","TightIso",], "FitTableHighMET")
 	#~ makeFitTable(allPkls,"BarrelHighMET", ["default","0BTag", "1BTag", "Ge2BTag","Pt2010","Pt2020", "Pt3010","Pt3020","Pt3030","Barrel","Endcap","Type1","Tc","Calo","LowPU", "MidPU", "HighPU","LowHT", "HighHT","RunAB", "RunC","TightIso",], "FitTableBarrelHighMET")
 	#~ makeFitTable(allPkls,"SignalLowMET", ["default","0BTag", "1BTag", "Ge2BTag","Pt2010","Pt2020", "Pt3010","Pt3020","Pt3030","Barrel","Endcap","Type1","Tc","Calo","LowPU", "MidPU", "HighPU","LowHT", "HighHT","RunAB", "RunC","TightIso",], "FitTableLowMET")
-	#~ makeFitTable(allPkls,"SignalLowMETFullEta", ["default","0BTag", "1BTag", "Ge2BTag","Pt2010","Pt2020", "Pt3010","Pt3020","Pt3030","Barrel","Endcap","Type1","Tc","Calo","LowPU", "MidPU", "HighPU","LowHT", "HighHT","RunAB", "RunC","TightIso",], "FitTableLowMETFullEta")
+	#~ makeFitTable(allPkls,"SignalLowMETFullEta", ["default","0BTag",
+        #"1BTag", "Ge2BTag","Pt2010","Pt2020",
+        #"Pt3010","Pt3020","Pt3030","Barrel","Endcap","Type1","Tc","Calo","LowPU",
+        #"MidPU", "HighPU","LowHT", "HighHT","RunAB", "RunC","TightIso",],
+        #"FitTableLowMETFullEta")
 	makeFitTable(allPkls,"SignalNonRectCentral", ["default","0BTag", "1BTag", "Ge2BTag","Pt2010","Pt2020", "Pt3010","Pt3020","Pt3030","Barrel","Endcap","Type1MET","TcMET","CaloMET","LowPU", "MidPU", "HighPU","LowHT", "HighHT","RunAB", "RunC","TightIso",], "FitTableSignalNonRectCentral")
 	makeFitTable(allPkls,"SignalNonRectForward", ["default","0BTag", "1BTag", "Ge2BTag","Pt2010","Pt2020", "Pt3010","Pt3020","Pt3030","Barrel","Endcap","Type1MET","TcMET","CaloMET","LowPU", "MidPU", "HighPU","LowHT", "HighHT","RunAB", "RunC","TightIso",], "FitTableSignalNonRectForward")
 	for regionName in allPkls:

@@ -1,9 +1,10 @@
 #DATA_TREES=../../../sw532v0458/processedTrees/sw532v0460.processed.MergedData.root
-DATA_TREES=/home/jan/Trees/sw532v0474/sw532v0474.processed.MergedData.root
-DATA_TREES_2011=/home/jan/Trees/sw532v0470/sw532v0470.processed.MergedData2011.root
-DATA_TREES_METPD=/home/jan/Trees/sw532v0474/sw532v0474.processed.MergedData_METPD.root
-DATA_TREES_SingleLepton=/home/jan/Trees/sw532v0470/sw532v0470.processed.MergedData_SingleLepton.root
-SIGNAL_TREES=/home/jan/Trees/sw532v0470/sw532v0470.processed.SUSY_CMSSM_4610_202_Summer12.root
+TREE_PATH=/user/edelhoff/trees/edgeAnalysis/sw532v0474/
+DATA_TREES=$(TREE_PATH)/sw532v0474.processed.MergedData.root
+DATA_TREES_2011=$(TREE_PATH)/sw532v0470.processed.MergedData2011.root
+DATA_TREES_METPD=$(TREE_PATH)/sw532v0474.processed.MergedData_METPD.root
+DATA_TREES_SingleLepton=$(TREE_PATH)/sw532v0470.processed.MergedData_SingleLepton.root
+SIGNAL_TREES=$(TREE_PATH)/sw532v0470.processed.SUSY_CMSSM_4610_202_Summer12.root
 AN_PATH = /home/jan/Doktorarbeit/Dilepton/projects/DileptonAN
 AN_TABLES=$(AN_PATH)/tables
 AN_PLOTS=$(AN_PATH)/plots
@@ -19,6 +20,8 @@ MAKETABLES = ./makeSummaryTables.py
 SSPlotter = ./SameSignPlotter.py
 
 COUNTING_REGIONS = SignalNonRectInclusive SignalNonRectCentral SignalNonRectForward SignalNonRectInclusive_METPD SignalNonRectCentral_METPD SignalNonRectForward_METPD SignalHighMETLowNJetsCentral SignalHighMETLowNJetsForward SignalHighMETHighNJetsCentral SignalHighMETHighNJetsForward SignalLowMETHighNJetsCentral SignalLowMETHighNJetsForward SignalHighMET BarrelHighMET SignalLowMET SignalLowMETFullEta  ControlHighMET ControlLowMET ControlCentral ControlForward ControlInclusive SignalHighMET_METPD SignalLowMET_METPD BarrelHighMET_METPD SignalLowMETFullEta_METPD 
+
+COUNTING_REGIONS_2011 = SignalNonRectInclusive_2011 SignalNonRectCentral_2011 SignalNonRectForward_2011  ControlCentral_2011 ControlForward_2011 ControlInclusive_2011
 
 all: countPlots tables
 
@@ -44,7 +47,7 @@ lumiPlots: $(foreach metric,nee nmumu nemu ns nsstar rmue simpleSig simpleSigSta
 
 slides_ofVsSf_XCheck.tex: $(MAKESLIDES)
 		$(MAKESLIDES) $(DATA_TREES) 2012
-		
+
 slides_ofVsSf_XCheck_2011.tex: $(MAKESLIDES)
 		$(MAKESLIDES) $(DATA_TREES_2011) 2011
 
@@ -54,9 +57,12 @@ slides_cutAndCount_XCheck_MC.tex: $(MAKECandCMC)
 tables: $(foreach region,$(COUNTING_REGIONS), shelves/cutAndCount_$(region).pkl)
 	$(MAKETABLES)
 
+tables2011: $(foreach region,$(COUNTING_REGIONS_2011), shelves/cutAndCount_$(region).pkl)
+	$(MAKETABLES)
+
 shelves/cutAndCount_%_METPD.pkl:
 	$(COUNTER) $(DATA_TREES_METPD) $(subst shelves/cutAndCount_,,$(subst .pkl,,$@))
-	
+
 shelves/cutAndCount_%_SingleLepton.pkl:
 	$(COUNTER) $(DATA_TREES_SingleLepton) $(subst shelves/cutAndCount_,,$(subst .pkl,,$@))
 
@@ -74,16 +80,16 @@ efficiencyCorrections:
 
 fig/mll_Datadriven_%.pdf_NoSig:
 	./mllDatadriven.py $(DATA_TREES) $(subst _, ,$(subst fig/mll_Datadriven_,,$(subst .pdf,,$@)))
-	
+
 fig/mll_Datadriven_%.pdf_Signal:
 	./mllDatadriven.py $(DATA_TREES) $(subst _, ,$(subst fig/mll_Datadriven_,,$(subst .pdf,,$@)))	
 
 fig/lumi_vs_%.pdf:
 	./vsLumi.py $(DATA_TREES) $(subst _, ,$(subst fig/lumi_vs_,,$(subst .pdf,,$@)))
-	
+
 eventLists:
 	./makeEventLists.py
-	
+
 SSPlots:
 	$(SSPlotter) SignalHighMET
 	$(SSPlotter) BarrelHighMET 	
