@@ -112,6 +112,23 @@ class SubProcesses8TeV:  #noch zu bearbeiten!
 		#"sw532v0456.cutsV22Dilepton.Data_Run2012A.root"
 	#"sw525v0451b.cutsV22Dilepton.Data_Run2012A.root" # fix vom 30.6.
     	xSection=0
+    
+    class DataReprocessedBlockA:#ist neu
+    	name="data"
+        #~ file="/user/schomakers/trees/sw532v0470.processed.MergedData.root"
+        file="/home/jan/Trees/sw538v0475/sw538v0475.processed.MergedData_BlockA.root"
+        #file="../processedTrees/sw532v0457.processed.MergedData.root"
+		#"sw532v0456.cutsV22Dilepton.Data_Run2012A.root"
+	#"sw525v0451b.cutsV22Dilepton.Data_Run2012A.root" # fix vom 30.6.
+    	xSection=0
+    class DataReprocessedBlockB:#ist neu
+    	name="data"
+        #~ file="/user/schomakers/trees/sw532v0470.processed.MergedData.root"
+        file="/home/jan/Trees/sw538v0475/sw538v0475.processed.MergedData_BlockB.root"
+        #file="../processedTrees/sw532v0457.processed.MergedData.root"
+		#"sw532v0456.cutsV22Dilepton.Data_Run2012A.root"
+	#"sw525v0451b.cutsV22Dilepton.Data_Run2012A.root" # fix vom 30.6.
+    	xSection=0
         
     class DataHT_Run2012A_Old1:
         name="HT_Run2012A"
@@ -252,6 +269,7 @@ class TreePaths:
     default="cutsV18SignalHighPtFinalTrees/" #praefix
     default8TeV= "cutsV20DileptonFinalTrees/"
     default8TeV_neu= "cutsV22DileptonFinalTrees/" # neu 4.6.2012
+    default8TeVReprocessed= "cutsV23DileptonFinalTrees/" # neu 4.6.2012
     ee_extension="EEDileptonTree"
     mumu_extension="MuMuDileptonTree"
     emu_extension="EMuDileptonTree"
@@ -377,6 +395,22 @@ class Processes8TeV:
         color=Colors.data
         subProcesses=[SubProcesses8TeV.Data]
         baseTreePath=TreePaths.default8TeV_neu # _neu nacher loeschen!
+        isData=True
+    class DataReprocessedBlockA:
+        name="Data"
+        sqrtS="8"
+        title=Titles.data
+        color=Colors.data
+        subProcesses=[SubProcesses8TeV.DataReprocessedBlockA]
+        baseTreePath=TreePaths.default8TeVReprocessed # _neu nacher loeschen!
+        isData=True
+    class DataReprocessedBlockB:
+        name="Data"
+        sqrtS="8"
+        title=Titles.data
+        color=Colors.data
+        subProcesses=[SubProcesses8TeV.DataReprocessedBlockB]
+        baseTreePath=TreePaths.default8TeVReprocessed # _neu nacher loeschen!
         isData=True
         
     class DataHT:

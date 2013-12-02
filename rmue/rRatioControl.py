@@ -40,6 +40,8 @@ relUncertainties = {"SS":0.1,
 				 "default":0.1,
 				}
 
+dataFile = {"BlockAFrozen":Processes8TeV.Data,"BlockAReprocessed":Processes8TeV.DataReprocessedBlockA,"BlockBReprocessed":Processes8TeV.DataReprocessedBlockB,}
+lumiBox = {"BlockAFrozen":9200,"BlockAReprocessed":9200,"BlockBReprocessed":10400,}
 
 class Ratio_nJets_MC(): #nJets
 	variable = "nJets"
@@ -461,6 +463,7 @@ class Ratio_eta1_Data():
 	xMax = 2.55
 
 
+
 def rRatioAll(plot,selectionModifier,isinput=False): #Tool, wird in rRatioDataVsMC verwendet
 	log.outputLevel=5
 #	SubProcesses7TeV.dataPath = "../Daten/"
@@ -493,12 +496,13 @@ def rRatioAll(plot,selectionModifier,isinput=False): #Tool, wird in rRatioDataVs
 	if isinput==True:
 		raw_input("press enter to continue")
 
-def rRatioDataVsMC(plotMC, plotData, variante=2,selectionModifier=[], isinput=False): #Ratio-Plots
+def rRatioDataVsMC(plotMC, plotData,dataName, variante=2,selectionModifier=[], isinput=False): #Ratio-Plots
 	log.outputLevel=5
 #	SubProcesses7TeV.dataPath = "../Daten/"
 #	SubProcesses8TeV.dataPath = "../Daten/"
 	plotpath="fig/"
-	
+	if plotData != None:
+		plotData.Processes8TeV = dataFile[dataName]
 	rootContainer = []
 	style=Styles.tdrStyle()
 	style.SetPadRightMargin(0.1)
@@ -775,6 +779,7 @@ def rRatioDataVsMC(plotMC, plotData, variante=2,selectionModifier=[], isinput=Fa
 	c1.Update()
 	if len(selectionModifier) > 0:
 		filename=filename+nameModifier
+	filename = filename+"_"+dataName
 	save(c1, plotpath, filename)
 
 	if isinput==True:
@@ -832,7 +837,7 @@ def calculateRatio(cut, process,selectionModifier=[]): # berechnet rmue
 
 # Latex-Tabelle mit Ratio
 def tableRatio(n_mumu_R3MC, n_ee_R3MC, rR3MC, sigma_rR3MC, sigma_rR3MC_syst_p, sigma_rR3MC_syst_m, 
-	n_mumu_R3Data, n_ee_R3Data, rR3Data, sigma_rR3Data, sigma_rR3Data_syst_p, sigma_rR3Data_syst_m,selectionModifier):
+	n_mumu_R3Data, n_ee_R3Data, rR3Data, sigma_rR3Data, sigma_rR3Data_syst_p, sigma_rR3Data_syst_m,dataName,selectionModifier):
 	rkeytitle=["empty", "n_mumu", "n_ee", "r"]
 	rkeys=["empty", "n_mumu", "n_ee", "r", "sigma_r_stat", "sigmaUp_r", "sigmaDown_r"]
 	rkeylist=[rkeytitle, rkeys, rkeys]
@@ -854,7 +859,7 @@ def tableRatio(n_mumu_R3MC, n_ee_R3MC, rR3MC, sigma_rR3MC, sigma_rR3MC_syst_p, s
 	if len(selectionModifier) >0:
 		for modifier in selectionModifier:			
 			nameModifier = nameModifier+modifier
-	savename="Tables/new_r-ValuesControl%s.txt"%nameModifier
+	savename="Tables/new_r-ValuesControl%s_%s.txt"%(nameModifier,dataName)
 	verweis="RValuesControl%s"%nameModifier
 
 	tabr=tabular(rdictlist,rkeylist, anzahlDezimalstellenDict, set([0,"1", 3]))
@@ -929,40 +934,42 @@ def tableDependency(ptMC, ptData, htMC, htData, metMC, metData, nVerticesMC, nVe
 
 def main():
 	from sys import argv
-	if len(argv) > 2:
-		selectionModifier = argv[2:]
+	dataName = argv[2]
+	if len(argv) > 3:
+		selectionModifier = argv[3:]
 	else: 
 		selectionModifier = []
 	Constants.setLumi(Constants.lumi8TeV)
+	Constants.lumi8TeV = lumiBox[dataName]
 	if argv[1] == "CentralValue":
-		n_mumu_R3Data, n_ee_R3Data, rR3Data, rR3Data_stat, rR3Data_up, rR3Data_down = calculateRatio(Cuts.basicPlusInvMassPlusMet50Cut, Processes8TeV.Data,selectionModifier)
+		n_mumu_R3Data, n_ee_R3Data, rR3Data, rR3Data_stat, rR3Data_up, rR3Data_down = calculateRatio(Cuts.basicPlusInvMassPlusMet50Cut, dataFile[dataName],selectionModifier)
 		n_mumu_R3MC, n_ee_R3MC, rR3MC, rR3MC_stat, rR3MC_up, rR3MC_down = calculateRatio(Cuts.basicPlusInvMassPlusMet50Cut, Processes8TeV.ZJets,selectionModifier)
 	#
 		tableRatio(n_mumu_R3MC, n_ee_R3MC, rR3MC, rR3MC_stat, rR3MC_up, rR3MC_down,
-			n_mumu_R3Data, n_ee_R3Data, rR3Data, rR3Data_stat, rR3Data_up, rR3Data_down,selectionModifier)	
+			n_mumu_R3Data, n_ee_R3Data, rR3Data, rR3Data_stat, rR3Data_up, rR3Data_down,dataName,selectionModifier)	
 #	
 	elif argv[1] == "Dependencies":
-		etaMC, etaData = rRatioDataVsMC(Ratio_eta1_MC, Ratio_eta1_Data, variante=2,selectionModifier=selectionModifier)
-		metMC, metData=rRatioDataVsMC(Ratio_met_MC, Ratio_met_Data, variante=2,selectionModifier=selectionModifier)
-		metMCtt, metDatatt=rRatioDataVsMC(Ratio_met_MC_tt, None, variante=2,selectionModifier=selectionModifier)
-		nJetsMC, nJetsData = rRatioDataVsMC(Ratio_nJets_MC, Ratio_nJets_Data, variante=2,selectionModifier=selectionModifier)
-		nVerticesMC, nVerticesData = rRatioDataVsMC(Ratio_nVertices_MC, Ratio_nVertices_Data, variante=2,selectionModifier=selectionModifier)
-		htMC, htData=rRatioDataVsMC(Ratio_ht_MC, Ratio_ht_Data,variante=2,selectionModifier=selectionModifier)
-		ptMC, ptData = rRatioDataVsMC(Ratio_pt_MC, Ratio_pt_Data, variante=2,selectionModifier=selectionModifier)
-		pt2MC, pt2Data = rRatioDataVsMC(Ratio_pt2_MC, Ratio_pt2_Data, variante=2,selectionModifier=selectionModifier)
-		nBJetsMC, nBJetsData=rRatioDataVsMC(Ratio_nBJets_MC, Ratio_nBJets_Data, variante=2,selectionModifier=selectionModifier)
-		iso1MC, iso1Data = rRatioDataVsMC(Ratio_id1_MC, Ratio_id1_Data, variante=2,selectionModifier=selectionModifier)
-		iso2MC, iso2Data = rRatioDataVsMC(Ratio_id2_MC, Ratio_id2_Data, variante=2,selectionModifier=selectionModifier)
-	#	iso1_002_MC, iso1_002_Data = rRatioDataVsMC(Ratio_id1_002_MC, Ratio_id1_002_Data, variante=2,selectionModifier=selectionModifier)
-	#	iso2_002_MC, iso2_002_Data = rRatioDataVsMC(Ratio_id2_002_MC, Ratio_id2_002_Data, variante=2,selectionModifier=selectionModifier)
-		mllMC, mllData=rRatioDataVsMC(Ratio_p4M_MC, Ratio_p4M_Data, variante=2,selectionModifier=selectionModifier)
-		mllMCZ, mllDataZ=rRatioDataVsMC(Ratio_p4M_MCZ, Ratio_p4M_Data, variante=2,selectionModifier=selectionModifier)
-		mllMCtt, mllDataZtt=rRatioDataVsMC(Ratio_p4M_MCtt, Ratio_p4M_Data, variante=2,selectionModifier=selectionModifier)
-		deltRMC, deltaRData=rRatioDataVsMC(Ratio_DeltaR_MC, Ratio_DeltaR_Data, variante=2,selectionModifier=selectionModifier)
-		deltRMCZ, deltaRDataZ=rRatioDataVsMC(Ratio_DeltaR_MCZ, Ratio_DeltaR_Data, variante=2,selectionModifier=selectionModifier)
+		etaMC, etaData = rRatioDataVsMC(Ratio_eta1_MC, Ratio_eta1_Data,dataName, variante=2,selectionModifier=selectionModifier)
+		metMC, metData=rRatioDataVsMC(Ratio_met_MC, Ratio_met_Data,dataName, variante=2,selectionModifier=selectionModifier)
+		metMCtt, metDatatt=rRatioDataVsMC(Ratio_met_MC_tt, None,dataName, variante=2,selectionModifier=selectionModifier)
+		nJetsMC, nJetsData = rRatioDataVsMC(Ratio_nJets_MC, Ratio_nJets_Data,dataName, variante=2,selectionModifier=selectionModifier)
+		nVerticesMC, nVerticesData = rRatioDataVsMC(Ratio_nVertices_MC, Ratio_nVertices_Data,dataName, variante=2,selectionModifier=selectionModifier)
+		htMC, htData=rRatioDataVsMC(Ratio_ht_MC, Ratio_ht_Data,dataName,variante=2,selectionModifier=selectionModifier)
+		ptMC, ptData = rRatioDataVsMC(Ratio_pt_MC, Ratio_pt_Data,dataName, variante=2,selectionModifier=selectionModifier)
+		pt2MC, pt2Data = rRatioDataVsMC(Ratio_pt2_MC, Ratio_pt2_Data,dataName, variante=2,selectionModifier=selectionModifier)
+		nBJetsMC, nBJetsData=rRatioDataVsMC(Ratio_nBJets_MC, Ratio_nBJets_Data,dataName, variante=2,selectionModifier=selectionModifier)
+		iso1MC, iso1Data = rRatioDataVsMC(Ratio_id1_MC, Ratio_id1_Data,dataName, variante=2,selectionModifier=selectionModifier)
+		iso2MC, iso2Data = rRatioDataVsMC(Ratio_id2_MC, Ratio_id2_Data,dataName, variante=2,selectionModifier=selectionModifier)
+	#	iso1_002_MC, iso1_002_Data = rRatioDataVsMC(Ratio_id1_002_MC, Ratio_id1_002_Data,dataName, variante=2,selectionModifier=selectionModifier)
+	#	iso2_002_MC, iso2_002_Data = rRatioDataVsMC(Ratio_id2_002_MC, Ratio_id2_002_Data,dataName, variante=2,selectionModifier=selectionModifier)
+		mllMC, mllData=rRatioDataVsMC(Ratio_p4M_MC, Ratio_p4M_Data,dataName, variante=2,selectionModifier=selectionModifier)
+		mllMCZ, mllDataZ=rRatioDataVsMC(Ratio_p4M_MCZ, Ratio_p4M_Data,dataName, variante=2,selectionModifier=selectionModifier)
+		mllMCtt, mllDataZtt=rRatioDataVsMC(Ratio_p4M_MCtt, Ratio_p4M_Data,dataName, variante=2,selectionModifier=selectionModifier)
+		deltRMC, deltaRData=rRatioDataVsMC(Ratio_DeltaR_MC, Ratio_DeltaR_Data,dataName, variante=2,selectionModifier=selectionModifier)
+		deltRMCZ, deltaRDataZ=rRatioDataVsMC(Ratio_DeltaR_MCZ, Ratio_DeltaR_Data,dataName, variante=2,selectionModifier=selectionModifier)
 		
 		
-		MllNonIsoMC, MllNonIsoData=rRatioDataVsMC(Ratio_p4M_MCIsoSideband, Ratio_p4M_DataIsoSideband, variante=2,selectionModifier=selectionModifier)
+		MllNonIsoMC, MllNonIsoData=rRatioDataVsMC(Ratio_p4M_MCIsoSideband, Ratio_p4M_DataIsoSideband,dataName, variante=2,selectionModifier=selectionModifier)
 
 	#	mllMC, mllData=rRatioDataVsMC(None, Ratio_p4M_Data, variante=2,selectionModifier=selectionModifier)
 	#	mllMCZ, mllDataZ=rRatioDataVsMC(Ratio_p4M_MCZ, None, variante=2,selectionModifier=selectionModifier)

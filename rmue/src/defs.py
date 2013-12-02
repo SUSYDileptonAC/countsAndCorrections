@@ -293,31 +293,32 @@ class Cuts:
     id1Cut="id2<0.1"
     id2Cut="id1<0.1"
 
-    basicCut="chargeProduct==-1 && nJets>=2 && pt1 > 20 && pt2 > 20 && deltaR > 0.3 && abs(eta1) < 2.4 && abs(eta2) < 2.4 && ((abs(eta1) < 1.4 || abs(eta1) > 1.6) && (abs(eta2) < 1.4 || abs(eta2) > 1.6) ) && p4.M()>20 && runNr <= 201678 && !(runNr >= 198049 && runNr <= 198522) && id1 < 0.15 && id2 < 0.15"
-    basicCutIsoSideband="chargeProduct==-1 && nJets>=2 && pt1 > 20 && pt2 > 20 && deltaR > 0.3 && abs(eta1) < 2.4 && abs(eta2) < 2.4 && ((abs(eta1) < 1.4 || abs(eta1) > 1.6) && (abs(eta2) < 1.4 || abs(eta2) > 1.6) ) && p4.M()>20 && runNr <= 201678 && !(runNr >= 198049 && runNr <= 198522) && id1 > 0.15 && id2 > 0.15 && id1 < 1 && id2 < 1"
-    basicCutNoDeltaR="chargeProduct==-1 && nJets>=2 && pt1 > 20 && pt2 > 20 && abs(eta1) < 2.4 && abs(eta2) < 2.4 && ((abs(eta1) < 1.4 || abs(eta1) > 1.6) && (abs(eta2) < 1.4 || abs(eta2) > 1.6) ) && p4.M()>20 && runNr <= 201678 && !(runNr >= 198049 && runNr <= 198522) && id1 < 0.15 && id2 < 0.15"
-    basicCutNoDeltaRNoNJets="chargeProduct==-1  && pt1 > 20 && pt2 > 20 && abs(eta1) < 2.4 && abs(eta2) < 2.4 && ((abs(eta1) < 1.4 || abs(eta1) > 1.6) && (abs(eta2) < 1.4 || abs(eta2) > 1.6) ) && p4.M()>20 && runNr <= 201678 && !(runNr >= 198049 && runNr <= 198522) && id1 < 0.15 && id2 < 0.15"
-    basicCut0="chargeProduct==-1 && nJets==0 && pt1 > 20 && pt2 > 20 && deltaR > 0.3 && abs(eta1) < 2.4 && abs(eta2) < 2.4 && ((abs(eta1) < 1.4 || abs(eta1) > 1.6) && (abs(eta2) < 1.4 || abs(eta2) > 1.6) ) && p4.M()>20 && runNr <= 201678 && !(runNr >= 198049 && runNr <= 198522) && id1 < 0.15 && id2 < 0.15" # nJets!
-    basicCutR="chargeProduct==-1 && nJets==0 && pt1 > 20 && pt2 > 20 && deltaR > 0.3 && abs(eta1) < 2.4 && abs(eta2) < 2.4 && ((abs(eta1) < 1.4 || abs(eta1) > 1.6) && (abs(eta2) < 1.4 || abs(eta2) > 1.6) ) && p4.M()>20 && runNr <= 201678 && !(runNr >= 198049 && runNr <= 198522) && id1 < 0.15 && id2 < 0.15" # nJets!
+    basicCut="chargeProduct==-1 && nJets>=2 && pt1 > 20 && pt2 > 20 && deltaR > 0.3 && abs(eta1) < 2.4 && abs(eta2) < 2.4 && ((abs(eta1) < 1.4 || abs(eta1) > 1.6) && (abs(eta2) < 1.4 || abs(eta2) > 1.6) ) && p4.M()>20  && id1 < 0.15 && id2 < 0.15"
+    basicCutIsoSideband="chargeProduct==-1 && nJets>=2 && pt1 > 20 && pt2 > 20 && deltaR > 0.3 && abs(eta1) < 2.4 && abs(eta2) < 2.4 && ((abs(eta1) < 1.4 || abs(eta1) > 1.6) && (abs(eta2) < 1.4 || abs(eta2) > 1.6) ) && p4.M()>20  && id1 > 0.15 && id2 > 0.15 && id1 < 1 && id2 < 1"
+    basicCutNoDeltaR="chargeProduct==-1 && nJets>=2 && pt1 > 20 && pt2 > 20 && abs(eta1) < 2.4 && abs(eta2) < 2.4 && ((abs(eta1) < 1.4 || abs(eta1) > 1.6) && (abs(eta2) < 1.4 || abs(eta2) > 1.6) ) && p4.M()>20  && id1 < 0.15 && id2 < 0.15"
+    basicCutNoDeltaRNoNJets="chargeProduct==-1  && pt1 > 20 && pt2 > 20 && abs(eta1) < 2.4 && abs(eta2) < 2.4 && ((abs(eta1) < 1.4 || abs(eta1) > 1.6) && (abs(eta2) < 1.4 || abs(eta2) > 1.6) ) && p4.M()>20  && id1 < 0.15 && id2 < 0.15"
+    basicCut0="chargeProduct==-1 && nJets==0 && pt1 > 20 && pt2 > 20 && deltaR > 0.3 && abs(eta1) < 2.4 && abs(eta2) < 2.4 && ((abs(eta1) < 1.4 || abs(eta1) > 1.6) && (abs(eta2) < 1.4 || abs(eta2) > 1.6) ) && p4.M()>20  && id1 < 0.15 && id2 < 0.15" # nJets!
+    basicCutR="chargeProduct==-1 && nJets==0 && pt1 > 20 && pt2 > 20 && deltaR > 0.3 && abs(eta1) < 2.4 && abs(eta2) < 2.4 && ((abs(eta1) < 1.4 || abs(eta1) > 1.6) && (abs(eta2) < 1.4 || abs(eta2) > 1.6) ) && p4.M()>20  && id1 < 0.15 && id2 < 0.15" # nJets!
     
-    basicCutSS="chargeProduct==1 && nJets>=2 && pt1 > 20 && pt2 > 20 && deltaR > 0.3 && abs(eta1) < 2.4 && abs(eta2) < 2.4 && ((abs(eta1) < 1.4 || abs(eta1) > 1.6) && (abs(eta2) < 1.4 || abs(eta2) > 1.6) ) && p4.M()>20 && runNr <= 201678 && !(runNr >= 198049 && runNr <= 198522)"
-    basicCutNoDeltaRSS="chargeProduct==1 && nJets>=2 && pt1 > 20 && pt2 > 20 && abs(eta1) < 2.4 && abs(eta2) < 2.4 && ((abs(eta1) < 1.4 || abs(eta1) > 1.6) && (abs(eta2) < 1.4 || abs(eta2) > 1.6) ) && p4.M()>20 && runNr <= 201678 && !(runNr >= 198049 && runNr <= 198522)"
-    basicCut0SS="chargeProduct==1 && nJets==0 && pt1 > 20 && pt2 > 20 && deltaR > 0.3 && abs(eta1) < 2.4 && abs(eta2) < 2.4 && ((abs(eta1) < 1.4 || abs(eta1) > 1.6) && (abs(eta2) < 1.4 || abs(eta2) > 1.6) ) && p4.M()>20 && runNr <= 201678 && !(runNr >= 198049 && runNr <= 198522)" # nJets!
-    basicCutRSS="chargeProduct==1 && nJets==0 && pt1 > 20 && pt2 > 20 && deltaR > 0.3 && abs(eta1) < 2.4 && abs(eta2) < 2.4 && ((abs(eta1) < 1.4 || abs(eta1) > 1.6) && (abs(eta2) < 1.4 || abs(eta2) > 1.6) ) && p4.M()>20 && runNr <= 201678 && !(runNr >= 198049 && runNr <= 198522)" # nJets!
-    
+    basicCutSS="chargeProduct==1 && nJets>=2 && pt1 > 20 && pt2 > 20 && deltaR > 0.3 && abs(eta1) < 2.4 && abs(eta2) < 2.4 && ((abs(eta1) < 1.4 || abs(eta1) > 1.6) && (abs(eta2) < 1.4 || abs(eta2) > 1.6) ) && p4.M()>20 "
+    basicCutNoDeltaRSS="chargeProduct==1 && nJets>=2 && pt1 > 20 && pt2 > 20 && abs(eta1) < 2.4 && abs(eta2) < 2.4 && ((abs(eta1) < 1.4 || abs(eta1) > 1.6) && (abs(eta2) < 1.4 || abs(eta2) > 1.6) ) && p4.M()>20 "
+    basicCut0SS="chargeProduct==1 && nJets==0 && pt1 > 20 && pt2 > 20 && deltaR > 0.3 && abs(eta1) < 2.4 && abs(eta2) < 2.4 && ((abs(eta1) < 1.4 || abs(eta1) > 1.6) && (abs(eta2) < 1.4 || abs(eta2) > 1.6) ) && p4.M()>20 " # nJets!
+    basicCutRSS="chargeProduct==1 && nJets==0 && pt1 > 20 && pt2 > 20 && deltaR > 0.3 && abs(eta1) < 2.4 && abs(eta2) < 2.4 && ((abs(eta1) < 1.4 || abs(eta1) > 1.6) && (abs(eta2) < 1.4 || abs(eta2) > 1.6) ) && p4.M()>20 " # nJets!
+
+    basicCutohneN="chargeProduct==-1 && pt1 > 20 && pt2 > 20 && deltaR > 0.3 && abs(eta1) < 2.4 && abs(eta2) < 2.4 && ((abs(eta1) < 1.4 || abs(eta1) > 1.6) && (abs(eta2) < 1.4 || abs(eta2) > 1.6) ) && p4.M()>20  && id1 < 0.15 && id2 < 0.15"
+    basicCutohnePt="chargeProduct==-1 && nJets>=2 && deltaR > 0.3 && abs(eta1) < 2.4 && abs(eta2) < 2.4 && ((abs(eta1) < 1.4 || abs(eta1) > 1.6) && (abs(eta2) < 1.4 || abs(eta2) > 1.6) ) && p4.M()>20  && id1 < 0.15 && id2 < 0.15"
+    basicCutOhnePtOhneN= "chargeProduct==-1 && deltaR > 0.3 && abs(eta1) < 2.4 && abs(eta2) < 2.4 && ((abs(eta1) < 1.4 || abs(eta1) > 1.6) && (abs(eta2) < 1.4 || abs(eta2) > 1.6) ) && p4.M()>20  && id1 < 0.15 && id2 < 0.15"
+  
+    basicCutohneNSS="chargeProduct==1 && pt1 > 20 && pt2 > 20 && deltaR > 0.3 && abs(eta1) < 2.4 && ((abs(eta1) < 1.4 || abs(eta1) > 1.6) && (abs(eta2) < 1.4 || abs(eta2) > 1.6) ) && abs(eta2) < 2.4 && p4.M()>20 "
+    basicCutohnePtSS="chargeProduct==1 && nJets>=2 && deltaR > 0.3 && abs(eta1) < 2.4 && abs(eta2) < 2.4 && ((abs(eta1) < 1.4 || abs(eta1) > 1.6) && (abs(eta2) < 1.4 || abs(eta2) > 1.6) ) && p4.M()>20 "
+    basicCutOhnePtOhneNSS= "chargeProduct==1 && deltaR > 0.3 && abs(eta1) < 2.4 && abs(eta2) < 2.4 && ((abs(eta1) < 1.4 || abs(eta1) > 1.6) && (abs(eta2) < 1.4 || abs(eta2) > 1.6) )&& p4.M()>20 "
+     
+ 
     met50Cut = "met < 50"
     topCut="met>50 && nBJets>=1 && abs(p4.M()-91)>15" 
     nVerticesCut="nVertices<11 && nVertices >9"
     ptCut="pt2>50"
 
-    basicCutohneN="chargeProduct==-1 && pt1 > 20 && pt2 > 20 && deltaR > 0.3 && abs(eta1) < 2.4 && abs(eta2) < 2.4 && ((abs(eta1) < 1.4 || abs(eta1) > 1.6) && (abs(eta2) < 1.4 || abs(eta2) > 1.6) ) && p4.M()>20 && runNr <= 201678 && !(runNr >= 198049 && runNr <= 198522) && id1 < 0.15 && id2 < 0.15"
-    basicCutohnePt="chargeProduct==-1 && nJets>=2 && deltaR > 0.3 && abs(eta1) < 2.4 && abs(eta2) < 2.4 && ((abs(eta1) < 1.4 || abs(eta1) > 1.6) && (abs(eta2) < 1.4 || abs(eta2) > 1.6) ) && p4.M()>20 && runNr <= 201678 && !(runNr >= 198049 && runNr <= 198522) && id1 < 0.15 && id2 < 0.15"
-    basicCutOhnePtOhneN= "chargeProduct==-1 && deltaR > 0.3 && abs(eta1) < 2.4 && abs(eta2) < 2.4 && ((abs(eta1) < 1.4 || abs(eta1) > 1.6) && (abs(eta2) < 1.4 || abs(eta2) > 1.6) ) && p4.M()>20 && runNr <= 201678 && !(runNr >= 198049 && runNr <= 198522) && id1 < 0.15 && id2 < 0.15"
-  
-    basicCutohneNSS="chargeProduct==1 && pt1 > 20 && pt2 > 20 && deltaR > 0.3 && abs(eta1) < 2.4 && ((abs(eta1) < 1.4 || abs(eta1) > 1.6) && (abs(eta2) < 1.4 || abs(eta2) > 1.6) ) && abs(eta2) < 2.4 && p4.M()>20 && runNr <= 201678 && !(runNr >= 198049 && runNr <= 198522)"
-    basicCutohnePtSS="chargeProduct==1 && nJets>=2 && deltaR > 0.3 && abs(eta1) < 2.4 && abs(eta2) < 2.4 && ((abs(eta1) < 1.4 || abs(eta1) > 1.6) && (abs(eta2) < 1.4 || abs(eta2) > 1.6) ) && p4.M()>20 && runNr <= 201678 && !(runNr >= 198049 && runNr <= 198522)"
-    basicCutOhnePtOhneNSS= "chargeProduct==1 && deltaR > 0.3 && abs(eta1) < 2.4 && abs(eta2) < 2.4 && ((abs(eta1) < 1.4 || abs(eta1) > 1.6) && (abs(eta2) < 1.4 || abs(eta2) > 1.6) )&& p4.M()>20 && runNr <= 201678 && !(runNr >= 198049 && runNr <= 198522)"
- 
     invMassCut="(p4.M()<120 && p4.M()>60)"
 
     weight = "weight" # um triggereffizeinzen und weight zu trennen nur MC/3.2626
@@ -339,6 +340,8 @@ class Cuts:
     basicOhneNJetPlusInvMassPlusMet50Cut = "(%s)*(%s)*(%s)" %(basicCutohneN,invMassCut,met50Cut)
     basicOhnePt50 = "(%s)*(%s)*(pt2>50)" %(basicCutohnePt,invMassCut)
     basicCutOhnePt= "(%s)*(%s)*(pt2>30)" %(basicCutOhnePtOhneN,invMassCut)
+
+
  
     lowHtSignalRegion="(%s) && met>150 && 100<ht && ht<300" %basicCut
     lowHtSignalRegion200="(%s) && met>200 && 100<ht && ht<300" %basicCut

@@ -53,6 +53,7 @@ def loadShapePickles(regionName, subcutName, shape = "GT", path = "../test/EdgeF
 		#~ print pklPath
 		if os.path.exists(pklPath):
 			pklFile = open(pklPath, "r")
+			print pklFile
 			result[varName] = pickle.load(pklFile)
 			pklFile.close()
 	if subcutName in region.dyPrediction:
@@ -98,7 +99,8 @@ def extendBasics(pkl, region):
 	from src.defs import getOFScale
 	n = {}
 	n.update(pkl)
-
+	print region.title
+	print region.R_SFOF.val
 	ofScale = region.R_SFOF.val
 	ofScaleRelError = region.R_SFOF.err
 
@@ -568,8 +570,8 @@ def main():
         #"Pt3010","Pt3020","Pt3030","Barrel","Endcap","Type1","Tc","Calo","LowPU",
         #"MidPU", "HighPU","LowHT", "HighHT","RunAB", "RunC","TightIso",],
         #"FitTableLowMETFullEta")
-	makeFitTable(allPkls,"SignalNonRectCentral", ["default","0BTag", "1BTag", "Ge2BTag","Pt2010","Pt2020", "Pt3010","Pt3020","Pt3030","Barrel","Endcap","Type1MET","TcMET","CaloMET","LowPU", "MidPU", "HighPU","LowHT", "HighHT","RunAB", "RunC","TightIso",], "FitTableSignalNonRectCentral")
-	makeFitTable(allPkls,"SignalNonRectForward", ["default","0BTag", "1BTag", "Ge2BTag","Pt2010","Pt2020", "Pt3010","Pt3020","Pt3030","Barrel","Endcap","Type1MET","TcMET","CaloMET","LowPU", "MidPU", "HighPU","LowHT", "HighHT","RunAB", "RunC","TightIso",], "FitTableSignalNonRectForward")
+	#~ makeFitTable(allPkls,"SignalNonRectCentral", ["default","0BTag", "1BTag", "Ge2BTag","Pt2010","Pt2020", "Pt3010","Pt3020","Pt3030","Barrel","Endcap","Type1MET","TcMET","CaloMET","LowPU", "MidPU", "HighPU","LowHT", "HighHT","RunAB", "RunC","TightIso",], "FitTableSignalNonRectCentral")
+	#~ makeFitTable(allPkls,"SignalNonRectForward", ["default","0BTag", "1BTag", "Ge2BTag","Pt2010","Pt2020", "Pt3010","Pt3020","Pt3030","Barrel","Endcap","Type1MET","TcMET","CaloMET","LowPU", "MidPU", "HighPU","LowHT", "HighHT","RunAB", "RunC","TightIso",], "FitTableSignalNonRectForward")
 	for regionName in allPkls:
 		allPkls[regionName] = extendPickle(regionName, allPkls[regionName])		
 		makeRegionTables(allPkls[regionName]["default"], regionName)

@@ -1,7 +1,7 @@
 #DATA_TREES=../../../sw532v0458/processedTrees/sw532v0460.processed.MergedData.root
-TREE_PATH=/user/edelhoff/trees/edgeAnalysis/sw532v0474/
+TREE_PATH=/home/jan/Trees/sw532v0474/
 DATA_TREES=$(TREE_PATH)/sw532v0474.processed.MergedData.root
-DATA_TREES_2011=$(TREE_PATH)/sw532v0471.processed.MergedData_2011.root
+DATA_TREES_2011=$(TREE_PATH)/sw532v0463.processed.MergedData_2011.root
 DATA_TREES_METPD=$(TREE_PATH)/sw532v0474.processed.MergedData_METPD.root
 DATA_TREES_SingleLepton=$(TREE_PATH)/sw532v0470.processed.MergedData_SingleLepton.root
 SIGNAL_TREES=$(TREE_PATH)/sw532v0470.processed.SUSY_CMSSM_4610_202_Summer12.root

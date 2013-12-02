@@ -130,11 +130,14 @@ class Constants:
 		class Control(Constant):
 			val = 1.0
 			err = 0.0
+			
+			
 class Constants2011(Constants):
 	class Trigger:
-                class EffEE(Constant):
+		class EffEE(Constant):
 			val = 1.0
 			err = 0.02
+			
 		class EffEMu(Constant):
 			val = 0.95
 			err = 0.02
@@ -142,17 +145,39 @@ class Constants2011(Constants):
 		class EffMuMu(Constant):
 			val = 0.90
 			err = 0.02
-                #not actually used?
-		class Correction:
-			class Inclusive(Constant):
-                                pass
-			class Central(Constant):
-                                pass
-				
-			class Forward(Constant):
-                                pass	
+				#not actually used?
+	class R_SFOF:
+		class Inclusive(Constant):
+							val = 1.0204
+							err = 0.0319
+		class Central(Constant):
+							val = 1.0204
+							err = 0.0319
+		class Forward(Constant):
+							val = 1.0241
+							err = 0.0549	
+	class R_EEOF:
+		class Inclusive(Constant):
+							val = 0.4192
+							err = 0.0360
+		class Central(Constant):
+							val = 0.4192
+							err = 0.0360
+		class Forward(Constant):
+							val = 0.3644
+							err = 0.0639	
+	class R_MMOF:
+		class Inclusive(Constant):
+							val = 0.6149
+							err = 0.0507
+		class Central(Constant):
+							val = 0.6149
+							err = 0.0507
+		class Forward(Constant):
+							val = 0.6349
+							err = 0.1033	
 	class Pt2020:
-                #still 2012 numbers
+				#still 2012 numbers
 		class RInOut:
 			class Inclusive(Constant):
 				val =0.069
@@ -163,7 +188,7 @@ class Constants2011(Constants):
 			class Forward(Constant):
 				val =0.066
 				err =0.066*0.25
-                #just using inclusive numbers from SUS-11-011
+				#just using inclusive numbers from SUS-11-011
 		class RMuE:
 			class Inclusive(Constant):
 				val =1.11
@@ -182,7 +207,7 @@ class Region(object):
 	cut3020 = "chargeProduct < 0 && ((pt1 > 30 && pt2 > 20 ) || (pt2 > 30 && pt1 > 20 )) && abs(eta1)<2.4  && abs(eta2) < 2.4 && ((abs(eta1) < 1.4 || abs(eta1) > 1.6) && (abs(eta2) < 1.4 || abs(eta2) > 1.6)) && deltaR > 0.3 && p4.M() > 20  && !(runNr >= 198049 && runNr <= 198522) && runNr < 201678 && !(runNr == 195649 && lumiSec == 49 && eventNr == 75858433) && !(runNr == 195749 && lumiSec == 108 && eventNr == 216906941)"
 	cut3010 = "chargeProduct < 0 && ((pt1 > 30 && pt2 > 10 ) || (pt2 > 30 && pt1 > 10 )) && abs(eta1)<2.4  && abs(eta2) < 2.4 && ((abs(eta1) < 1.4 || abs(eta1) > 1.6) && (abs(eta2) < 1.4 || abs(eta2) > 1.6)) && deltaR > 0.3 && p4.M() > 20  && !(runNr >= 198049 && runNr <= 198522) && runNr < 201678 && !(runNr == 195649 && lumiSec == 49 && eventNr == 75858433) && !(runNr == 195749 && lumiSec == 108 && eventNr == 216906941)"
 	cut3030 = "chargeProduct < 0 && ((pt1 > 30 && pt2 > 30 ) || (pt2 > 30 && pt1 > 30 )) && abs(eta1)<2.4  && abs(eta2) < 2.4 && ((abs(eta1) < 1.4 || abs(eta1) > 1.6) && (abs(eta2) < 1.4 || abs(eta2) > 1.6)) && deltaR > 0.3 && p4.M() > 20  && !(runNr >= 198049 && runNr <= 198522) && runNr < 201678 && !(runNr == 195649 && lumiSec == 49 && eventNr == 75858433) && !(runNr == 195749 && lumiSec == 108 && eventNr == 216906941)"
-        cut2011 = "chargeProduct < 0 && pt1 > 20 && pt2 > 20 && abs(eta1)<2.4 && ((abs(eta1) < 1.4 || abs(eta1) > 1.6) && (abs(eta2) < 1.4 || abs(eta2) > 1.6)) && abs(eta2) < 2.4 && deltaR > 0.3 && p4.M() > 20 && jet1pt > 40 && jet2pt > 40"
+	cut2011 = "chargeProduct < 0 && pt1 > 20 && pt2 > 20 && abs(eta1)<2.4 && ((abs(eta1) < 1.4 || abs(eta1) > 1.6) && (abs(eta2) < 1.4 || abs(eta2) > 1.6)) && abs(eta2) < 2.4 && deltaR > 0.3 && p4.M() > 20 && jet1pt > 40 && jet2pt > 40"
 	title = "everything"
 	latex = "everything"
 	dyPrediction = {}
@@ -303,9 +328,9 @@ class Regions:
 		rMuE = Constants.Pt2020.RMuE.Central
 		rInOut = Constants.Pt2020.RInOut.Central
 		R_SFOF = Constants.R_SFOF.Central
-		R_SFOFTrig = Constants.Trigger.Correction.Forward
-		R_EEOF = Constants.R_EEOF.Forward
-		R_MMOF = Constants.R_MMOF.Forward		
+		R_SFOFTrig = Constants.Trigger.Correction.Central
+		R_EEOF = Constants.R_EEOF.Central
+		R_MMOF = Constants.R_MMOF.Central		
 		dyPrediction = {
 			"default":	( 30, 0,0),
 			"SingleLetpon":	(30,0,0),
@@ -910,8 +935,20 @@ class Regions:
 		cut = "nJets >= 2  && (%s)"%Region.cut
 		title = "More than 2 Jets"
 		latex = "More than 2 Jets"
-	
-
+		rMuE = Constants.Pt2020.RMuE.Central
+		rInOut = Constants.Pt2020.RInOut.Central
+		R_SFOF = Constants.R_SFOF.Central
+		R_SFOFTrig = Constants.Trigger.Correction.Central
+		R_EEOF = Constants.R_EEOF.Central
+		R_MMOF = Constants.R_MMOF.Central		
+		rarePrediction = {
+			"default":	( 0, 0,0),
+			"SingleLetpon":	(0,0,0),
+			"RunAB": (0,0,0),
+			"RunC": (0,0,0),
+			"MuMu": (0,0,0),
+			"EE": (0,0,0)			
+			}	
 def getRegion(name):
 	if not name in dir(Regions):
 		print "unknown region '%s, using SignalHighMET'"%name
