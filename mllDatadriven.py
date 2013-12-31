@@ -161,7 +161,7 @@ def getSysErrorGraph(hist, scale, errorList=None,additionalHist=None):
 			yVals.append( hist.GetBinContent(i)) 
 		else:
 			yVals.append(hist.GetBinContent(i)+additionalHist.GetBinContent(i))
-		errs.append( sqrt(hist.GetBinContent(i)*scale**2+hist.GetBinContent(i)))
+		errs.append( sqrt(abs(hist.GetBinContent(i)*scale**2+hist.GetBinContent(i))))
 		widths.append( hist.GetXaxis().GetBinWidth(i) * 0.5)
 	if not errorList == None:
 		assert len(errorList) == nBins, "errorList incopatible %s != %s"%(nBins, len(errorList))
@@ -428,20 +428,20 @@ def main():
 
 	regionName = argv[2]
 	subcutName =  argv[3]
-	lumi = { "default": 9200,
-			 "RunAB": 5230,
-			 "RunC": 4100
+	lumi = { "BlockA": 9200,
+			 "BlockB": 10200,
+			 "default": 19400
 		}
 
  	
-	maxY = 90
+	maxY = 300
 	
 	if regionName == "SignalNonRectInclusive":
-		maxY = 180.
+		maxY = 400.
 	if regionName == "SignalNonRectCentral":
-		maxY = 150.
+		maxY = 250.
 	if regionName == "SignalNonRectForward":
-		maxY = 120.
+		maxY = 125.
 		#~ maxDiff = [-30, 50.]
 	#~ if regionName == "SignalHighMET_SingleLepton":
 		#~ maxY = 80.
@@ -453,14 +453,31 @@ def main():
 		#~ maxY = 120.
 		#~ maxDiff = [-30, 50.]
 
-
+	if subcutName == "BlockA" or subcutName == "BlockB":
+		maxY = maxY*0.5
 	
 	region = getRegion(regionName)
 	dyRegion = getRegion("DrellYan")
+
+	corrections = {
+		"BlockA":{"SF":[region.R_SFOF_A.val,region.R_SFOF_A.err],"EE":[region.R_EEOF_A.val,region.R_EEOF_A.err],"MM":[region.R_MMOF_A.val,region.R_MMOF_A.err]},
+		"BlockB":{"SF":[region.R_SFOF_B.val,region.R_SFOF_B.err],"EE":[region.R_EEOF_B.val,region.R_EEOF_B.err],"MM":[region.R_MMOF_B.val,region.R_MMOF_B.err]},
+		"default":{"SF":[region.R_SFOF_AB.val,region.R_SFOF_AB.err],"EE":[region.R_EEOF_AB.val,region.R_EEOF_AB.err],"MM":[region.R_MMOF_AB.val,region.R_MMOF_AB.err]}
+	}
+	print corrections
+	ofScale = corrections[subcutName]["SF"][0]
+	ofScaleError = corrections[subcutName]["SF"][1]		
+	eeScale = corrections[subcutName]["EE"][0]
+	eeScaleError = corrections[subcutName]["EE"][1]		
+	mmScale = corrections[subcutName]["MM"][0]
+	mmScaleError = corrections[subcutName]["MM"][1]		
+
+	print ofScale, ofScaleError
+
 	
 	cuts = {"default": region.cut,
-			"RunAB": "%s && runNr <= 196531"%region.cut,
-			"RunC":"%s && runNr > 196531 && (runNr < 198049 || runNr > 198522) &&  runNr < 201678"%region.cut,
+			"BlockA": "%s   && !(runNr >= 198049 && runNr <= 198522) && runNr < 201678 && !(runNr == 195649 && lumiSec == 49 && eventNr == 75858433) && !(runNr == 195749 && lumiSec == 108 && eventNr == 216906941)"%region.cut,
+			"BlockB": region.cut,
 			"SingleLepton": region.cut,
 		}
 
@@ -478,6 +495,12 @@ def main():
 			"EMu": readTreeFromFile(path, "EMu", preselection,SingleLepton=True),
 			"EE": readTreeFromFile(path, "EE", preselection,SingleLepton=True),
 			}
+	elif subcutName == "BlockA":
+		trees = {
+			"MuMu": readTreeFromFile(path, "MuMu", preselection, use532=True),
+			"EMu": readTreeFromFile(path, "EMu", preselection, use532=True),
+			"EE": readTreeFromFile(path, "EE", preselection, use532=True),
+			}
 	else:
 		trees = {
 			"MuMu": readTreeFromFile(path, "MuMu", preselection),
@@ -486,39 +509,51 @@ def main():
 			}
 	binWidth = getBinWidth("inv")	
 
+
+
+
 	ofLeptons = getOF(trees, cuts[subcutName])
+	ofLeptonsBTagged = getOF(trees, cuts[subcutName]+" && nBJets >= 1")
+	ofLeptonsBVeto = getOF(trees, cuts[subcutName]+" && nBJets == 0")
 	
-	ofScale = region.R_SFOF.val
-	ofScaleError = region.R_SFOF.err
+
 	
 	ofLeptonsEE = ofLeptons.Clone("ofLeptonsEE")
 	ofLeptonsMuMu = ofLeptons.Clone("ofLeptonsMuMu")
 	
-	print ofScale, ofScaleError
+	sfLeptons = getSF(trees, cuts[subcutName])
+	sfLeptonsBTagged = getSF(trees, cuts[subcutName]+" && nBJets >= 1")
+	sfLeptonsBVeto = getSF(trees, cuts[subcutName]+" && nBJets == 0")
+	setOverflowBin(sfLeptons,305,binWidth)
+	setOverflowBin(sfLeptonsBTagged,305,binWidth)
+	setOverflowBin(sfLeptonsBVeto,305,binWidth)
+	
+
+	
+	
+	
+
 	
 	ofLeptons.Scale(ofScale)
+	ofLeptonsBTagged.Scale(ofScale)
+	ofLeptonsBVeto.Scale(ofScale)
 	setOverflowBin(ofLeptons,305,binWidth)
-	
-		
+	setOverflowBin(ofLeptonsBTagged,305,binWidth)
+	setOverflowBin(ofLeptonsBVeto,305,binWidth)
 
 	dyLineShape = getDY(trees, dyRegion.cut)
 	dyLineShape.Scale(region.dyPrediction[subcutName][0]*1./dyLineShape.Integral(0, dyLineShape.GetXaxis().GetNbins()+1))
 	setOverflowBin(dyLineShape,305,binWidth)
-	sfLeptons = getSF(trees, cuts[subcutName])
-	setOverflowBin(sfLeptons,305,binWidth)
+
 	
 	eeLeptons = getDilepton(trees,cuts[subcutName],"EE")
 	setOverflowBin(eeLeptons,305,binWidth)
 	print region.rMuE.val,region.rMuE.err,region.R_SFOFTrig.val,region.R_SFOFTrig.err	
-	eeScale = region.R_EEOF.val
-	eeScaleError = region.R_EEOF.err/region.R_EEOF.val 
 	ofLeptonsEE.Scale(eeScale)
 	setOverflowBin(ofLeptonsEE,305,binWidth)	
 	
 	mmLeptons = getDilepton(trees,cuts[subcutName],"MuMu")
 	setOverflowBin(mmLeptons,305,binWidth)	
-	mmScale = region.R_MMOF.val
-	mmScaleError = region.R_MMOF.err/region.R_MMOF.val
 	ofLeptonsMuMu.Scale(mmScale)
 	setOverflowBin(ofLeptonsMuMu,305,binWidth)	
 	
@@ -533,32 +568,57 @@ def main():
 		relDYErrorPeak = 0
 		relDYErrorLowMass = 0
 	if regionName == "SignalNonRectCentral" or regionName == "SignalNonRectForward":
-		relDYErrorEE = sqrt(region.dyPrediction["EE"][1]**2 + region.dyPrediction["EE"][2]**2) * 1./ region.dyPrediction["EE"][0]
-		relDYErrorPeakEE = sqrt(region.dyPrediction["EE"][1]**2 + region.dyPrediction["EE"][2]**2) * 1./region.dyPrediction["EE"][0]
-		relDYErrorLowMassEE = sqrt((sqrt(region.dyPrediction["EE"][1]**2 + region.dyPrediction["EE"][2]**2)*Rinout+(0.25*Rinout*region.dyPrediction["EE"][0])**2)) * (region.dyPrediction["EE"][0]*Rinout/ofLeptons.Integral(ofLeptons.FindBin(15),ofLeptons.FindBin(70)))		
-		relDYErrorMM = sqrt(region.dyPrediction["MM"][1]**2 + region.dyPrediction["MM"][2]**2) * 1./ region.dyPrediction["MM"][0]
-		relDYErrorPeakMM = sqrt(region.dyPrediction["MM"][1]**2 + region.dyPrediction["MM"][2]**2) * 1./region.dyPrediction["MM"][0]
-		relDYErrorLowMassMM = sqrt((sqrt(region.dyPrediction["MM"][1]**2 + region.dyPrediction["MM"][2]**2)*Rinout+(0.25*Rinout*region.dyPrediction["MM"][0])**2)) * (region.dyPrediction["MM"][0]*Rinout/ofLeptons.Integral(ofLeptons.FindBin(15),ofLeptons.FindBin(70)))		
-	
+		relDYErrorEE = sqrt(region.dyPrediction["EE"+subcutName][1]**2 + region.dyPrediction["EE"+subcutName][2]**2) * 1./ region.dyPrediction["EE"+subcutName][0]
+		relDYErrorPeakEE = sqrt(region.dyPrediction["EE"+subcutName][1]**2 + region.dyPrediction["EE"+subcutName][2]**2) * 1./region.dyPrediction["EE"+subcutName][0]
+		relDYErrorLowMassEE = sqrt((sqrt(region.dyPrediction["EE"+subcutName][1]**2 + region.dyPrediction["EE"+subcutName][2]**2)*Rinout+(0.25*Rinout*region.dyPrediction["EE"+subcutName][0])**2)) * (region.dyPrediction["EE"+subcutName][0]*Rinout/ofLeptons.Integral(ofLeptons.FindBin(15),ofLeptons.FindBin(70)))		
+		relDYErrorMM = sqrt(region.dyPrediction["MuMu"+subcutName][1]**2 + region.dyPrediction["MuMu"+subcutName][2]**2) * 1./ region.dyPrediction["MuMu"+subcutName][0]
+		relDYErrorPeakMM = sqrt(region.dyPrediction["MuMu"+subcutName][1]**2 + region.dyPrediction["MuMu"+subcutName][2]**2) * 1./region.dyPrediction["MuMu"+subcutName][0]
+		relDYErrorLowMassMM = sqrt((sqrt(region.dyPrediction["MuMu"+subcutName][1]**2 + region.dyPrediction["MuMu"+subcutName][2]**2)*Rinout+(0.25*Rinout*region.dyPrediction["MuMu"+subcutName][0])**2)) * (region.dyPrediction["MuMu"+subcutName][0]*Rinout/ofLeptons.Integral(ofLeptons.FindBin(15),ofLeptons.FindBin(70)))		
+		if regionName == "SignalNonRectCentral":
+			relDYErrorBTagged = sqrt(region.dyPrediction["BTagged"+subcutName][1]**2 + region.dyPrediction["BTagged"+subcutName][2]**2) * 1./ region.dyPrediction["BTagged"+subcutName][0]
+			relDYErrorPeakBTagged = sqrt(region.dyPrediction["BTagged"+subcutName][1]**2 + region.dyPrediction["BTagged"+subcutName][2]**2) * 1./region.dyPrediction["BTagged"+subcutName][0]
+			relDYErrorLowMassBTagged = sqrt((sqrt(region.dyPrediction["BTagged"+subcutName][1]**2 + region.dyPrediction["BTagged"+subcutName][2]**2)*Rinout+(0.25*Rinout*region.dyPrediction["BTagged"+subcutName][0])**2)) * (region.dyPrediction["BTagged"+subcutName][0]*Rinout/ofLeptons.Integral(ofLeptons.FindBin(15),ofLeptons.FindBin(70)))		
+			relDYErrorBVeto = sqrt(region.dyPrediction["BVeto"+subcutName][1]**2 + region.dyPrediction["BVeto"+subcutName][2]**2) * 1./ region.dyPrediction["BVeto"+subcutName][0]
+			relDYErrorPeakBVeto = sqrt(region.dyPrediction["BVeto"+subcutName][1]**2 + region.dyPrediction["BVeto"+subcutName][2]**2) * 1./region.dyPrediction["BVeto"+subcutName][0]
+			relDYErrorLowMassBVeto = sqrt((sqrt(region.dyPrediction["BVeto"+subcutName][1]**2 + region.dyPrediction["BVeto"+subcutName][2]**2)*Rinout+(0.25*Rinout*region.dyPrediction["BVeto"+subcutName][0])**2)) * (region.dyPrediction["BVeto"+subcutName][0]*Rinout/ofLeptons.Integral(ofLeptons.FindBin(15),ofLeptons.FindBin(70)))					
+		else:
+			relDYErrorBTagged = relDYError
+			relDYErrorPeakBTagged = relDYErrorPeak
+			relDYErrorLowMassBTagged = relDYErrorLowMass
+			relDYErrorBVeto = relDYError
+			relDYErrorPeakBVeto = relDYErrorPeak
+			relDYErrorLowMassBVeto = relDYErrorLowMass
 	else:
 		relDYErrorEE = relDYError
 		relDYErrorPeakEE = relDYErrorPeak
 		relDYErrorLowMassEE = relDYErrorLowMass		
 		relDYErrorMM = relDYError
 		relDYErrorPeakMM = relDYErrorPeak
-		relDYErrorLowMassMM = relDYErrorLowMass		
+		relDYErrorLowMassMM = relDYErrorLowMass
+		relDYErrorBTagged = relDYError
+		relDYErrorPeakBTagged = relDYErrorPeak
+		relDYErrorLowMassBTagged = relDYErrorLowMass
+		relDYErrorBVeto = relDYError
+		relDYErrorPeakBVeto = relDYErrorPeak
+		relDYErrorLowMassBVeto = relDYErrorLowMass				
 	dyErrors, errorList = getSysErrorGraph(dyLineShape, relDYError)
 	dyErrorsEE, errorListEE = getSysErrorGraph(dyLineShape, relDYErrorEE)
 	dyErrorsMM, errorListMM = getSysErrorGraph(dyLineShape, relDYErrorMM)
+	dyErrorsBTagged, errorListBTagged = getSysErrorGraph(dyLineShape, relDYErrorBTagged)
+	dyErrorsBVeto, errorListBVeto = getSysErrorGraph(dyLineShape, relDYErrorBVeto)
 	print ofScaleError, eeScaleError, mmScaleError
 	ofErrors, errorListOF = getSysErrorGraph(ofLeptons, ofScaleError, errorList,dyLineShape)
 	ofErrorsEE, errorListEE = getSysErrorGraph(ofLeptonsEE, eeScaleError, errorListEE,dyLineShape)
 	ofErrorsMM, errorListMM = getSysErrorGraph(ofLeptonsMuMu, mmScaleError, errorListMM,dyLineShape)
+	ofErrorsBTagged, errorListOFBTagged = getSysErrorGraph(ofLeptonsBTagged, ofScaleError, errorListBTagged,dyLineShape)
+	ofErrorsBVeto, errorListOFBVeto = getSysErrorGraph(ofLeptonsBVeto, ofScaleError, errorListBVeto,dyLineShape)
 
 
 	DrawPlot(sfLeptons,ofLeptons,dyLineShape,ofErrors,binWidth,regionName,subcutName,maxY,plotSignal,relDYError,relDYErrorPeak,relDYErrorLowMass,ofScaleError,lumi)
-	DrawPlot(eeLeptons,ofLeptonsEE,dyLineShape,ofErrorsEE,binWidth,regionName,subcutName,maxY,plotSignal,relDYErrorEE,relDYErrorPeakEE,relDYErrorLowMassEE,eeScaleError,lumi,dilepton="EE")
-	DrawPlot(mmLeptons,ofLeptonsMuMu,dyLineShape,ofErrorsMM,binWidth,regionName,subcutName,maxY,plotSignal,relDYErrorMM,relDYErrorPeakMM,relDYErrorLowMassMM,mmScaleError,lumi,dilepton="MuMu")
+	DrawPlot(eeLeptons,ofLeptonsEE,dyLineShape,ofErrorsEE,binWidth,regionName,subcutName,maxY*0.5,plotSignal,relDYErrorEE,relDYErrorPeakEE,relDYErrorLowMassEE,eeScaleError,lumi,dilepton="EE")
+	DrawPlot(mmLeptons,ofLeptonsMuMu,dyLineShape,ofErrorsMM,binWidth,regionName,subcutName,maxY*0.5,plotSignal,relDYErrorMM,relDYErrorPeakMM,relDYErrorLowMassMM,mmScaleError,lumi,dilepton="MuMu")
+	DrawPlot(sfLeptonsBTagged,ofLeptonsBTagged,dyLineShape,ofErrorsBTagged,binWidth,regionName,subcutName,maxY,plotSignal,relDYErrorBTagged,relDYErrorPeakBTagged,relDYErrorLowMassBTagged,ofScaleError,lumi,dilepton="BTagged")
+	DrawPlot(sfLeptonsBVeto,ofLeptonsBVeto,dyLineShape,ofErrorsBVeto,binWidth,regionName,subcutName,maxY,plotSignal,relDYErrorBVeto,relDYErrorPeakBVeto,relDYErrorLowMassBVeto,ofScaleError,lumi,dilepton="BVeto")
 	
 
 main()

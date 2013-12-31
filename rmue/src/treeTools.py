@@ -167,7 +167,9 @@ def getHistoFromProcess(process, variable, cut , treeType, nBins=100, xMin=0, xM
             if process.isData == False:
                 #print "%s unscaled: %s +Error %s + sumw2 %s" %(fileName,histo.GetBinContent(10),histo.GetBinError(10),
                                                               # math.sqrt(histo.GetSumw2()[10]))
-                histo.Scale(subProcess.xSection*Constants.lumi/count) 
+																
+                histo.Scale(subProcess.xSection*Constants.lumi/count)
+                print Constants.lumi 
                # print "%s unscaled: %s +Error %s + sumw2 %s" %(fileName,histo.GetBinContent(10),histo.GetBinError(10),
                                                              #  math.sqrt(histo.GetSumw2()[10]))
                 log.logDebug("Scalig histo: %f * %f / %f" %(subProcess.xSection,Constants.lumi,count))

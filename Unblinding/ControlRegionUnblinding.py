@@ -16,7 +16,7 @@ etaCuts = {
 			}
 
 
-def readTreeFromFile(path, dileptonCombination, use532 = False):
+def readTreeFromFile(path, dileptonCombination):
 	"""
 	helper functionfrom argparse import ArgumentParser
 	path: path to .root file containing simulated events
@@ -26,13 +26,10 @@ def readTreeFromFile(path, dileptonCombination, use532 = False):
 	"""
 	from ROOT import TChain
 	result = TChain()
-	if use532:
-		result.Add("%s/cutsV22DileptonFinalTrees/%sDileptonTree"%(path, dileptonCombination))
-	else:	
-		result.Add("%s/cutsV23DileptonFinalTrees/%sDileptonTree"%(path, dileptonCombination))
+	result.Add("%s/cutsV23DileptonFinalTrees/%sDileptonTree"%(path, dileptonCombination))
 	return result
 	
-def getFilePathsAndSampleNames(path, use532 = False):
+def getFilePathsAndSampleNames(path):
 	"""
 	helper function
 	path: path to directory containing all sample files
@@ -43,19 +40,12 @@ def getFilePathsAndSampleNames(path, use532 = False):
 	from glob import glob
 	from re import match
 	result = {}
-	if use532:
-		path = "/home/jan/Trees/sw532v0474/"
-		for filePath in glob("%s/sw532*.root"%path):
-
-			sampleName = match(".*sw532v.*\.processed.*\.(.*).root", filePath).groups()[0]
-			#for the python enthusiats: yield sampleName, filePath is more efficient here :)
-			result[sampleName] = filePath
-	else:
-		for filePath in glob("%s/sw538*.root"%path):
-
-			sampleName = match(".*sw538v.*\.processed.*\.(.*).root", filePath).groups()[0]
-			#for the python enthusiats: yield sampleName, filePath is more efficient here :)
-			result[sampleName] = filePath
+	print path
+	for filePath in glob("%s/sw538*.root"%path):
+		print filePath
+		sampleName = match(".*sw538v.*\.processed.*\.(.*).root", filePath).groups()[0]
+		#for the python enthusiats: yield sampleName, filePath is more efficient here :)
+		result[sampleName] = filePath
 	return result
 	
 def totalNumberOfGeneratedEvents(path):
@@ -72,7 +62,7 @@ def totalNumberOfGeneratedEvents(path):
 		result[sampleName] = rootFile.FindObjectAny("analysis paths").GetBinContent(1)
 	return result
 	
-def readTrees(path, dileptonCombination,use532 = False):
+def readTrees(path, dileptonCombination):
 	"""
 	path: path to directory containing all sample files
     dileptonCombination: "EMu", "EMu", or pyroot"EMu" for electron-electron, electron-muon, or muon-muon events
@@ -81,9 +71,9 @@ def readTrees(path, dileptonCombination,use532 = False):
 	"""
 	result = {}
 	print (path)
-	for sampleName, filePath in getFilePathsAndSampleNames(path,use532).iteritems():
+	for sampleName, filePath in getFilePathsAndSampleNames(path).iteritems():
 		
-		result[sampleName] = readTreeFromFile(filePath, dileptonCombination, use532)
+		result[sampleName] = readTreeFromFile(filePath, dileptonCombination)
 		
 	return result
 	
@@ -191,7 +181,7 @@ def setTDRStyle():
 	# Margins:
 	tdrStyle.SetPadTopMargin(0.05)
 	tdrStyle.SetPadBottomMargin(0.13)
-	tdrStyle.SetPadLeftMargin(0.2)
+	tdrStyle.SetPadLeftMargin(0.15)
 	tdrStyle.SetPadRightMargin(0.05)
 	
 	# For the Global title:
@@ -215,7 +205,7 @@ def setTDRStyle():
 	# tdrStyle->SetTitleXSize(Float_t size = 0.02); # Another way to set the size?
 	# tdrStyle->SetTitleYSize(Float_t size = 0.02);
 	tdrStyle.SetTitleXOffset(0.9)
-	tdrStyle.SetTitleYOffset(1.5)
+	tdrStyle.SetTitleYOffset(1.2)
 	# tdrStyle->SetTitleOffset(1.1, "Y"); # Another way to set the Offset
 	
 	# For the axis labels:
@@ -260,124 +250,31 @@ def setTDRStyle():
 	
 	tdrStyle.cd()
 
-def produceRSFOF(EETrees,MuMuTrees,EMuTrees,cuts,cutsTransfer,SampleName,suffix):
 
-	nBins = 200
-	firstBin = 0
-	lastBin = 200
-	
-	for name, tree in EEtrees.iteritems():
-		if name == SampleName:
-			print name
-			EEhist = createHistoFromTree(tree,  variable, cuts, nBins, firstBin, lastBin, nEvents)
-			EEhistTransfer = createHistoFromTree(tree,  variable, cutsTransfer, nBins, firstBin, lastBin, nEvents)
-	for name, tree in MuMutrees.iteritems():
-		if name == SampleName:
+def plotBlockComparison(treeBlockA,treeBlockB,variable,additionalCut,nBins,firstBin,lastBin,labelX,labelY,suffix,log=False,signal=False):	
 
-			MuMuhist = createHistoFromTree(tree,  variable, cuts, nBins, firstBin, lastBin, nEvents)
-			MuMuhistTransfer = createHistoFromTree(tree,  variable, cutsTransfer, nBins, firstBin, lastBin, nEvents)
-	for name, tree in EMutrees.iteritems():
-		if name == SampleName:
 
-			EMuhist = createHistoFromTree(tree,  variable, cuts, nBins, firstBin, lastBin, nEvents)
-			EMuhistTransfer = createHistoFromTree(tree,  variable, cutsTransfer, nBins, firstBin, lastBin, nEvents)
-		
-	SFhist = EEhist.Clone()
-	SFhist.Add(MuMuhist.Clone())
-	SFhistTransfer = EEhistTransfer.Clone()
-	SFhistTransfer.Add(MuMuhistTransfer.Clone())
-	
-	
-	
-	ee = EEhist.Integral()
-	mm = MuMuhist.Integral()
-	eeTransfer = EEhistTransfer.Integral()
-	mmTransfer = MuMuhistTransfer.Integral()
-	sf = SFhist.Integral() 
-	of = EMuhist.Integral()-1 
-	sfTransfer = SFhistTransfer.Integral() 
-	ofTransfer = EMuhistTransfer.Integral() 
-	
-	rsfof = float(sf)/float(of)
-	rsfofErr = rsfof*(sf/sf**2+of/of**2)**0.5
-	rsfofTransfer = float(sfTransfer)/float(ofTransfer)
-	rsfofErrTransfer = rsfofTransfer*(sfTransfer/sfTransfer**2+ofTransfer/ofTransfer**2)**0.5
-	rEEOF = float(ee)/float(of)
-	rEEOFErr = rEEOF * (ee/ee**2 + of/of**2)**0.5
-	rEEOFTransfer = float(eeTransfer)/float(ofTransfer)
-	rEEOFErrTransfer = rEEOFTransfer * (eeTransfer/eeTransfer**2 + ofTransfer/ofTransfer**2)**0.5
-	rMMOF = float(mm)/float(of)
-	rMMOFErr = rMMOF * (mm/mm**2 + of/of**2)**0.5
-	rMMOFTransfer = float(mmTransfer)/float(ofTransfer)
-	rMMOFErrTransfer = rMMOFTransfer * (mmTransfer/mmTransfer**2 + ofTransfer/ofTransfer**2)**0.5
-	
-	transferFaktor = rsfofTransfer/rsfof
-	transferFaktorErr = transferFaktor*((rsfofErr/rsfof)**2+(rsfofErrTransfer/rsfofTransfer)**2)**0.5
-	transferFaktorEE = rEEOFTransfer/rEEOF
-	transferFaktorEEErr = transferFaktorEE*((rEEOFErr/rEEOF)**2+(rEEOFErrTransfer/rEEOFTransfer)**2)**0.5
-	transferFaktorMM = rMMOFTransfer/rMMOF
-	transferFaktorMMErr = transferFaktorMM*((rMMOFErr/rMMOF)**2+(rMMOFErrTransfer/rMMOFTransfer)**2)**0.5
-	result = {}
-	result["EE"] = ee
-	result["MM"] = mm
-	result["SF"] = sf
-	result["OF"] = of
-	result["rSFOF"] = rsfof
-	result["rSFOFErr"] = rsfofErr
-	result["rEEOF"] = rEEOF
-	result["rEEOFErr"] = rEEOFErr
-	result["rMMOF"] = rMMOF
-	result["rMMOFErr"] = rMMOFErr
-	result["transfer"] = transferFaktor
-	result["transferErr"] = transferFaktorErr
-	result["transferEE"] = transferFaktorEE
-	result["transferEEErr"] = transferFaktorEEErr
-	result["transferMM"] = transferFaktorMM
-	result["transferMMErr"] = transferFaktorMMErr
-	if "MergedData" in SampleName:
-		outFilePkl = open("shelves/rSFOF_Data_%s.pkl"%suffix,"w")
-	else:
-		outFilePkl = open("shelves/rSFOF_MC_%s.pkl"%suffix,"w")
-	pickle.dump(result, outFilePkl)
-	outFilePkl.close()	
-	
-	
-if (__name__ == "__main__"):
-	setTDRStyle()
-	path = "/home/jan/Trees/sw538v0476/"
-	from sys import argv
-	import pickle	
-	from ROOT import TCanvas, TPad, TH1F, TH1I, THStack, TLegend, TF1
 	hCanvas = TCanvas("hCanvas", "Distribution", 800,800)
-	ptCut = "pt1 > 20 && pt2 > 20"#(pt1 > 10 && pt2 > 20 || pt1 > 20 && pt2 > 10)
-	ptCutLabel = "20"#"20(10)"
-	variable = "p4.M()"
-	etaCut = etaCuts[argv[1]]
-	suffix = argv[1]
-	data = False
+	plotPad = ROOT.TPad("plotPad","plotPad",0,0.3,1,1)
+	ratioPad = ROOT.TPad("ratioPad","ratioPad",0,0.,1,0.3)
+	setTDRStyle()		
+	plotPad.UseCurrentStyle()
+	ratioPad.UseCurrentStyle()
+	plotPad.Draw()	
+	ratioPad.Draw()	
+	plotPad.cd()	
+
+	legend = TLegend(0.7, 0.55, 0.95, 0.95)
+	legend.SetFillStyle(0)
+	legend.SetBorderSize(1)
 	
-	#~ cuts = "weight*(chargeProduct < 0 && %s && met < 100 && nJets ==2 && abs(eta1) < 2.4 && abs(eta2) < 2.4 && deltaR > 0.3 && runNr < 201657 && (runNr < 198049 || runNr > 198522))"%ptCut
-	cuts532 = "weight*(chargeProduct < 0 && %s && p4.M() > 20 && p4.M() < 70 && met > 100 && met < 150 && nJets ==2 && %s && deltaR > 0.3 && runNr <= 201678 && !(runNr >= 198049 && runNr <= 198522) )"%(ptCut,etaCut)
-	cuts = "weight*(chargeProduct < 0 && %s && p4.M() > 20 && p4.M() < 70 && met > 100 && met < 150 && nJets ==2 && %s && deltaR > 0.3  )"%(ptCut,etaCut)
-	cutsTransfer = "weight*(chargeProduct < 0 && %s && p4.M() > 20 && p4.M() < 70 && ((met > 100 && nJets >= 3) ||  (met > 150 && nJets >=2)) && %s && deltaR > 0.3 )"%(ptCut,etaCut)
-	cutsTransfer532 = "weight*(chargeProduct < 0 && %s && p4.M() > 20 && p4.M() < 70 && ((met > 100 && nJets >= 3) ||  (met > 150 && nJets >=2)) && %s && deltaR > 0.3 && runNr <= 201678 && !(runNr >= 198049 && runNr <= 198522) )"%(ptCut,etaCut)
-	print cuts
-	nEvents=-1
+
 	
-	lumi = 9.2
 	
 
 	minMll = 20
-	legend = TLegend(0.6, 0.7, 0.95, 0.95)
-	legend.SetFillStyle(0)
-	legend.SetBorderSize(1)
+
 	ROOT.gStyle.SetOptStat(0)
-	EMutrees = readTrees(path, "EMu")
-	EEtrees = readTrees(path, "EE")
-	MuMutrees = readTrees(path, "MuMu")
-	EMutrees532 = readTrees(path, "EMu", use532 = True)
-	EEtrees532 = readTrees(path, "EE", use532 = True)
-	MuMutrees532 = readTrees(path, "MuMu", use532 = True)
 	Cutlabel = ROOT.TLatex()
 	Cutlabel.SetTextAlign(12)
 	Cutlabel.SetTextSize(0.03)
@@ -390,11 +287,156 @@ if (__name__ == "__main__"):
 	Labelout.SetTextSize(0.07)
 	Labelout.SetTextColor(ROOT.kBlack)
 
+
+
+	
+	EMuhistBlockA = createHistoFromTree(treeBlockA,  variable, additionalCut, nBins, firstBin, lastBin, -1)
+
+	EMuhistBlockB = createHistoFromTree(treeBlockB,  variable, additionalCut, nBins, firstBin, lastBin, -1)
+	
+	EMuhistBlockB.Scale(9.2/10.4)
+	print EMuhistBlockA.Integral()
+	print EMuhistBlockB.Integral()
+	EMuhistBlockA.SetMarkerStyle(21)
+	EMuhistBlockB.SetMarkerStyle(22)
+	EMuhistBlockA.SetMarkerColor(ROOT.kGreen+3)
+	EMuhistBlockB.SetMarkerColor(ROOT.kBlack)
+	EMuhistBlockA.SetLineColor(ROOT.kGreen+3)
+	EMuhistBlockB.SetLineColor(ROOT.kBlack)
+	
+	if log: 
+		yMin=0.1
+		yMax = max(EMuhistBlockA.GetBinContent(EMuhistBlockA.GetMaximumBin()),EMuhistBlockB.GetBinContent(EMuhistBlockB.GetMaximumBin()))*10
+		plotPad.SetLogy()
+	else: 
+		yMin=0
+		yMax = max(EMuhistBlockA.GetBinContent(EMuhistBlockA.GetMaximumBin()),EMuhistBlockB.GetBinContent(EMuhistBlockB.GetMaximumBin()))*1.5
+	hCanvas.DrawFrame(firstBin,yMin,lastBin,yMax,"; %s ; %s" %(labelX,labelY))
+
+	EMuhistBlockA.Draw("samep")
+	EMuhistBlockB.Draw("samep")
+	
+	legend.AddEntry(EMuhistBlockA,"First 9.2 fb^{-1}","p")	
+	legend.AddEntry(EMuhistBlockB,"Second 10.4 fb^{-1} scaled","p")
+	#~ 
+	latex = ROOT.TLatex()
+	latex.SetTextSize(0.043)
+	latex.SetTextFont(42)
+	latex.SetNDC(True)
+	latex.DrawLatex(0.13, 0.95, "CMS Preliminary,    #sqrt{s} = 8 TeV,     #scale[0.6]{#int}Ldt = 9.2-10.4 fb^{-1}")
+	#~ 
+		
+	legend.Draw("same")
+	
+	ratioPad.cd()
+
+	ratioGraphs =  ratios.RatioGraph(EMuhistBlockA,EMuhistBlockB, firstBin, lastBin,title="Bl. A / Bl. B",yMin=0.0,yMax=2,ndivisions=10,color=ROOT.kGreen+3,adaptiveBinning=0.25)
+
+	ratioGraphs.draw(ROOT.gPad,True,False,True,chi2Pos=0.8)
+	if signal:
+		name = "OFUnblinding_SignalRegion_%s_%s.pdf"
+	else:
+		name = "OFUnblinding_Inclusive_%s_%s.pdf"
+	if variable == "p4.M()":
+		
+		hCanvas.Print(name%(suffix,"Mll"))
+	else:		
+		hCanvas.Print(name%(suffix,variable))	
+		hCanvas.Clear()
+if (__name__ == "__main__"):
+	setTDRStyle()
+	path = "/home/jan/Trees/sw538v0475/"
+	from sys import argv
+	import pickle	
+	from ROOT import TCanvas, TPad, TH1F, TH1I, THStack, TLegend, TF1
+	import ratios
+
+	
+	ptCut = "pt1 > 20 && pt2 > 20"#(pt1 > 10 && pt2 > 20 || pt1 > 20 && pt2 > 10)
+	ptCutLabel = "20"#"20(10)"
+	variable = "p4.M()"
+	etaCut = etaCuts[argv[1]]
+	suffix = argv[1]
+	cuts = "weight*(chargeProduct < 0 && %s && p4.M() < 70 && p4.M() > 20 && %s && nJets == 2 && met > 100 && met < 150 && abs(eta1) < 2.4 && abs(eta2) < 2.4 && deltaR > 0.3)"%(ptCut,etaCut)
+
 	
 
 	
-	#~ produceRSFOF(EEtrees, MuMutrees, EMutrees, cuts, cutsTransfer, "MergedData", "Full2012_"+suffix)
-	#~ produceRSFOF(EEtrees, MuMutrees, EMutrees, cuts, cutsTransfer, "MergedData_BlockB", "BlockB_"+suffix)
-	produceRSFOF(EEtrees, MuMutrees, EMutrees, cuts, cutsTransfer, "MergedData_BlockA", "BlockA_"+suffix)
-	#~ produceRSFOF(EEtrees532, MuMutrees532, EMutrees532, cuts532, cutsTransfer532, "MergedData", "BlockAOld_"+suffix)
+	print cuts
+	
+	SampleNameBlockA = "MergedData_BlockA"
+	SampleNameBlockB = "MergedData_BlockB"
+
+	EMutrees = readTrees(path, "EMu")	
+	EEtrees = readTrees(path, "EE")	
+	MuMutrees = readTrees(path, "MuMu")	
+	for name, tree in EMutrees.iteritems():
+		#~ print name
+		if name == SampleNameBlockA:
+			#~ fullTreeA = tree.Clone()
+			eMuTreeA = tree.CopyTree(cuts)
+		if name == SampleNameBlockB:
+			#~ fullTreeB = tree.Clone()
+			eMuTreeB = tree.CopyTree(cuts)
+	for name, tree in EEtrees.iteritems():
+		#~ print name
+		if name == SampleNameBlockA:
+			#~ fullTreeA = tree.Clone()
+			eeTreeA = tree.CopyTree(cuts)
+		if name == SampleNameBlockB:
+			#~ fullTreeB = tree.Clone()
+			eeTreeB = tree.CopyTree(cuts)
+	for name, tree in MuMutrees.iteritems():
+		#~ print name
+		if name == SampleNameBlockA:
+			#~ fullTreeA = tree.Clone()
+			mmTreeA = tree.CopyTree(cuts)
+		if name == SampleNameBlockB:
+			#~ fullTreeB = tree.Clone()
+			mmTreeB = tree.CopyTree(cuts)
+		
+	#~ plotBlockComparison(eMuTreeA,eMuTreeB,"p4.M()","",60,0,300,"m_{ll} [GeV]","Events / 5 GeV",suffix,signal=True)	
+	#~ plotBlockComparison(fullTreeA,fullTreeB,"p4.M()","",60,0,300,"m_{ll} [GeV]","Events / 5 GeV",suffix,signal=False,log=True)	
+	#~ plotBlockComparison(eMuTreeA,eMuTreeB,"p4.M()","nVertices < 11",60,0,300,"m_{ll} [GeV]","Events / 5 GeV",suffix+"_LowPU",signal=True)	
+	#~ plotBlockComparison(fullTreeA,fullTreeB,"p4.M()","nVertices < 11",60,0,300,"m_{ll} [GeV]","Events / 5 GeV",suffix+"_LowPU",signal=False,log=True)	
+	#~ plotBlockComparison(eMuTreeA,eMuTreeB,"p4.M()","11 <= nVertices && nVertices < 16",60,0,300,"m_{ll} [GeV]","Events / 5 GeV",suffix+"_MidPU",signal=True)	
+	#~ plotBlockComparison(fullTreeA,fullTreeB,"p4.M()","11 <= nVertices && nVertices < 16",60,0,300,"m_{ll} [GeV]","Events / 5 GeV",suffix+"_MidPU",signal=False,log=True)	
+	#~ plotBlockComparison(eMuTreeA,eMuTreeB,"p4.M()","16 <= nVertices",60,0,300,"m_{ll} [GeV]","Events / 5 GeV",suffix+"_HighPU",signal=True)	
+	#~ plotBlockComparison(fullTreeA,fullTreeB,"p4.M()","16 <= nVertices",60,0,300,"m_{ll} [GeV]","Events / 5 GeV",suffix+"_HighPU",signal=False,log=True)	
+	#~ plotBlockComparison(eMuTreeA,eMuTreeB,"nJets","p4.M() > 20 && p4.M() < 70",8,0,8,"N_{Jets}","Events",suffix,signal=True)	
+	#~ plotBlockComparison(fullTreeA,fullTreeB,"nJets","",8,0,8,"N_{Jets}","Events",suffix,signal=False,log=True)	
+	#~ plotBlockComparison(eMuTreeA,eMuTreeB,"nBJets","p4.M() > 20 && p4.M() < 70",8,0,8,"N_{B-Jets}","Events",suffix,signal=True)	
+	#~ plotBlockComparison(fullTreeA,fullTreeB,"nBJets","",8,0,8,"N_{B-Jets}","Events",suffix,signal=False,log=True)	
+	#~ plotBlockComparison(eMuTreeA,eMuTreeB,"nVertices","p4.M() > 20 && p4.M() < 70",50,0,50,"N_{Vertex}","Events",suffix,signal=True)	
+	#~ plotBlockComparison(fullTreeA,fullTreeB,"nVertices","",50,0,50,"N_{Vertex}","Events",suffix,signal=False,log=True)	
+	#~ 
+	#~ plotBlockComparison(eMuTreeA,eMuTreeB,"met","p4.M() > 20 && p4.M() < 70",30,0,300,"E_T^{miss} [GeV]","Events / 10 GeV",suffix,signal=True)
+	#~ plotBlockComparison(fullTreeA,fullTreeB,"met","",30,0,300,"E_T^{miss} [GeV]","Events / 10 GeV",suffix,signal=False,log=True)	
+	#~ 
+
+
+	
+	sfA = eeTreeA.GetEntries() + mmTreeB.GetEntries()
+	ofA = eMuTreeA.GetEntries()
+	sfB = eeTreeB.GetEntries() + mmTreeB.GetEntries()
+	ofB = eMuTreeB.GetEntries()
+	eeA = eeTreeA.GetEntries()
+	eeB = eeTreeB.GetEntries()
+	mmA = mmTreeA.GetEntries()
+	mmB = mmTreeB.GetEntries()
+	
+	print "Block A"
+	print "SF: %d (ee: %d mm: %d ) OF: %d"%(sfA,eeA,mmA,ofA)
+	print "Block B"
+	print "SF: %d (ee: %d mm: %d ) OF: %d"%(sfB,eeB,mmB,ofB)
+	#~ print "ee events:"
+	#~ for ev in eeTreeB:
+		#~ print "%s:%s:%s"%(ev.runNr,ev.lumiSec,ev.eventNr)
+	#~ print "mm events:"
+	#~ for ev in mmTreeB:
+		#~ print "%s:%s:%s"%(ev.runNr,ev.lumiSec,ev.eventNr)
+	#~ print "em events:"
+	#~ for ev in eMuTreeB:
+		#~ print "%s:%s:%s"%(ev.runNr,ev.lumiSec,ev.eventNr)
+	#~ 
 	

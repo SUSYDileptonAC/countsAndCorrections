@@ -16,7 +16,7 @@ etaCuts = {
 			}
 
 
-def readTreeFromFile(path, dileptonCombination, use532 = False):
+def readTreeFromFile(path, dileptonCombination):
 	"""
 	helper functionfrom argparse import ArgumentParser
 	path: path to .root file containing simulated events
@@ -26,13 +26,10 @@ def readTreeFromFile(path, dileptonCombination, use532 = False):
 	"""
 	from ROOT import TChain
 	result = TChain()
-	if use532:
-		result.Add("%s/cutsV22DileptonFinalTrees/%sDileptonTree"%(path, dileptonCombination))
-	else:	
-		result.Add("%s/cutsV23DileptonFinalTrees/%sDileptonTree"%(path, dileptonCombination))
+	result.Add("%s/cutsV22DileptonFinalTrees/%sDileptonTree"%(path, dileptonCombination))
 	return result
 	
-def getFilePathsAndSampleNames(path, use532 = False):
+def getFilePathsAndSampleNames(path):
 	"""
 	helper function
 	path: path to directory containing all sample files
@@ -43,19 +40,12 @@ def getFilePathsAndSampleNames(path, use532 = False):
 	from glob import glob
 	from re import match
 	result = {}
-	if use532:
-		path = "/home/jan/Trees/sw532v0474/"
-		for filePath in glob("%s/sw532*.root"%path):
-
-			sampleName = match(".*sw532v.*\.processed.*\.(.*).root", filePath).groups()[0]
-			#for the python enthusiats: yield sampleName, filePath is more efficient here :)
-			result[sampleName] = filePath
-	else:
-		for filePath in glob("%s/sw538*.root"%path):
-
-			sampleName = match(".*sw538v.*\.processed.*\.(.*).root", filePath).groups()[0]
-			#for the python enthusiats: yield sampleName, filePath is more efficient here :)
-			result[sampleName] = filePath
+	print path
+	for filePath in glob("%s/sw538*.root"%path):
+		print filePath
+		sampleName = match(".*sw538v.*\.processed.*\.(.*).root", filePath).groups()[0]
+		#for the python enthusiats: yield sampleName, filePath is more efficient here :)
+		result[sampleName] = filePath
 	return result
 	
 def totalNumberOfGeneratedEvents(path):
@@ -72,7 +62,7 @@ def totalNumberOfGeneratedEvents(path):
 		result[sampleName] = rootFile.FindObjectAny("analysis paths").GetBinContent(1)
 	return result
 	
-def readTrees(path, dileptonCombination,use532 = False):
+def readTrees(path, dileptonCombination):
 	"""
 	path: path to directory containing all sample files
     dileptonCombination: "EMu", "EMu", or pyroot"EMu" for electron-electron, electron-muon, or muon-muon events
@@ -81,9 +71,9 @@ def readTrees(path, dileptonCombination,use532 = False):
 	"""
 	result = {}
 	print (path)
-	for sampleName, filePath in getFilePathsAndSampleNames(path,use532).iteritems():
+	for sampleName, filePath in getFilePathsAndSampleNames(path).iteritems():
 		
-		result[sampleName] = readTreeFromFile(filePath, dileptonCombination, use532)
+		result[sampleName] = readTreeFromFile(filePath, dileptonCombination)
 		
 	return result
 	
@@ -107,6 +97,30 @@ def createHistoFromTree(tree, variable, weight, nBins, firstBin, lastBin, nEvent
 	result = TH1F(name, "", nBins, firstBin, lastBin)
 	result.Sumw2()
 	tree.Draw("%s>>%s"%(variable, name), weight, "goff", nEvents)
+	return result
+	
+def create2DHistoFromTree(tree, variable1,variable2, weight, nBins1, firstBin1, lastBin1, nBins2, firstBin2, lastBin2, nEvents = -1):
+	"""
+	tree: tree to create histo from)
+	variable: variable to plot (must be a branch of the tree)
+	weight: weights to apply (e.g. "var1*(var2 > 15)" will use weights from var1 and cut on var2 > 15
+	nBins, firstBin, lastBin: number of bins, first bin and last bin (same as in TH1F constructor)
+	nEvents: number of events to process (-1 = all)
+	"""
+	from ROOT import TH2F
+	from random import randint
+	from sys import maxint
+	if nEvents < 0:
+		nEvents = maxint
+	#make a random name you could give something meaningfull here,
+	#but that would make this less readable
+	name = "%x"%(randint(0, maxint))
+	result = TH2F(name, "", nBins1, firstBin1, lastBin1, nBins2, firstBin2, lastBin2)
+	result.Sumw2()
+	#~ tree.Draw("%s>>%s"%(variable, name), weight, "goff", nEvents)
+	cutTree = tree.CopyTree(weight)
+	for ev in cutTree:
+		result.Fill(getattr(ev,variable1),getattr(ev,variable2))
 	return result
 	
 	
@@ -259,109 +273,38 @@ def setTDRStyle():
 	ROOT.gROOT.ForceStyle()
 	
 	tdrStyle.cd()
-
-def produceRSFOF(EETrees,MuMuTrees,EMuTrees,cuts,cutsTransfer,SampleName,suffix):
-
-	nBins = 200
-	firstBin = 0
-	lastBin = 200
-	
-	for name, tree in EEtrees.iteritems():
-		if name == SampleName:
-			print name
-			EEhist = createHistoFromTree(tree,  variable, cuts, nBins, firstBin, lastBin, nEvents)
-			EEhistTransfer = createHistoFromTree(tree,  variable, cutsTransfer, nBins, firstBin, lastBin, nEvents)
-	for name, tree in MuMutrees.iteritems():
-		if name == SampleName:
-
-			MuMuhist = createHistoFromTree(tree,  variable, cuts, nBins, firstBin, lastBin, nEvents)
-			MuMuhistTransfer = createHistoFromTree(tree,  variable, cutsTransfer, nBins, firstBin, lastBin, nEvents)
-	for name, tree in EMutrees.iteritems():
-		if name == SampleName:
-
-			EMuhist = createHistoFromTree(tree,  variable, cuts, nBins, firstBin, lastBin, nEvents)
-			EMuhistTransfer = createHistoFromTree(tree,  variable, cutsTransfer, nBins, firstBin, lastBin, nEvents)
-		
-	SFhist = EEhist.Clone()
-	SFhist.Add(MuMuhist.Clone())
-	SFhistTransfer = EEhistTransfer.Clone()
-	SFhistTransfer.Add(MuMuhistTransfer.Clone())
-	
-	
-	
-	ee = EEhist.Integral()
-	mm = MuMuhist.Integral()
-	eeTransfer = EEhistTransfer.Integral()
-	mmTransfer = MuMuhistTransfer.Integral()
-	sf = SFhist.Integral() 
-	of = EMuhist.Integral()-1 
-	sfTransfer = SFhistTransfer.Integral() 
-	ofTransfer = EMuhistTransfer.Integral() 
-	
-	rsfof = float(sf)/float(of)
-	rsfofErr = rsfof*(sf/sf**2+of/of**2)**0.5
-	rsfofTransfer = float(sfTransfer)/float(ofTransfer)
-	rsfofErrTransfer = rsfofTransfer*(sfTransfer/sfTransfer**2+ofTransfer/ofTransfer**2)**0.5
-	rEEOF = float(ee)/float(of)
-	rEEOFErr = rEEOF * (ee/ee**2 + of/of**2)**0.5
-	rEEOFTransfer = float(eeTransfer)/float(ofTransfer)
-	rEEOFErrTransfer = rEEOFTransfer * (eeTransfer/eeTransfer**2 + ofTransfer/ofTransfer**2)**0.5
-	rMMOF = float(mm)/float(of)
-	rMMOFErr = rMMOF * (mm/mm**2 + of/of**2)**0.5
-	rMMOFTransfer = float(mmTransfer)/float(ofTransfer)
-	rMMOFErrTransfer = rMMOFTransfer * (mmTransfer/mmTransfer**2 + ofTransfer/ofTransfer**2)**0.5
-	
-	transferFaktor = rsfofTransfer/rsfof
-	transferFaktorErr = transferFaktor*((rsfofErr/rsfof)**2+(rsfofErrTransfer/rsfofTransfer)**2)**0.5
-	transferFaktorEE = rEEOFTransfer/rEEOF
-	transferFaktorEEErr = transferFaktorEE*((rEEOFErr/rEEOF)**2+(rEEOFErrTransfer/rEEOFTransfer)**2)**0.5
-	transferFaktorMM = rMMOFTransfer/rMMOF
-	transferFaktorMMErr = transferFaktorMM*((rMMOFErr/rMMOF)**2+(rMMOFErrTransfer/rMMOFTransfer)**2)**0.5
-	result = {}
-	result["EE"] = ee
-	result["MM"] = mm
-	result["SF"] = sf
-	result["OF"] = of
-	result["rSFOF"] = rsfof
-	result["rSFOFErr"] = rsfofErr
-	result["rEEOF"] = rEEOF
-	result["rEEOFErr"] = rEEOFErr
-	result["rMMOF"] = rMMOF
-	result["rMMOFErr"] = rMMOFErr
-	result["transfer"] = transferFaktor
-	result["transferErr"] = transferFaktorErr
-	result["transferEE"] = transferFaktorEE
-	result["transferEEErr"] = transferFaktorEEErr
-	result["transferMM"] = transferFaktorMM
-	result["transferMMErr"] = transferFaktorMMErr
-	if "MergedData" in SampleName:
-		outFilePkl = open("shelves/rSFOF_Data_%s.pkl"%suffix,"w")
-	else:
-		outFilePkl = open("shelves/rSFOF_MC_%s.pkl"%suffix,"w")
-	pickle.dump(result, outFilePkl)
-	outFilePkl.close()	
 	
 	
 if (__name__ == "__main__"):
 	setTDRStyle()
-	path = "/home/jan/Trees/sw538v0476/"
+	path = "/home/jan/Trees/sw538v0475/"
 	from sys import argv
 	import pickle	
 	from ROOT import TCanvas, TPad, TH1F, TH1I, THStack, TLegend, TF1
+	import ratios
+	
 	hCanvas = TCanvas("hCanvas", "Distribution", 800,800)
+
+	setTDRStyle()		
+
+
+	legend = TLegend(0.7, 0.55, 0.95, 0.95)
+	legend.SetFillStyle(0)
+	legend.SetBorderSize(1)
+	
 	ptCut = "pt1 > 20 && pt2 > 20"#(pt1 > 10 && pt2 > 20 || pt1 > 20 && pt2 > 10)
 	ptCutLabel = "20"#"20(10)"
-	variable = "p4.M()"
+
 	etaCut = etaCuts[argv[1]]
 	suffix = argv[1]
 	data = False
-	
+	if argv[2] == "Data":
+		data = True
 	#~ cuts = "weight*(chargeProduct < 0 && %s && met < 100 && nJets ==2 && abs(eta1) < 2.4 && abs(eta2) < 2.4 && deltaR > 0.3 && runNr < 201657 && (runNr < 198049 || runNr > 198522))"%ptCut
-	cuts532 = "weight*(chargeProduct < 0 && %s && p4.M() > 20 && p4.M() < 70 && met > 100 && met < 150 && nJets ==2 && %s && deltaR > 0.3 && runNr <= 201678 && !(runNr >= 198049 && runNr <= 198522) )"%(ptCut,etaCut)
-	cuts = "weight*(chargeProduct < 0 && %s && p4.M() > 20 && p4.M() < 70 && met > 100 && met < 150 && nJets ==2 && %s && deltaR > 0.3  )"%(ptCut,etaCut)
-	cutsTransfer = "weight*(chargeProduct < 0 && %s && p4.M() > 20 && p4.M() < 70 && ((met > 100 && nJets >= 3) ||  (met > 150 && nJets >=2)) && %s && deltaR > 0.3 )"%(ptCut,etaCut)
-	cutsTransfer532 = "weight*(chargeProduct < 0 && %s && p4.M() > 20 && p4.M() < 70 && ((met > 100 && nJets >= 3) ||  (met > 150 && nJets >=2)) && %s && deltaR > 0.3 && runNr <= 201678 && !(runNr >= 198049 && runNr <= 198522) )"%(ptCut,etaCut)
-	print cuts
+	cutsBlockA = "weight*(chargeProduct < 0 && %s  && p4.M() > 20 && p4.M() < 70 && ((met > 100 && nJets >= 3) ||  (met > 150 && nJets >=2)) && %s && deltaR > 0.3 && runNr <= 201678 && !(runNr >= 198049 && runNr <= 198522) && !(runNr == 195649 && lumiSec == 49 && eventNr == 75858433) && !(runNr == 201191) && !(runNr == 195749 && lumiSec == 108 && eventNr == 216906941)  && !(runNr == 190646 || runNr == 190659 || runNr == 190679 || runNr == 190688 || runNr == 190702 || runNr == 190703 || runNr == 190706 || runNr == 190707 || runNr == 190708 || runNr == 190733 || runNr == 190736 || (runNr == 191271 && lumiSec >= 159) || runNr == 193192 || runNr == 193193 || runNr == 190782 || runNr == 190895 || runNr == 190906 || runNr == 190945 || runNr == 190949 || runNr == 201191) )"%(ptCut,etaCut)
+	cutsBlockB = "weight*(chargeProduct < 0 && %s  && p4.M() > 20 && p4.M() < 70 && ((met > 100 && nJets >= 3) ||  (met > 150 && nJets >=2)) && %s && deltaR > 0.3 && (runNr > 201678 || (runNr >= 198049 && runNr <= 198522) || runNr == 201671 || runNr == 201669 || runNr == 201668 || runNr == 201658 || runNr == 201657 || runNr == 200976 || runNr == 200961 || (runNr == 200229 && (lumiSec == 532 || lumiSec == 533)) || (runNr == 199812 && (lumiSec >= 182 && lumiSec <= 186)) || runNr == 190782 || runNr == 190895 || runNr == 190906 || runNr == 190945 || runNr == 190949 || runNr == 190646 || runNr == 190659 || runNr == 190679 || runNr == 190688 || runNr == 190702 || runNr == 190703 || runNr == 190706 || runNr == 190707 || runNr == 190708 || runNr == 190733 || runNr == 190736 || (runNr == 191271 && lumiSec >= 159) || runNr == 193192 || runNr == 193193 || runNr == 194631 || (runNr == 195540 && lumiSec <=120)))"%(ptCut,etaCut)
+	print cutsBlockA
+	print cutsBlockB
 	nEvents=-1
 	
 	lumi = 9.2
@@ -375,9 +318,6 @@ if (__name__ == "__main__"):
 	EMutrees = readTrees(path, "EMu")
 	EEtrees = readTrees(path, "EE")
 	MuMutrees = readTrees(path, "MuMu")
-	EMutrees532 = readTrees(path, "EMu", use532 = True)
-	EEtrees532 = readTrees(path, "EE", use532 = True)
-	MuMutrees532 = readTrees(path, "MuMu", use532 = True)
 	Cutlabel = ROOT.TLatex()
 	Cutlabel.SetTextAlign(12)
 	Cutlabel.SetTextSize(0.03)
@@ -389,12 +329,68 @@ if (__name__ == "__main__"):
 	Labelout.SetTextAlign(12)
 	Labelout.SetTextSize(0.07)
 	Labelout.SetTextColor(ROOT.kBlack)
-
 	
-
+	variable1 = "met"	
+	nBins1 = 4000
+	firstBin1 = 100
+	lastBin1 = 500
 	
-	#~ produceRSFOF(EEtrees, MuMutrees, EMutrees, cuts, cutsTransfer, "MergedData", "Full2012_"+suffix)
-	#~ produceRSFOF(EEtrees, MuMutrees, EMutrees, cuts, cutsTransfer, "MergedData_BlockB", "BlockB_"+suffix)
-	produceRSFOF(EEtrees, MuMutrees, EMutrees, cuts, cutsTransfer, "MergedData_BlockA", "BlockA_"+suffix)
-	#~ produceRSFOF(EEtrees532, MuMutrees532, EMutrees532, cuts532, cutsTransfer532, "MergedData", "BlockAOld_"+suffix)
+	variable2 = "nJets"	
+	nBins2 = 40
+	firstBin2 = 2
+	lastBin2 = 7
+	
+	if data:
+		SampleName = "MergedData"
+	else: 
+		SampleName = "TTJets_MGDecays_Trigger_madgraph_Summer12"
+	
+	for name, tree in EEtrees.iteritems():
+		if name == SampleName:
+			print name
+			EEhistBlockA = create2DHistoFromTree(tree,  variable1, variable2, cutsBlockA, nBins1, firstBin1, lastBin1 , nBins2, firstBin2, lastBin2, nEvents)
+	for name, tree in MuMutrees.iteritems():
+		if name == SampleName:
+
+			MuMuhistBlockA = create2DHistoFromTree(tree,  variable1, variable2, cutsBlockA, nBins1, firstBin1, lastBin1 , nBins2, firstBin2, lastBin2, nEvents)
+	for name, tree in EMutrees.iteritems():
+		print name
+		if name == SampleName:
+			print SampleName
+			fullTree = tree.Clone()
+			EMuhistBlockA = create2DHistoFromTree(tree,  variable1, variable2, cutsBlockA, nBins1, firstBin1, lastBin1 , nBins2, firstBin2, lastBin2, nEvents)
+			EMuhistBlockB = create2DHistoFromTree(tree,  variable1, variable2, cutsBlockB, nBins1, firstBin1, lastBin1 , nBins2, firstBin2, lastBin2, nEvents)
+		
+
+	EMuhistBlockA.SetMarkerStyle(21)
+	EMuhistBlockB.SetMarkerStyle(22)
+	EEhistBlockA.SetMarkerStyle(22)
+	EMuhistBlockA.SetMarkerColor(ROOT.kGreen+3)
+	EMuhistBlockB.SetMarkerColor(ROOT.kBlack)
+	EEhistBlockA.SetMarkerColor(ROOT.kBlack)
+	
+	EEhistBlockA.Add(MuMuhistBlockA.Clone())
+	
+	
+	
+	hCanvas.DrawFrame(80,1,500,7,"; %s ; %s" %("E_{T}^{miss} [GeV]","N_{jets}"))
+
+	EMuhistBlockA.Draw("samep")
+	EEhistBlockA.Draw("samep")
+	
+	legend.AddEntry(EMuhistBlockA,"First 9.2 fb^{-1}","p")	
+	legend.AddEntry(EMuhistBlockB,"Unblinded Data","p")	
+	legend.Draw("same")
+	hCanvas.Print("OFUnblindingScatter.pdf")
+		
+	hCanvas.Clear()
+	hCanvas.DrawFrame(80,1,500,7,"; %s ; %s" %("E_{T}^{miss} [GeV]","N_{jets}"))
+	EMuhistBlockA.Draw("samep")
+	EEhistBlockA.Draw("samep")
+	legend.Clear()
+	legend.AddEntry(EMuhistBlockA,"First 9.2 fb^{-1} OF","p")	
+	legend.AddEntry(EEhistBlockA,"First 9.2 fb^{-1} SF","p")			
+	legend.Draw("same")	
+	
+	hCanvas.Print("OFSFScatter.pdf")
 	

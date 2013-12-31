@@ -53,6 +53,7 @@ def loadShapePickles(regionName, subcutName, shape = "GT", path = "../test/EdgeF
 		#~ print pklPath
 		if os.path.exists(pklPath):
 			pklFile = open(pklPath, "r")
+			print pklFile
 			result[varName] = pickle.load(pklFile)
 			pklFile.close()
 	if subcutName in region.dyPrediction:
@@ -98,7 +99,8 @@ def extendBasics(pkl, region):
 	from src.defs import getOFScale
 	n = {}
 	n.update(pkl)
-
+	print region.title
+	print region.R_SFOF.val
 	ofScale = region.R_SFOF.val
 	ofScaleRelError = region.R_SFOF.err
 
@@ -263,6 +265,10 @@ def extendPickleSeparated( name, pkl,dilepton):
 			result[subcut]["nZStatUncert"] = ((region.dyPrediction[subcut][2]*scale)**2 + (region.dyPrediction[subcut][2]*scale*scaleError)**2)**0.5
 			result[subcut]["nZUncert"] = sqrt(sum([i**2 for i in [result[subcut]["nZStatUncert"], result[subcut]["nZSysUncert"]]]))
 		if not subcut == "default":
+			result[subcut]["nRare"] = 0.
+			result[subcut]["nRareUncert"] = 0.
+                elif  not dilepton in region.rarePrediction:
+                        print "WARNING: Ignoring rare for '%s'"%(region.title)
 			result[subcut]["nRare"] = 0.
 			result[subcut]["nRareUncert"] = 0.
 		else:
@@ -559,9 +565,13 @@ def main():
 	#~ makeFitTable(allPkls,"SignalHighMET", ["default","0BTag", "1BTag", "Ge2BTag","Pt2010","Pt2020", "Pt3010","Pt3020","Pt3030","Barrel","Endcap","Type1","Tc","MHT","LowPU", "MidPU", "HighPU","LowHT", "HighHT","RunAB", "RunC","TightIso",], "FitTableHighMET")
 	#~ makeFitTable(allPkls,"BarrelHighMET", ["default","0BTag", "1BTag", "Ge2BTag","Pt2010","Pt2020", "Pt3010","Pt3020","Pt3030","Barrel","Endcap","Type1","Tc","Calo","LowPU", "MidPU", "HighPU","LowHT", "HighHT","RunAB", "RunC","TightIso",], "FitTableBarrelHighMET")
 	#~ makeFitTable(allPkls,"SignalLowMET", ["default","0BTag", "1BTag", "Ge2BTag","Pt2010","Pt2020", "Pt3010","Pt3020","Pt3030","Barrel","Endcap","Type1","Tc","Calo","LowPU", "MidPU", "HighPU","LowHT", "HighHT","RunAB", "RunC","TightIso",], "FitTableLowMET")
-	#~ makeFitTable(allPkls,"SignalLowMETFullEta", ["default","0BTag", "1BTag", "Ge2BTag","Pt2010","Pt2020", "Pt3010","Pt3020","Pt3030","Barrel","Endcap","Type1","Tc","Calo","LowPU", "MidPU", "HighPU","LowHT", "HighHT","RunAB", "RunC","TightIso",], "FitTableLowMETFullEta")
-	makeFitTable(allPkls,"SignalNonRectCentral", ["default","0BTag", "1BTag", "Ge2BTag","Pt2010","Pt2020", "Pt3010","Pt3020","Pt3030","Barrel","Endcap","Type1MET","TcMET","CaloMET","LowPU", "MidPU", "HighPU","LowHT", "HighHT","RunAB", "RunC","TightIso",], "FitTableSignalNonRectCentral")
-	makeFitTable(allPkls,"SignalNonRectForward", ["default","0BTag", "1BTag", "Ge2BTag","Pt2010","Pt2020", "Pt3010","Pt3020","Pt3030","Barrel","Endcap","Type1MET","TcMET","CaloMET","LowPU", "MidPU", "HighPU","LowHT", "HighHT","RunAB", "RunC","TightIso",], "FitTableSignalNonRectForward")
+	#~ makeFitTable(allPkls,"SignalLowMETFullEta", ["default","0BTag",
+        #"1BTag", "Ge2BTag","Pt2010","Pt2020",
+        #"Pt3010","Pt3020","Pt3030","Barrel","Endcap","Type1","Tc","Calo","LowPU",
+        #"MidPU", "HighPU","LowHT", "HighHT","RunAB", "RunC","TightIso",],
+        #"FitTableLowMETFullEta")
+	#~ makeFitTable(allPkls,"SignalNonRectCentral", ["default","0BTag", "1BTag", "Ge2BTag","Pt2010","Pt2020", "Pt3010","Pt3020","Pt3030","Barrel","Endcap","Type1MET","TcMET","CaloMET","LowPU", "MidPU", "HighPU","LowHT", "HighHT","RunAB", "RunC","TightIso",], "FitTableSignalNonRectCentral")
+	#~ makeFitTable(allPkls,"SignalNonRectForward", ["default","0BTag", "1BTag", "Ge2BTag","Pt2010","Pt2020", "Pt3010","Pt3020","Pt3030","Barrel","Endcap","Type1MET","TcMET","CaloMET","LowPU", "MidPU", "HighPU","LowHT", "HighHT","RunAB", "RunC","TightIso",], "FitTableSignalNonRectForward")
 	for regionName in allPkls:
 		allPkls[regionName] = extendPickle(regionName, allPkls[regionName])		
 		makeRegionTables(allPkls[regionName]["default"], regionName)
