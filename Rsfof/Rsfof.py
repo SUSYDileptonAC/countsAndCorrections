@@ -16,7 +16,7 @@ etaCuts = {
 			}
 
 
-def readTreeFromFile(path, dileptonCombination):
+def readTreeFromFile(path, dileptonCombination, use532 = False):
 	"""
 	helper functionfrom argparse import ArgumentParser
 	path: path to .root file containing simulated events
@@ -26,10 +26,13 @@ def readTreeFromFile(path, dileptonCombination):
 	"""
 	from ROOT import TChain
 	result = TChain()
-	result.Add("%s/cutsV22DileptonFinalTrees/%sDileptonTree"%(path, dileptonCombination))
+	if use532:
+		result.Add("%s/cutsV22DileptonFinalTrees/%sDileptonTree"%(path, dileptonCombination))
+	else:	
+		result.Add("%s/cutsV23DileptonFinalTrees/%sDileptonTree"%(path, dileptonCombination))
 	return result
 	
-def getFilePathsAndSampleNames(path):
+def getFilePathsAndSampleNames(path, use532 = False):
 	"""
 	helper function
 	path: path to directory containing all sample files
@@ -40,11 +43,19 @@ def getFilePathsAndSampleNames(path):
 	from glob import glob
 	from re import match
 	result = {}
-	for filePath in glob("%s/sw532*.root"%path):
+	if use532:
+		path = "/home/jan/Trees/sw532v0474/"
+		for filePath in glob("%s/sw532*.root"%path):
 
-		sampleName = match(".*sw532v.*\.processed.*\.(.*).root", filePath).groups()[0]
-		#for the python enthusiats: yield sampleName, filePath is more efficient here :)
-		result[sampleName] = filePath
+			sampleName = match(".*sw532v.*\.processed.*\.(.*).root", filePath).groups()[0]
+			#for the python enthusiats: yield sampleName, filePath is more efficient here :)
+			result[sampleName] = filePath
+	else:
+		for filePath in glob("%s/sw538*.root"%path):
+
+			sampleName = match(".*sw538v.*\.processed.*\.(.*).root", filePath).groups()[0]
+			#for the python enthusiats: yield sampleName, filePath is more efficient here :)
+			result[sampleName] = filePath
 	return result
 	
 def totalNumberOfGeneratedEvents(path):
@@ -61,7 +72,7 @@ def totalNumberOfGeneratedEvents(path):
 		result[sampleName] = rootFile.FindObjectAny("analysis paths").GetBinContent(1)
 	return result
 	
-def readTrees(path, dileptonCombination):
+def readTrees(path, dileptonCombination,use532 = False):
 	"""
 	path: path to directory containing all sample files
     dileptonCombination: "EMu", "EMu", or pyroot"EMu" for electron-electron, electron-muon, or muon-muon events
@@ -70,9 +81,9 @@ def readTrees(path, dileptonCombination):
 	"""
 	result = {}
 	print (path)
-	for sampleName, filePath in getFilePathsAndSampleNames(path).iteritems():
+	for sampleName, filePath in getFilePathsAndSampleNames(path,use532).iteritems():
 		
-		result[sampleName] = readTreeFromFile(filePath, dileptonCombination)
+		result[sampleName] = readTreeFromFile(filePath, dileptonCombination, use532)
 		
 	return result
 	
@@ -248,59 +259,12 @@ def setTDRStyle():
 	ROOT.gROOT.ForceStyle()
 	
 	tdrStyle.cd()
-	
-	
-if (__name__ == "__main__"):
-	setTDRStyle()
-	path = "/home/jan/Trees/sw532v0474/"
-	from sys import argv
-	import pickle	
-	from ROOT import TCanvas, TPad, TH1F, TH1I, THStack, TLegend, TF1
-	hCanvas = TCanvas("hCanvas", "Distribution", 800,800)
-	ptCut = "pt1 > 20 && pt2 > 20"#(pt1 > 10 && pt2 > 20 || pt1 > 20 && pt2 > 10)
-	ptCutLabel = "20"#"20(10)"
-	variable = "p4.M()"
-	etaCut = etaCuts[argv[1]]
-	suffix = argv[1]
-	data = False
-	if argv[2] == "Data":
-		data = True
-	#~ cuts = "weight*(chargeProduct < 0 && %s && met < 100 && nJets ==2 && abs(eta1) < 2.4 && abs(eta2) < 2.4 && deltaR > 0.3 && runNr < 201657 && (runNr < 198049 || runNr > 198522))"%ptCut
-	cuts = "weight*(chargeProduct < 0 && %s && p4.M() > 20 && p4.M() < 70 && met > 100 && met < 150 && nJets ==2 && %s && deltaR > 0.3 && runNr <= 201678 && !(runNr >= 198049 && runNr <= 198522) )"%(ptCut,etaCut)
-	cutsTransfer = "weight*(chargeProduct < 0 && %s && p4.M() > 20 && p4.M() < 70 && ((met > 100 && nJets >= 3) ||  (met > 150 && nJets >=2)) && %s && deltaR > 0.3 && runNr <= 201678 && !(runNr >= 198049 && runNr <= 198522) )"%(ptCut,etaCut)
-	print cuts
-	nEvents=-1
-	
-	lumi = 9.2
-	
 
-	minMll = 20
-	legend = TLegend(0.6, 0.7, 0.95, 0.95)
-	legend.SetFillStyle(0)
-	legend.SetBorderSize(1)
-	ROOT.gStyle.SetOptStat(0)
-	EMutrees = readTrees(path, "EMu")
-	EEtrees = readTrees(path, "EE")
-	MuMutrees = readTrees(path, "MuMu")
-	Cutlabel = ROOT.TLatex()
-	Cutlabel.SetTextAlign(12)
-	Cutlabel.SetTextSize(0.03)
-	Labelin = ROOT.TLatex()
-	Labelin.SetTextAlign(12)
-	Labelin.SetTextSize(0.07)
-	Labelin.SetTextColor(ROOT.kRed+2)
-	Labelout = ROOT.TLatex()
-	Labelout.SetTextAlign(12)
-	Labelout.SetTextSize(0.07)
-	Labelout.SetTextColor(ROOT.kBlack)
+def produceRSFOF(EETrees,MuMuTrees,EMuTrees,cuts,cutsTransfer,SampleName,suffix):
+
 	nBins = 200
 	firstBin = 0
 	lastBin = 200
-	
-	if data:
-		SampleName = "MergedData"
-	else: 
-		SampleName = "TTJets_MGDecays_Trigger_madgraph_Summer12"
 	
 	for name, tree in EEtrees.iteritems():
 		if name == SampleName:
@@ -370,10 +334,67 @@ if (__name__ == "__main__"):
 	result["transferEEErr"] = transferFaktorEEErr
 	result["transferMM"] = transferFaktorMM
 	result["transferMMErr"] = transferFaktorMMErr
-	if data:
+	if "MergedData" in SampleName:
 		outFilePkl = open("shelves/rSFOF_Data_%s.pkl"%suffix,"w")
 	else:
 		outFilePkl = open("shelves/rSFOF_MC_%s.pkl"%suffix,"w")
 	pickle.dump(result, outFilePkl)
 	outFilePkl.close()	
+	
+	
+if (__name__ == "__main__"):
+	setTDRStyle()
+	path = "/home/jan/Trees/sw538v0476/"
+	from sys import argv
+	import pickle	
+	from ROOT import TCanvas, TPad, TH1F, TH1I, THStack, TLegend, TF1
+	hCanvas = TCanvas("hCanvas", "Distribution", 800,800)
+	ptCut = "pt1 > 20 && pt2 > 20"#(pt1 > 10 && pt2 > 20 || pt1 > 20 && pt2 > 10)
+	ptCutLabel = "20"#"20(10)"
+	variable = "p4.M()"
+	etaCut = etaCuts[argv[1]]
+	suffix = argv[1]
+	data = False
+	
+	#~ cuts = "weight*(chargeProduct < 0 && %s && met < 100 && nJets ==2 && abs(eta1) < 2.4 && abs(eta2) < 2.4 && deltaR > 0.3 && runNr < 201657 && (runNr < 198049 || runNr > 198522))"%ptCut
+	cuts532 = "weight*(chargeProduct < 0 && %s && p4.M() > 20 && p4.M() < 70 && met > 100 && met < 150 && nJets ==2 && %s && deltaR > 0.3 && runNr <= 201678 && !(runNr >= 198049 && runNr <= 198522) )"%(ptCut,etaCut)
+	cuts = "weight*(chargeProduct < 0 && %s && p4.M() > 20 && p4.M() < 70 && met > 100 && met < 150 && nJets ==2 && %s && deltaR > 0.3  )"%(ptCut,etaCut)
+	cutsTransfer = "weight*(chargeProduct < 0 && %s && p4.M() > 20 && p4.M() < 70 && ((met > 100 && nJets >= 3) ||  (met > 150 && nJets >=2)) && %s && deltaR > 0.3 )"%(ptCut,etaCut)
+	cutsTransfer532 = "weight*(chargeProduct < 0 && %s && p4.M() > 20 && p4.M() < 70 && ((met > 100 && nJets >= 3) ||  (met > 150 && nJets >=2)) && %s && deltaR > 0.3 && runNr <= 201678 && !(runNr >= 198049 && runNr <= 198522) )"%(ptCut,etaCut)
+	print cuts
+	nEvents=-1
+	
+	lumi = 9.2
+	
+
+	minMll = 20
+	legend = TLegend(0.6, 0.7, 0.95, 0.95)
+	legend.SetFillStyle(0)
+	legend.SetBorderSize(1)
+	ROOT.gStyle.SetOptStat(0)
+	EMutrees = readTrees(path, "EMu")
+	EEtrees = readTrees(path, "EE")
+	MuMutrees = readTrees(path, "MuMu")
+	EMutrees532 = readTrees(path, "EMu", use532 = True)
+	EEtrees532 = readTrees(path, "EE", use532 = True)
+	MuMutrees532 = readTrees(path, "MuMu", use532 = True)
+	Cutlabel = ROOT.TLatex()
+	Cutlabel.SetTextAlign(12)
+	Cutlabel.SetTextSize(0.03)
+	Labelin = ROOT.TLatex()
+	Labelin.SetTextAlign(12)
+	Labelin.SetTextSize(0.07)
+	Labelin.SetTextColor(ROOT.kRed+2)
+	Labelout = ROOT.TLatex()
+	Labelout.SetTextAlign(12)
+	Labelout.SetTextSize(0.07)
+	Labelout.SetTextColor(ROOT.kBlack)
+
+	
+
+	
+	#~ produceRSFOF(EEtrees, MuMutrees, EMutrees, cuts, cutsTransfer, "MergedData", "Full2012_"+suffix)
+	#~ produceRSFOF(EEtrees, MuMutrees, EMutrees, cuts, cutsTransfer, "MergedData_BlockB", "BlockB_"+suffix)
+	produceRSFOF(EEtrees, MuMutrees, EMutrees, cuts, cutsTransfer, "MergedData_BlockA", "BlockA_"+suffix)
+	#~ produceRSFOF(EEtrees532, MuMutrees532, EMutrees532, cuts532, cutsTransfer532, "MergedData", "BlockAOld_"+suffix)
 	

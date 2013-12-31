@@ -40,8 +40,8 @@ relUncertainties = {"SS":0.1,
 				 "default":0.1,
 				}
 
-dataFile = {"BlockAFrozen":Processes8TeV.Data,"BlockAReprocessed":Processes8TeV.DataReprocessedBlockA,"BlockBReprocessed":Processes8TeV.DataReprocessedBlockB,}
-lumiBox = {"BlockAFrozen":9200,"BlockAReprocessed":9200,"BlockBReprocessed":10400,}
+dataFile = {"BlockAFrozen":Processes8TeV.Data,"BlockAReprocessed":Processes8TeV.DataReprocessedBlockA,"BlockBReprocessed":Processes8TeV.DataReprocessedBlockB,"Full2012":Processes8TeV.DataReprocessed,}
+lumiBox = {"BlockAFrozen":9200,"BlockAReprocessed":9200,"BlockBReprocessed":10200,"Full2012":19400}
 
 class Ratio_nJets_MC(): #nJets
 	variable = "nJets"
@@ -941,6 +941,7 @@ def main():
 		selectionModifier = []
 	Constants.setLumi(Constants.lumi8TeV)
 	Constants.lumi8TeV = lumiBox[dataName]
+	Constants.lumi = lumiBox[dataName]
 	if argv[1] == "CentralValue":
 		n_mumu_R3Data, n_ee_R3Data, rR3Data, rR3Data_stat, rR3Data_up, rR3Data_down = calculateRatio(Cuts.basicPlusInvMassPlusMet50Cut, dataFile[dataName],selectionModifier)
 		n_mumu_R3MC, n_ee_R3MC, rR3MC, rR3MC_stat, rR3MC_up, rR3MC_down = calculateRatio(Cuts.basicPlusInvMassPlusMet50Cut, Processes8TeV.ZJets,selectionModifier)

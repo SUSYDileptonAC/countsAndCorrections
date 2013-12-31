@@ -420,11 +420,23 @@ if (__name__ == "__main__"):
 	ofA = eMuTreeA.GetEntries()
 	sfB = eeTreeB.GetEntries() + mmTreeB.GetEntries()
 	ofB = eMuTreeB.GetEntries()
-	
+	eeA = eeTreeA.GetEntries()
+	eeB = eeTreeB.GetEntries()
+	mmA = mmTreeA.GetEntries()
+	mmB = mmTreeB.GetEntries()
 	
 	print "Block A"
-	print "SF: %d OF: %d"%(sfA,ofA)
+	print "SF: %d (ee: %d mm: %d ) OF: %d"%(sfA,eeA,mmA,ofA)
 	print "Block B"
-	print "SF: %d OF: %d"%(sfB,ofB)
-	
+	print "SF: %d (ee: %d mm: %d ) OF: %d"%(sfB,eeB,mmB,ofB)
+	#~ print "ee events:"
+	#~ for ev in eeTreeB:
+		#~ print "%s:%s:%s"%(ev.runNr,ev.lumiSec,ev.eventNr)
+	#~ print "mm events:"
+	#~ for ev in mmTreeB:
+		#~ print "%s:%s:%s"%(ev.runNr,ev.lumiSec,ev.eventNr)
+	#~ print "em events:"
+	#~ for ev in eMuTreeB:
+		#~ print "%s:%s:%s"%(ev.runNr,ev.lumiSec,ev.eventNr)
+	#~ 
 	

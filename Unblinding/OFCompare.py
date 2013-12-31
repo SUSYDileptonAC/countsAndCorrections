@@ -345,7 +345,7 @@ def plotBlockComparison(treeBlockA,treeBlockB,variable,additionalCut,nBins,first
 		hCanvas.Clear()
 if (__name__ == "__main__"):
 	setTDRStyle()
-	path = "/home/jan/Trees/sw538v0475/"
+	path = "/home/jan/Trees/sw538v0476/"
 	from sys import argv
 	import pickle	
 	from ROOT import TCanvas, TPad, TH1F, TH1I, THStack, TLegend, TF1
@@ -373,10 +373,10 @@ if (__name__ == "__main__"):
 		if name == SampleNameBlockA:
 			fullTreeA = tree.Clone()
 			eMuTreeA = tree.CopyTree(cuts)
-		if name == SampleNameBlockB:
-			fullTreeB = tree.Clone()
-			eMuTreeB = tree.CopyTree(cuts)
-		
+		#~ if name == SampleNameBlockB:
+			#~ fullTreeB = tree.Clone()
+			#~ eMuTreeB = tree.CopyTree(cuts)
+		#~ 
 	plotBlockComparison(eMuTreeA,eMuTreeB,"p4.M()","",60,0,300,"m_{ll} [GeV]","Events / 5 GeV",suffix,signal=True)	
 	plotBlockComparison(fullTreeA,fullTreeB,"p4.M()","",60,0,300,"m_{ll} [GeV]","Events / 5 GeV",suffix,signal=False,log=True)	
 	plotBlockComparison(eMuTreeA,eMuTreeB,"p4.M()","nVertices < 11",60,0,300,"m_{ll} [GeV]","Events / 5 GeV",suffix+"_LowPU",signal=True)	

@@ -58,6 +58,19 @@ centralValueControlCentralBlockBReprocessed:
 centralValueControlForwardBlockBReprocessed:
 		$(MAKERmueDependenciesControl) CentralValue BlockBReprocessed Forward
 		
+dependenciesControlInclusiveFull2012:
+		$(MAKERmueDependenciesControl) Dependencies Full2012
+dependenciesControlCentralFull2012:
+		$(MAKERmueDependenciesControl) Dependencies Full2012 Central
+dependenciesControlForwardFull2012:
+		$(MAKERmueDependenciesControl) Dependencies Full2012 Forward
+centralValueControlInclusiveFull2012:
+		$(MAKERmueDependenciesControl) CentralValue Full2012
+centralValueControlCentralFull2012:
+		$(MAKERmueDependenciesControl) CentralValue Full2012 Central
+centralValueControlForwardFull2012:
+		$(MAKERmueDependenciesControl) CentralValue Full2012 Forward
+		
 		
 copyAN:
 	cp fig/8TeVrRatioDataVsMCControl_eta1_Central.pdf fig/8TeVrRatioDataVsMCControl_pt1_Central.pdf fig/8TeVrRatioDataVsMCControl_met_Central.pdf fig/8TeVrRatioDataVsMCControl_mll_Central.pdf fig/8TeVrRatioDataVsMCControl_nJets_Central.pdf fig/8TeVrRatioDataVsMCControl_nVertices_Central.pdf fig/8TeVrRatioDataVsMCControl_eta1_Forward.pdf fig/8TeVrRatioDataVsMCControl_pt1_Forward.pdf fig/8TeVrRatioDataVsMCControl_met_Forward.pdf fig/8TeVrRatioDataVsMCControl_mll_Forward.pdf fig/8TeVrRatioDataVsMCControl_nJets_Forward.pdf fig/8TeVrRatioDataVsMCControl_nVertices_Forward.pdf  $(AN_PLOTS)

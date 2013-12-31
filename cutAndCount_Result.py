@@ -55,7 +55,7 @@ def getTable( trees, cuts, titles = None, cutOrder = None):
 		result += lineTemplate%repMap
 	return tableTemplate%result
 
-def cutAndCountForRegion(trees, cut, name):
+def cutAndCountForRegion(trees, cut, name,period):
 	from src.defs import Regions
 	cut = getattr(Regions, name).cut
 	
@@ -200,7 +200,7 @@ def cutAndCountForRegion(trees, cut, name):
 			counts[name][subcutName][mllcutName] = getCounts(trees, fullcut)
 			#~ eventLists[name][subcutName][mllcutName] = getEventLists(trees, fullcut)
 
-	outFile = open("shelves/cutAndCount_%s.pkl"%name,"w")
+	outFile = open("shelves/cutAndCount_%s_%s.pkl"%(name,period),"w")
 	pickle.dump(counts, outFile)
 	outFile.close()
 
@@ -218,7 +218,7 @@ def main():
 	cuts = {}
 	for regionName in filter(lambda x: not x.endswith("_"), dir(Regions)):
 		cuts[regionName] = getattr(Regions, regionName).cut
-
+	
 	for cut in cuts.keys():
 		cuts["%s_METPD"%cut] = cuts[cut]
 		cuts["%s_SingleLepton"%cut] = cuts[cut]
@@ -230,6 +230,12 @@ def main():
 			"EMu": readTreeFromFile(argv[1], "EMu", preselection,SingleLepton=True),
 			"EE": readTreeFromFile(argv[1], "EE", preselection,SingleLepton=True),
 			}		
+	elif "BlockA" in argv[1]:
+		trees = {
+			"MuMu": readTreeFromFile(argv[1], "MuMu", preselection, use532=True),
+			"EMu": readTreeFromFile(argv[1], "EMu", preselection, use532=True),
+			"EE": readTreeFromFile(argv[1], "EE", preselection, use532=True),
+			}		
 		
 	else:
 		trees = {
@@ -239,8 +245,8 @@ def main():
 			}
 	datasetName = argv[1].split("/")[-1].split(".")[2]
 	isMC = (not "MergedData" in datasetName)
-
-	cutAndCountForRegion(trees, preselection, argv[2])
+	name = argv[3]
+	cutAndCountForRegion(trees, preselection, argv[2],name)
 		
 
 main()

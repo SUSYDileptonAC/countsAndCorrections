@@ -417,7 +417,7 @@ if (__name__ == "__main__"):
 	etaCut = etaCuts[argv[1]]
 	suffix = argv[1]
 	
-	runCut = "runNr < 201657 && runNr > 198522 && !(runNr == 199832 || runNr == 199834 || runNr == 199967 || runNr == 200160 || runNr == 200161 || runNr == 200174 || runNr == 200177 || runNr == 200178 || runNr == 200186 || runNr == 201191)"
+	runCut = "runNr < 201657 && runNr > 198522 && (runNr == 199832 || runNr == 199834 || runNr == 199967 || runNr == 200160 || runNr == 200161 || runNr == 200174 || runNr == 200177 || runNr == 200178 || runNr == 200186 || runNr == 201191)"
 
 	#~ cuts = "weight*(chargeProduct < 0 && %s && met < 100 && nJets ==2 && abs(eta1) < 2.4 && abs(eta2) < 2.4 && deltaR > 0.3 && runNr < 201657 && (runNr < 198049 || runNr > 198522))"%ptCut
 	cuts = "weight*(chargeProduct < 0 && %s && ((met > 100 && nJets >= 3) ||  (met > 150 && nJets >=2)) && %s && deltaR > 0.3 && %s && abs(eta1) < 2.4 && abs(eta2) < 2.4)"%(ptCut,etaCut,runCut)

@@ -24,7 +24,7 @@ def readTreeFromFile(path, dileptonCombination):
 	"""
 	from ROOT import TChain
 	result = TChain()
-	result.Add("%s/cutsV22DileptonFinalTrees/%sDileptonTree"%(path, dileptonCombination))
+	result.Add("%s/cutsV23DileptonFinalTrees/%sDileptonTree"%(path, dileptonCombination))
 	return result
 	
 def getFilePathsAndSampleNames(path):
@@ -38,9 +38,9 @@ def getFilePathsAndSampleNames(path):
 	from glob import glob
 	from re import match
 	result = {}
-	for filePath in glob("%s/sw532*.root"%path):
+	for filePath in glob("%s/sw538*.root"%path):
 
-		sampleName = match(".*sw532v.*\.processed.*\.(.*).root", filePath).groups()[0]
+		sampleName = match(".*sw538v.*\.processed.*\.(.*).root", filePath).groups()[0]
 		#for the python enthusiats: yield sampleName, filePath is more efficient here :)
 		result[sampleName] = filePath
 	return result
@@ -250,8 +250,7 @@ def setTDRStyle():
 	
 if (__name__ == "__main__"):
 	setTDRStyle()
-	path = "/home/jan/Trees/sw532v0474/"
-	
+	path = "/home/jan/Trees/sw538v0475/"
 	from ROOT import TCanvas, TPad, TH1F, TH1I, THStack, TLegend
 	hCanvas = TCanvas("hCanvas", "Distribution", 800,800)
 	from sys import argv		
@@ -261,10 +260,11 @@ if (__name__ == "__main__"):
 	ptCutLabel = "20"#"20(10)"
 	variable = "p4.M()"
 	#~ cuts = "weight*(chargeProduct < 0 && %s && met < 100 && nJets ==2 && abs(eta1) < 2.4 && abs(eta2) < 2.4 && deltaR > 0.3 && runNr < 201657 && (runNr < 198049 || runNr > 198522))"%ptCut
-	cuts = "weight*(chargeProduct < 0 && %s && met < 50 && nJets >=2 && %s && deltaR > 0.3 && runNr <= 201678 && !(runNr >= 198049 && runNr <= 198522) )"%(ptCut,etaCut)
+	cuts = "weight*(chargeProduct < 0 && %s && met < 50 && nJets >=2 && %s && deltaR > 0.3 )"%(ptCut,etaCut)
 	nEvents=-1
 	minMll = 20
-	lumi = 9.2
+	lumi = 19.4
+	
 	EMutrees = readTrees(path, "EMu")
 	EEtrees = readTrees(path, "EE")
 	MuMutrees = readTrees(path, "MuMu")
@@ -337,8 +337,8 @@ if (__name__ == "__main__"):
 
 	ErrRinout = sqrt((continuumError/peak)**2 + (continuum*peakError/peak**2)**2)
 
-	if argv[2] == "SF" and "TMath" in cuts:
-		Rinout = 0.063
+	#~ if argv[2] == "SF" and "TMath" in cuts:
+		#~ Rinout = 0.063
 
 	legend = TLegend(0.2, 0.65, 0.65, 0.90)
 	legend.SetFillStyle(0)
@@ -428,7 +428,7 @@ if (__name__ == "__main__"):
 		latex.DrawLatex(0.05, 0.96, "CMS Preliminary  #sqrt{s} = 8 TeV,     #scale[0.6]{#int}Ldt = %s fb^{-1}"%lumi)
 			
 			
-		hCanvas.Print("Rinout_%dJets_MET%d_%s.pdf"%(nJets,metBinsUp[index],suffix))
+		hCanvas.Print("fig/Rinout_Full2012_%dJets_MET%d_%s.pdf"%(nJets,metBinsUp[index],suffix))
 
 
 			#SFhist.Add(EMuhist,-1)
@@ -491,7 +491,7 @@ if (__name__ == "__main__"):
 	latex2.SetNDC(True)
 	latex2.DrawLatex(0.2, 0.96, "CMS Preliminary  #sqrt{s} = 8 TeV,     #scale[0.6]{#int}Ldt = %s fb^{-1}"%lumi)
 	ROOT.gPad.RedrawAxis()		
-	hCanvas.Print("RinoutSystMET_%s.pdf"%suffix)
+	hCanvas.Print("fig/RinoutSystMET_Full2012_%s.pdf"%suffix)
 	
 	RinoutMET100 = []
 	ErrRinoutMET100 = []	
@@ -544,7 +544,7 @@ if (__name__ == "__main__"):
 		line4.Draw("same")
 		Labelin.DrawLatex(82.25,SFhist.GetBinContent(SFhist.GetMaximumBin()/10),"In")
 		Labelout.DrawLatex(37.25,SFhist.GetBinContent(SFhist.GetMaximumBin()/10),"Out")
-		Cutlabel.DrawLatex(120,SFhist.GetBinContent(SFhist.GetMaximumBin()/10),"#splitline{p_{T}^{lepton} > 20(10) GeV}{ %d GeV < met < %d GeV, nJets ==%d}" %(0,100,nJets))
+		Cutlabel.DrawLatex(120,SFhist.GetBinContent(SFhist.GetMaximumBin()/10),"#splitline{p_{T}^{lepton} > 20 GeV}{ %d GeV < met < %d GeV, nJets ==%d}" %(0,100,nJets))
 			#~ Labelin.DrawLatex(82.25,SFhist.GetBinContent(SFhist.GetMaximumBin())/2,"In")
 			#~ Labelout.DrawLatex(37.25,SFhist.GetBinContent(SFhist.GetMaximumBin())/2,"Out")
 			#~ Cutlabel.DrawLatex(120,SFhist.GetBinContent(SFhist.GetMaximumBin())/2,"#splitline{p_{T}^{lepton} > 20(10) GeV}{MET < 100 GeV, nJets ==3}")
@@ -552,10 +552,10 @@ if (__name__ == "__main__"):
 		latex = ROOT.TLatex()
 		latex.SetTextSize(0.04)
 		latex.SetNDC(True)
-		latex.DrawLatex(0.05, 0.96, "CMS Preliminary  #sqrt{s} = 8 TeV,     #scale[0.6]{#int}Ldt = 9.2fb^{-1}")
+		latex.DrawLatex(0.05, 0.96, "CMS Preliminary  #sqrt{s} = 8 TeV,     #scale[0.6]{#int}Ldt = 10.4 fb^{-1}")
 			
 			
-		hCanvas.Print("Rinout_%dJets_MET%d_%s.pdf"%(nJets,metBinsUp[index],suffix))
+		hCanvas.Print("fig/Rinout_Full2012_%dJets_MET%d_%s.pdf"%(nJets,metBinsUp[index],suffix))
 
 
 			#SFhist.Add(EMuhist,-1)
@@ -613,4 +613,4 @@ if (__name__ == "__main__"):
 	latex2.SetNDC(True)
 	latex2.DrawLatex(0.2, 0.96, "CMS Preliminary  #sqrt{s} = 8 TeV,     #scale[0.6]{#int}Ldt = %sfb^{-1}"%lumi)
 	ROOT.gPad.RedrawAxis()		
-	hCanvas.Print("RinoutSystNJets_%s.pdf"%suffix)
+	hCanvas.Print("fig/RinoutSystNJets_Full2012_%s.pdf"%suffix)
