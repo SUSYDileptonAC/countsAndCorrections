@@ -198,15 +198,15 @@ def cutAndCountForRegion(trees, cut, name,period):
 				#~ print subcutName
 				#~ print fullcut	
 			counts[name][subcutName][mllcutName] = getCounts(trees, fullcut)
-			#~ eventLists[name][subcutName][mllcutName] = getEventLists(trees, fullcut)
+			eventLists[name][subcutName][mllcutName] = getEventLists(trees, fullcut)
 
 	outFile = open("shelves/cutAndCount_%s_%s.pkl"%(name,period),"w")
 	pickle.dump(counts, outFile)
 	outFile.close()
 
-	#~ outFile = open("shelves/eventLists_%s.pkl"%name,"w")
-	#~ pickle.dump(eventLists, outFile)
-	#~ outFile.close()
+	outFile = open("shelves/eventLists_%s.pkl"%name,"w")
+	pickle.dump(eventLists, outFile)
+	outFile.close()
 
 
 
