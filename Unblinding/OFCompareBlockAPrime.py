@@ -16,7 +16,7 @@ etaCuts = {
 			}
 
 
-def readTreeFromFile(path, dileptonCombination,Run2011=False,use532=False):
+def readTreeFromFile(path, dileptonCombination):
 	"""
 	helper functionfrom argparse import ArgumentParser
 	path: path to .root file containing simulated events
@@ -26,128 +26,10 @@ def readTreeFromFile(path, dileptonCombination,Run2011=False,use532=False):
 	"""
 	from ROOT import TChain
 	result = TChain()
-	if Run2011:
-		result.Add("%s/cutsV18SignalHighPtFinalTrees/%sDileptonTree"%(path, dileptonCombination))
-	elif use532:		
-		result.Add("%s/cutsV22DileptonFinalTrees/%sDileptonTree"%(path, dileptonCombination))
-	else:		
-		result.Add("%s/cutsV23DileptonFinalTrees/%sDileptonTree"%(path, dileptonCombination))
-	if mainConfig.preselect:
-		result = result.CopyTree("nJets >= 2")	
-	return result
-def readMCTreeFromFile(path,dileptonTrigger, dileptonCombination,Run2011=False):
-	"""
-	helper functionfrom argparse import ArgumentParser
-	path: path to .root file containing simulated events
-	dileptonCombination: EMu, EMu, or EMu for electron-electron, electron-muon, or muon-muon events
-
-	returns: tree containing events for on sample and dileptonCombination
-	"""
-	from ROOT import TChain
-	result = TChain()
-	if Run2011:
-		result.Add("%s/cutsV18SignalHighPtFinalTrees/%sDileptonTree"%(path, dileptonCombination))		
-	else:
-		result.Add("%s/cutsV23Dilepton%sFinalTrees/%sDileptonTree"%(path,dileptonTrigger, dileptonCombination))
-	if mainConfig.preselect:
-		result = result.CopyTree("nJets >= 2")	
-	return result
-def readVectorTreeFromFile(path, dileptonCombination):
-	"""
-	helper functionfrom argparse import ArgumentParser
-	path: path to .root file containing simulated events
-	dileptonCombination: EMu, EMu, or EMu for electron-electron, electron-muon, or muon-muon events
-
-	returns: tree containing events for on sample and dileptonCombination
-	"""
-	from ROOT import TChain
-	result = TChain()
-	result.Add("%s/cutsV22DileptonFinalTrees/%sDileptonVectorTree"%(path, dileptonCombination))
-	if mainConfig.preselect:
-		result = result.CopyTree("nJets >= 2")
-	return result
-
-	
-	
-def totalNumberOfGeneratedEvents(path,Run2011=False):
-	"""
-	path: path to directory containing all sample files
-
-	returns dict samples names -> number of simulated events in source sample
-	        (note these include events without EMu EMu EMu signature, too )
-	"""
-	from ROOT import TFile
-	result = {}
-	#~ print path
-	if Run2011:
-			
-		for sampleName, filePath in getFilePathsAndSampleNames(path,Run2011).iteritems():
-			rootFile = TFile(filePath, "read")
-			result[sampleName] = rootFile.FindObjectAny("analysis paths").GetBinContent(1)
-	else:
-		for sampleName, filePath in getFilePathsAndSampleNames(path).iteritems():
-			#~ print filePath
-			rootFile = TFile(filePath, "read")
-			result[sampleName] = rootFile.FindObjectAny("analysis paths").GetBinContent(1)				
+	result.Add("%s/cutsV23DileptonFinalTrees/%sDileptonTree"%(path, dileptonCombination))
 	return result
 	
-def readTrees(path, dileptonCombination,Run2011=False,use532 = False):
-	"""
-	path: path to directory containing all sample files
-    dileptonCombination: "EMu", "EMu", or pyroot"EMu" for electron-electron, electron-muon, or muon-muon events
-
-	returns: dict of sample names ->  trees containing events (for all samples for one dileptonCombination)
-	"""
-	result = {}
-	#~ print (path)
-	if Run2011:
-			
-		for sampleName, filePath in getFilePathsAndSampleNames(path,Run2011=True).iteritems():
-			
-			result[sampleName] = readTreeFromFile(filePath, dileptonCombination,Run2011=True)
-		
-	elif use532:
-		
-		for sampleName, filePath in getFilePathsAndSampleNames(path,use532=True).iteritems():
-		
-			result[sampleName] = readTreeFromFile(filePath, dileptonCombination,use532=True)
-	else:
-
-		for sampleName, filePath in getFilePathsAndSampleNames(path).iteritems():
-			result[sampleName] = readTreeFromFile(filePath, dileptonCombination)
-		
-	return result
-def readTreesMC(path,dileptonTrigger, dileptonCombination):
-	"""
-	path: path to directory containing all sample files
-    dileptonCombination: "EMu", "EMu", or pyroot"EMu" for electron-electron, electron-muon, or muon-muon events
-
-	returns: dict of sample names ->  trees containing events (for all samples for one dileptonCombination)
-	"""
-	result = {}
-	#~ print (path)
-	for sampleName, filePath in getFilePathsAndSampleNames(path).iteritems():
-		
-		result[sampleName] = readMCTreeFromFile(filePath,dileptonTrigger, dileptonCombination)
-		
-	return result
-def readVectorTrees(path, dileptonCombination):
-	"""
-	path: path to directory containing all sample files
-    dileptonCombination: "EMu", "EMu", or pyroot"EMu" for electron-electron, electron-muon, or muon-muon events
-
-	returns: dict of sample names ->  trees containing events (for all samples for one dileptonCombination)
-	"""
-	result = {}
-	#~ print (path)
-	for sampleName, filePath in getFilePathsAndSampleNames(path).iteritems():
-		
-		result[sampleName] = readVectorTreeFromFile(filePath, dileptonCombination)
-		
-	return result
-
-	
-def getFilePathsAndSampleNames(path,Run2011=False,use532 = False):
+def getFilePathsAndSampleNames(path):
 	"""
 	helper function
 	path: path to directory containing all sample files
@@ -158,48 +40,43 @@ def getFilePathsAndSampleNames(path,Run2011=False,use532 = False):
 	from glob import glob
 	from re import match
 	result = {}
-	if Run2011:
-		for filePath in glob("%s/sw428*.root"%path):
-
-			
-			sampleName = match(".*sw428v.*\.cutsV18SignalHighPt.*\.(.*).root", filePath).groups()[0]			
-			#for the python enthusiats: yield sampleName, filePath is more efficient here :)
-			result[sampleName] = filePath		
-	elif use532:
-		for filePath in glob("%s/sw532*.root"%path):
-
-			
-			sampleName = match(".*sw532v.*\.processed.*\.(.*).root", filePath).groups()[0]				
-			#for the python enthusiats: yield sampleName, filePath is more efficient here :)
-			result[sampleName] = filePath		
-	else:
-		for filePath in glob("%s/sw538*.root"%path):
-			
-			sampleName = match(".*sw538v.*\.processed.*\.(.*).root", filePath).groups()[0]			
-			#for the python enthusiats: yield sampleName, filePath is more efficient here :)
-			result[sampleName] = filePath
+	print path
+	for filePath in glob("%s/sw538*.root"%path):
+		print filePath
+		sampleName = match(".*sw538v.*\.processed.*\.(.*).root", filePath).groups()[0]
+		#for the python enthusiats: yield sampleName, filePath is more efficient here :)
+		result[sampleName] = filePath
 	return result
 	
+def totalNumberOfGeneratedEvents(path):
+	"""
+	path: path to directory containing all sample files
 
-class mainConfig:
-	plotData = True
-	plotMC	= True
-	compareTTbar = False
-	normalizeToData = False
-	plotRatio = True
-	plotSignal = False
-	compare2011 = False
-	compareSFvsOF = True
-	compareEEvsMuMu = False
-	compareSFvsOFFlavourSeperated = False
-	useVectorTrees = False
-	useTriggerEmulation = False 
-	preselect = False
-	produceReweighting = True
-	plot2011 = False
-	plot53X = False
-	personalWork = False
-	doTopReweighting = False
+	returns dict samples names -> number of simulated events in source sample
+	        (note these include events without EMu EMu EMu signature, too )
+	"""
+	from ROOT import TFile
+	result = {}
+	for sampleName, filePath in getFilePathsAndSampleNames(path).iteritems():
+		rootFile = TFile(filePath, "read")
+		result[sampleName] = rootFile.FindObjectAny("analysis paths").GetBinContent(1)
+	return result
+	
+def readTrees(path, dileptonCombination):
+	"""
+	path: path to directory containing all sample files
+    dileptonCombination: "EMu", "EMu", or pyroot"EMu" for electron-electron, electron-muon, or muon-muon events
+
+	returns: dict of sample names ->  trees containing events (for all samples for one dileptonCombination)
+	"""
+	result = {}
+	print (path)
+	for sampleName, filePath in getFilePathsAndSampleNames(path).iteritems():
+		
+		result[sampleName] = readTreeFromFile(filePath, dileptonCombination)
+		
+	return result
+	
 	
 def createHistoFromTree(tree, variable, weight, nBins, firstBin, lastBin, nEvents = -1):
 	"""
@@ -468,7 +345,7 @@ def plotBlockComparison(treeBlockA,treeBlockB,variable,additionalCut,nBins,first
 		hCanvas.Clear()
 if (__name__ == "__main__"):
 	setTDRStyle()
-	path = "/home/jan/Trees/sw538v0475/"
+	path = "/home/jan/Trees/sw538v0476/"
 	from sys import argv
 	import pickle	
 	from ROOT import TCanvas, TPad, TH1F, TH1I, THStack, TLegend, TF1
@@ -480,8 +357,7 @@ if (__name__ == "__main__"):
 	variable = "p4.M()"
 	etaCut = etaCuts[argv[1]]
 	suffix = argv[1]
-	#~ cuts = "weight*(chargeProduct < 0 && %s && p4.M() < 70 && p4.M() > 20 && %s && nJets == 2 && met > 100 && met < 150 && abs(eta1) < 2.4 && abs(eta2) < 2.4 && deltaR > 0.3)"%(ptCut,etaCut)
-	cuts = "weight*(chargeProduct < 0 && %s && p4.M() < 101 && p4.M() > 81 && %s && ((met > 100 && nJets >= 3) ||  (met > 150 && nJets >=2)) && abs(eta1) < 2.4 && abs(eta2) < 2.4 && deltaR > 0.3)"%(ptCut,etaCut)
+	cuts = "weight*(chargeProduct < 0 && %s && %s && ((met > 100 && nJets >= 3) ||  (met > 150 && nJets >=2)) && abs(eta1) < 2.4 && abs(eta2) < 2.4 && deltaR > 0.3 && p4.M() > 20 && p4.M() < 70)"%(ptCut,etaCut)
 
 	
 
@@ -489,40 +365,35 @@ if (__name__ == "__main__"):
 	print cuts
 	
 	SampleNameBlockA = "MergedData_BlockA"
-	SampleNameBlockB = "MergedData_BlockB_2Jets"
-	path = "/home/jan/Trees/sw538v0476/"
-	EMutrees = readTrees(path, "EMu")
-	EEtrees = readTrees(path, "EE")
-	MuMutrees = readTrees(path, "MuMu")
-	path = "/home/jan/Trees/sw532v0474/"
-	EMutrees532 = readTrees(path, "EMu",use532=True)
-	EEtrees532 = readTrees(path, "EE",use532=True)
-	MuMutrees532 = readTrees(path, "MuMu",use532=True)
+	SampleNameBlockB = "MergedData_BlockB"
+
+	EMutrees = readTrees(path, "EMu")	
+	EEtrees = readTrees(path, "EE")	
+	MuMutrees = readTrees(path, "MuMu")	
 	for name, tree in EMutrees.iteritems():
-		#~ print name
+		print name
 		if name == SampleNameBlockA:
 			#~ fullTreeA = tree.Clone()
 			eMuTreeA = tree.CopyTree(cuts)
-		if name == SampleNameBlockB:
-			#~ fullTreeB = tree.Clone()
-			eMuTreeB = tree.CopyTree(cuts)
 	for name, tree in EEtrees.iteritems():
-		#~ print name
+		print name
 		if name == SampleNameBlockA:
 			#~ fullTreeA = tree.Clone()
 			eeTreeA = tree.CopyTree(cuts)
-		if name == SampleNameBlockB:
-			#~ fullTreeB = tree.Clone()
-			eeTreeB = tree.CopyTree(cuts)
 	for name, tree in MuMutrees.iteritems():
-		#~ print name
+		print name
 		if name == SampleNameBlockA:
 			#~ fullTreeA = tree.Clone()
 			mmTreeA = tree.CopyTree(cuts)
-		if name == SampleNameBlockB:
+			
+			
+	print eMuTreeA.GetEntries()		
+	print eeTreeA.GetEntries()		
+	print mmTreeA.GetEntries()		
+		#~ if name == SampleNameBlockB:
 			#~ fullTreeB = tree.Clone()
-			mmTreeB = tree.CopyTree(cuts)
-		
+			#~ eMuTreeB = tree.CopyTree(cuts)
+		#~ 
 	#~ plotBlockComparison(eMuTreeA,eMuTreeB,"p4.M()","",60,0,300,"m_{ll} [GeV]","Events / 5 GeV",suffix,signal=True)	
 	#~ plotBlockComparison(fullTreeA,fullTreeB,"p4.M()","",60,0,300,"m_{ll} [GeV]","Events / 5 GeV",suffix,signal=False,log=True)	
 	#~ plotBlockComparison(eMuTreeA,eMuTreeB,"p4.M()","nVertices < 11",60,0,300,"m_{ll} [GeV]","Events / 5 GeV",suffix+"_LowPU",signal=True)	
@@ -541,30 +412,6 @@ if (__name__ == "__main__"):
 	#~ plotBlockComparison(eMuTreeA,eMuTreeB,"met","p4.M() > 20 && p4.M() < 70",30,0,300,"E_T^{miss} [GeV]","Events / 10 GeV",suffix,signal=True)
 	#~ plotBlockComparison(fullTreeA,fullTreeB,"met","",30,0,300,"E_T^{miss} [GeV]","Events / 10 GeV",suffix,signal=False,log=True)	
 	#~ 
-
-
-	
-	sfA = eeTreeA.GetEntries() + mmTreeB.GetEntries()
-	ofA = eMuTreeA.GetEntries()
-	sfB = eeTreeB.GetEntries() + mmTreeB.GetEntries()
-	ofB = eMuTreeB.GetEntries()
-	eeA = eeTreeA.GetEntries()
-	eeB = eeTreeB.GetEntries()
-	mmA = mmTreeA.GetEntries()
-	mmB = mmTreeB.GetEntries()
-	
-	print "Block A"
-	print "SF: %d (ee: %d mm: %d ) OF: %d"%(sfA,eeA,mmA,ofA)
-	print "Block B"
-	print "SF: %d (ee: %d mm: %d ) OF: %d"%(sfB,eeB,mmB,ofB)
-	#~ print "ee events:"
-	#~ for ev in eeTreeB:
-		#~ print "%s:%s:%s"%(ev.runNr,ev.lumiSec,ev.eventNr)
-	#~ print "mm events:"
-	#~ for ev in mmTreeB:
-		#~ print "%s:%s:%s"%(ev.runNr,ev.lumiSec,ev.eventNr)
-	#~ print "em events:"
-	#~ for ev in eMuTreeB:
-		#~ print "%s:%s:%s"%(ev.runNr,ev.lumiSec,ev.eventNr)
+#~ 
+#~ 
 	#~ 
-	

@@ -279,7 +279,7 @@ if (__name__ == "__main__"):
 	#~ cuts = "weight*(chargeProduct < 0 && %s && met < 100 && nJets ==2 && abs(eta1) < 2.4 && abs(eta2) < 2.4 && deltaR > 0.3 && runNr < 201657 && (runNr < 198049 || runNr > 198522))"%ptCut
 	cuts = "weight*(chargeProduct < 0 && %s && met < 50 && nJets >=2 && %s && deltaR > 0.3  )"%(ptCut,etaCut)
 	cutsPeak = "weight*(chargeProduct < 0 && %s && met < 50 && nJets >=2 && %s && deltaR > 0.3 && p4.M() > 81 && p4.M() < 101 )"%(ptCut,etaCut)
-	cutsLowMass = "weight*(chargeProduct < 0 && %s && met < 50 && nJets >=2 && %s && deltaR > 0.3 && p4.M() > 20 && p4.M() < 70 )"%(ptCut,etaCut)
+	cutsLowMass = "weight*(chargeProduct < 0 && %s && met < 50 && nJets >=2 && %s && deltaR > 0.3 && p4.M() > 120  )"%(ptCut,etaCut)
 	print cuts
 	nEvents=-1
 	
@@ -330,8 +330,8 @@ if (__name__ == "__main__"):
 		sampleName = "MergedData"
 		
 		
-	nllPredictionScale	= corrections[sampleName][argv[1]][argv[2]][0]	
-	nllPredictionScaleErr	= corrections[sampleName][argv[1]][argv[2]][1]	
+	nllPredictionScale	= correctionsHighMass[sampleName][argv[1]][argv[2]][0]	
+	nllPredictionScaleErr	= correctionsHighMass[sampleName][argv[1]][argv[2]][1]	
 		
 		
 	if useMC:
@@ -564,9 +564,9 @@ if (__name__ == "__main__"):
 	result["rInOutSyst"] = ErrRinoutSyst
 
 	if not useMC:
-		outFilePkl = open("shelves/rInOut_Data_%s.pkl"%suffix,"w")
+		outFilePkl = open("shelves/rInOut_highMass_Data_%s.pkl"%suffix,"w")
 	else:
-		outFilePkl = open("shelves/rInOut_MC_%s.pkl"%suffix,"w")
+		outFilePkl = open("shelves/rInOut_highMass_MC_%s.pkl"%suffix,"w")
 	pickle.dump(result, outFilePkl)
 	outFilePkl.close()	
 	
@@ -586,7 +586,7 @@ if (__name__ == "__main__"):
 	#hCanvas.SetLogy()
 	
 	line1 = ROOT.TLine(minMll,0,minMll,SFhist.GetBinContent(SFhist.GetMaximumBin()))
-	line2 = ROOT.TLine(70,0,70,SFhist.GetBinContent(SFhist.GetMaximumBin()))
+	line2 = ROOT.TLine(120,0,70,SFhist.GetBinContent(SFhist.GetMaximumBin()))
 	line3 = ROOT.TLine(81,0,81,SFhist.GetBinContent(SFhist.GetMaximumBin()))
 	line4 = ROOT.TLine(101,0,101,SFhist.GetBinContent(SFhist.GetMaximumBin()))
 	line1.SetLineColor(ROOT.kBlack)
@@ -603,7 +603,7 @@ if (__name__ == "__main__"):
 	line4.Draw("same")
 
 	Labelin.DrawLatex(82.25,SFhist.GetBinContent(SFhist.GetMaximumBin())/2,"In")
-	Labelout.DrawLatex(37.25,SFhist.GetBinContent(SFhist.GetMaximumBin())/2,"Out")
+	Labelout.DrawLatex(150,SFhist.GetBinContent(SFhist.GetMaximumBin())/2,"Out")
 	Cutlabel.DrawLatex(120,SFhist.GetBinContent(SFhist.GetMaximumBin())/2,"#splitline{p_{T}^{lepton} > %s GeV}{MET < 100 GeV, nJets ==2}"%ptCutLabel)
 	
 	latex = ROOT.TLatex()
@@ -612,7 +612,7 @@ if (__name__ == "__main__"):
 	latex.DrawLatex(0.05, 0.96, "CMS Preliminary  #sqrt{s} = 8 TeV,     #scale[0.6]{#int}Ldt = %s fb^{-1}"%lumi)
 	
 	
-	hCanvas.Print("fig/Rinout_NoLog_%s.pdf"%suffix)
+	hCanvas.Print("fig/Rinout_highMass_NoLog_%s.pdf"%suffix)
 	hCanvas.Clear()
 	hCanvas.SetLogy()
 	ROOT.gStyle.SetTitleYOffset(0.9)
@@ -622,7 +622,7 @@ if (__name__ == "__main__"):
 	SFhist.GetYaxis().SetTitle("Events / 5 GeV")
 	EMuhist.Draw("samehist")
 	#EMuhist.SetLineColor(855)
-	EMuhist.SetFillColor(855)http://forum.tylers-kneipe.de/index.php
+	EMuhist.SetFillColor(855)
 	#legend.AddEntry(SFhist,"SF events","p")
 	#legend.AddEntry(EMuhist,"OF events","f")
 	legend.Draw("same")
@@ -648,6 +648,6 @@ if (__name__ == "__main__"):
 	Labelout.DrawLatex(37.25,SFhist.GetBinContent(SFhist.GetMaximumBin())/12,"Out")
 	Cutlabel.DrawLatex(120,SFhist.GetBinContent(SFhist.GetMaximumBin())/10,"#splitline{p_{T}^{lepton} > %s GeV}{MET < 50 GeV, nJets >=2}"%ptCutLabel)
 	latex.DrawLatex(0.05, 0.96, "CMS Preliminary  #sqrt{s} = 8 TeV,     #scale[0.6]{#int}Ldt = %s fb^{-1}"%lumi)
-	hCanvas.Print("fig/Rinout_%s.pdf"%suffix)	
+	hCanvas.Print("fig/Rinout_highMass_%s.pdf"%suffix)	
 	
 	

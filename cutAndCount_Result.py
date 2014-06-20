@@ -63,7 +63,7 @@ def cutAndCountForRegion(trees, cut, name,period):
 	base = "1"#chargeProduct < 0 && ((pt1 > 20 && pt2 > 10 ) || (pt2 > 20 && pt1 > 10 )) && abs(eta1) < 2.4  && abs(eta2) < 2.4 && deltaR > 0.3 &&  p4.M() > 30 && p4.M() < 80"
 	edgeMass = "(20 < inv && inv < 70)"
 	onShellMass = "(81 < inv && inv < 101)"
-	highMass = "(inv > 110)"
+	highMass = "(inv > 120)"
 	pt2010 = "((pt1 > 20 && pt2 > 10)||(pt2 > 20 && pt1 > 10))"
 	pt2020 = "pt1 > 20 && pt2 > 20"
 	pt3020 = "((pt1 > 30 && pt2 > 20)||(pt1 > 20 && pt2 > 30))"

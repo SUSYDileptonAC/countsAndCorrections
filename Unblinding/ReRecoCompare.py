@@ -26,7 +26,7 @@ def readTreeFromFile(path, dileptonCombination):
 	"""
 	from ROOT import TChain
 	result = TChain()
-	result.Add("%s/cutsV22DileptonFinalTrees/%sDileptonTree"%(path, dileptonCombination))
+	result.Add("%s/cutsV23DileptonFinalTrees/%sDileptonTree"%(path, dileptonCombination))
 	return result
 	
 def readTreeFromFileReReco(path, dileptonCombination):
@@ -53,9 +53,9 @@ def getFilePathsAndSampleNames(path):
 	from glob import glob
 	from re import match
 	result = {}
-	for filePath in glob("%s/sw532*.root"%path):
+	for filePath in glob("%s/sw538*.root"%path):
 
-		sampleName = match(".*sw532v.*\.processed.*\.(.*).root", filePath).groups()[0]
+		sampleName = match(".*sw538v.*\.processed.*\.(.*).root", filePath).groups()[0]
 		#for the python enthusiats: yield sampleName, filePath is more efficient here :)
 		result[sampleName] = filePath
 	return result
@@ -360,14 +360,14 @@ def plotReRecoComparison(treeList1,treeList2,variable,additionalCut,nBins,firstB
 	EMuhistBlockA.Draw("samep")
 	EMuhistBlockB.Draw("samep")
 	
-	legend.AddEntry(EMuhistBlockA,"Prompt Reco RunC","p")	
-	legend.AddEntry(EMuhistBlockB,"Jan22 ReReco RunC","p")
+	legend.AddEntry(EMuhistBlockA,"Default Reconstruction","p")	
+	legend.AddEntry(EMuhistBlockB,"Jan22ReReco","p")
 	#~ 
 	latex = ROOT.TLatex()
 	latex.SetTextSize(0.043)
 	latex.SetTextFont(42)
 	latex.SetNDC(True)
-	latex.DrawLatex(0.13, 0.95, "CMS Preliminary,    #sqrt{s} = 8 TeV,     #scale[0.6]{#int}Ldt = 4.0 fb^{-1}")
+	latex.DrawLatex(0.13, 0.95, "CMS Preliminary,   #sqrt{s} = 8 TeV,     #scale[0.6]{#int}Ldt = 19.4-19.8 fb^{-1}")
 	#~ 
 		
 	legend.Draw("same")
@@ -390,7 +390,8 @@ def plotReRecoComparison(treeList1,treeList2,variable,additionalCut,nBins,firstB
 	
 if (__name__ == "__main__"):
 	setTDRStyle()
-	path = "/home/jan/Trees/sw532v0474/"
+	path = "/home/jan/Trees/sw538v0476/"
+	pathReReco = "/home/jan/Trees/sw538v0477/"
 	from sys import argv
 	import pickle	
 	from ROOT import TCanvas, TPad, TH1F, TH1I, THStack, TLegend, TF1
@@ -417,14 +418,15 @@ if (__name__ == "__main__"):
 	etaCut = etaCuts[argv[1]]
 	suffix = argv[1]
 	
-	runCut = "runNr < 201657 && runNr > 198522 && (runNr == 199832 || runNr == 199834 || runNr == 199967 || runNr == 200160 || runNr == 200161 || runNr == 200174 || runNr == 200177 || runNr == 200178 || runNr == 200186 || runNr == 201191)"
+	#~ runCut = "runNr < 201657 && runNr > 198522 && (runNr == 199832 || runNr == 199834 || runNr == 199967 || runNr == 200160 || runNr == 200161 || runNr == 200174 || runNr == 200177 || runNr == 200178 || runNr == 200186 || runNr == 201191)"
+	runCut = "runNr < 999999"
 
 	#~ cuts = "weight*(chargeProduct < 0 && %s && met < 100 && nJets ==2 && abs(eta1) < 2.4 && abs(eta2) < 2.4 && deltaR > 0.3 && runNr < 201657 && (runNr < 198049 || runNr > 198522))"%ptCut
 	cuts = "weight*(chargeProduct < 0 && %s && ((met > 100 && nJets >= 3) ||  (met > 150 && nJets >=2)) && %s && deltaR > 0.3 && %s && abs(eta1) < 2.4 && abs(eta2) < 2.4)"%(ptCut,etaCut,runCut)
 	print cuts
 	nEvents=-1
 	
-	lumi = 9.2
+	lumi = 19.4
 	
 
 	minMll = 20
@@ -435,9 +437,9 @@ if (__name__ == "__main__"):
 	EMutrees = readTrees(path, "EMu")
 	EEtrees = readTrees(path, "EE")
 	MuMutrees = readTrees(path, "MuMu")
-	EMutreesReReco = readTreesReReco(path, "EMu")
-	EEtreesReReco = readTreesReReco(path, "EE")
-	MuMutreesReReco = readTreesReReco(path, "MuMu")
+	EMutreesReReco = readTreesReReco(pathReReco, "EMu")
+	EEtreesReReco = readTreesReReco(pathReReco, "EE")
+	MuMutreesReReco = readTreesReReco(pathReReco, "MuMu")
 	Cutlabel = ROOT.TLatex()
 	Cutlabel.SetTextAlign(12)
 	Cutlabel.SetTextSize(0.03)
@@ -501,33 +503,33 @@ if (__name__ == "__main__"):
 	signalTreelistReReco = [eeTreeReRecoSignal,mmTreeReRecoSignal]
 	treelist = [eeTree,mmTree]
 	treelistReReco = [eeTreeReReco,mmTreeReReco]	
-	#~ plotReRecoComparison(signalTreelist,signalTreelistReReco,"p4.M()","",60,0,300,"m_{ll} [GeV]","Events / 5 GeV",suffix+"_SF",signal=True)	
-	#~ plotReRecoComparison(treelist,treelistReReco,"p4.M()",runCut,60,0,300,"m_{ll} [GeV]","Events / 5 GeV",suffix+"_SF",signal=False,log=True)	
-	#~ plotReRecoComparison(signalTreelist,signalTreelistReReco,"nJets","p4.M() > 20 && p4.M() < 70",8,0,8,"N_{Jets}","Events",suffix+"_SF",signal=True)	
-	#~ plotReRecoComparison(treelist,treelistReReco,"nJets",runCut,8,0,8,"N_{Jets}","Events",suffix+"_SF",signal=False,log=True)	
-	#~ plotReRecoComparison(signalTreelist,signalTreelistReReco,"nBJets","p4.M() > 20 && p4.M() < 70",8,0,8,"N_{B-Jets}","Events",suffix+"_SF",signal=True)	
-	#~ plotReRecoComparison(treelist,treelistReReco,"nBJets",runCut,8,0,8,"N_{B-Jets}","Events",suffix+"_SF",signal=False,log=True)	
-	#~ plotReRecoComparison(signalTreelist,signalTreelistReReco,"nVertices","p4.M() > 20 && p4.M() < 70",50,0,50,"N_{Vertex}","Events",suffix+"_SF",signal=True)	
-	#~ plotReRecoComparison(treelist,treelistReReco,"nVertices",runCut,50,0,50,"N_{Vertex}","Events",suffix+"_SF",signal=False,log=True)	
-	#~ plotReRecoComparison(signalTreelist,signalTreelistReReco,"met","p4.M() > 20 && p4.M() < 70",30,0,300,"E_T^{miss} [GeV]","Events / 10 GeV",suffix+"_SF",signal=True)
-	#~ plotReRecoComparison(treelist,treelistReReco,"met",runCut,30,0,300,"E_T^{miss} [GeV]","Events / 10 GeV",suffix+"_SF",signal=False,log=True)	
-	#~ 
+	plotReRecoComparison(signalTreelist,signalTreelistReReco,"p4.M()","",60,0,300,"m_{ll} [GeV]","Events / 5 GeV",suffix+"_SF",signal=True)	
+	plotReRecoComparison(treelist,treelistReReco,"p4.M()",runCut,60,0,300,"m_{ll} [GeV]","Events / 5 GeV",suffix+"_SF",signal=False,log=True)	
+	plotReRecoComparison(signalTreelist,signalTreelistReReco,"nJets","p4.M() > 20 && p4.M() < 70",8,0,8,"N_{Jets}","Events",suffix+"_SF",signal=True)	
+	plotReRecoComparison(treelist,treelistReReco,"nJets",runCut,8,0,8,"N_{Jets}","Events",suffix+"_SF",signal=False,log=True)	
+	plotReRecoComparison(signalTreelist,signalTreelistReReco,"nBJets","p4.M() > 20 && p4.M() < 70",8,0,8,"N_{B-Jets}","Events",suffix+"_SF",signal=True)	
+	plotReRecoComparison(treelist,treelistReReco,"nBJets",runCut,8,0,8,"N_{B-Jets}","Events",suffix+"_SF",signal=False,log=True)	
+	plotReRecoComparison(signalTreelist,signalTreelistReReco,"nVertices","p4.M() > 20 && p4.M() < 70",50,0,50,"N_{Vertex}","Events",suffix+"_SF",signal=True)	
+	plotReRecoComparison(treelist,treelistReReco,"nVertices",runCut,50,0,50,"N_{Vertex}","Events",suffix+"_SF",signal=False,log=True)	
+	plotReRecoComparison(signalTreelist,signalTreelistReReco,"met","p4.M() > 20 && p4.M() < 70",30,0,300,"E_T^{miss} [GeV]","Events / 10 GeV",suffix+"_SF",signal=True)
+	plotReRecoComparison(treelist,treelistReReco,"met",runCut,30,0,300,"E_T^{miss} [GeV]","Events / 10 GeV",suffix+"_SF",signal=False,log=True)	
+	
 	signalTreelist = [emTreeSignal]
 	signalTreelistReReco = [emTreeReRecoSignal]
 	treelist = [emTree]
 	treelistReReco = [emTreeReReco]
-	#~ 
-	#~ plotReRecoComparison(signalTreelist ,signalTreelistReReco,"p4.M()","",60,0,300,"m_{ll} [GeV]","Events / 5 GeV",suffix+"_OF",signal=True)	
-	#~ plotReRecoComparison(treelist,treelistReReco,"p4.M()",runCut,60,0,300,"m_{ll} [GeV]","Events / 5 GeV",suffix+"_OF",signal=False,log=True)	
-	#~ plotReRecoComparison(signalTreelist ,signalTreelistReReco,"nJets","p4.M() > 20 && p4.M() < 70",8,0,8,"N_{Jets}","Events",suffix+"_OF",signal=True)	
-	#~ plotReRecoComparison(treelist,treelistReReco,"nJets",runCut,8,0,8,"N_{Jets}","Events",suffix+"_OF",signal=False,log=True)	
-	#~ plotReRecoComparison(signalTreelist,signalTreelistReReco,"nBJets","p4.M() > 20 && p4.M() < 70",8,0,8,"N_{B-Jets}","Events",suffix+"_OF",signal=True)	
-	#~ plotReRecoComparison(treelist,treelistReReco,"nBJets",runCut,8,0,8,"N_{B-Jets}","Events",suffix+"_OF",signal=False,log=True)	
-	#~ plotReRecoComparison(signalTreelist ,signalTreelistReReco,"nVertices","p4.M() > 20 && p4.M() < 70",50,0,50,"N_{Vertex}","Events",suffix+"_OF",signal=True)	
-	#~ plotReRecoComparison(treelist,treelistReReco,"nVertices",runCut,50,0,50,"N_{Vertex}","Events",suffix+"_OF",signal=False,log=True)	
-	#~ plotReRecoComparison(signalTreelist ,signalTreelistReReco,"met","p4.M() > 20 && p4.M() < 70",30,0,300,"E_T^{miss} [GeV]","Events / 10 GeV",suffix+"_OF",signal=True)
-	#~ plotReRecoComparison(treelist,treelistReReco,"met",runCut,30,0,300,"E_T^{miss} [GeV]","Events / 10 GeV",suffix+"_OF",signal=False,log=True)	
-	#~ 
+	
+	plotReRecoComparison(signalTreelist ,signalTreelistReReco,"p4.M()","",60,0,300,"m_{ll} [GeV]","Events / 5 GeV",suffix+"_OF",signal=True)	
+	plotReRecoComparison(treelist,treelistReReco,"p4.M()",runCut,60,0,300,"m_{ll} [GeV]","Events / 5 GeV",suffix+"_OF",signal=False,log=True)	
+	plotReRecoComparison(signalTreelist ,signalTreelistReReco,"nJets","p4.M() > 20 && p4.M() < 70",8,0,8,"N_{Jets}","Events",suffix+"_OF",signal=True)	
+	plotReRecoComparison(treelist,treelistReReco,"nJets",runCut,8,0,8,"N_{Jets}","Events",suffix+"_OF",signal=False,log=True)	
+	plotReRecoComparison(signalTreelist,signalTreelistReReco,"nBJets","p4.M() > 20 && p4.M() < 70",8,0,8,"N_{B-Jets}","Events",suffix+"_OF",signal=True)	
+	plotReRecoComparison(treelist,treelistReReco,"nBJets",runCut,8,0,8,"N_{B-Jets}","Events",suffix+"_OF",signal=False,log=True)	
+	plotReRecoComparison(signalTreelist ,signalTreelistReReco,"nVertices","p4.M() > 20 && p4.M() < 70",50,0,50,"N_{Vertex}","Events",suffix+"_OF",signal=True)	
+	plotReRecoComparison(treelist,treelistReReco,"nVertices",runCut,50,0,50,"N_{Vertex}","Events",suffix+"_OF",signal=False,log=True)	
+	plotReRecoComparison(signalTreelist ,signalTreelistReReco,"met","p4.M() > 20 && p4.M() < 70",30,0,300,"E_T^{miss} [GeV]","Events / 10 GeV",suffix+"_OF",signal=True)
+	plotReRecoComparison(treelist,treelistReReco,"met",runCut,30,0,300,"E_T^{miss} [GeV]","Events / 10 GeV",suffix+"_OF",signal=False,log=True)	
+	
 	
 	eeCountTree = eeTreeSignal.CopyTree("p4.M() > 20 && p4.M() < 70")
 	mmCountTree = mmTreeSignal.CopyTree("p4.M() > 20 && p4.M() < 70")
@@ -552,10 +554,41 @@ if (__name__ == "__main__"):
 	print blockA, blockB
 	
 
+	#~ met = 0
+	#~ nJets = 0
+	#~ mll = 0
+	#~ pt = 0
+	#~ other = 0
+	#~ overlap = 0 
+	#~ 
+	#~ for ev in eeTreeSignal:
+		#~ 
+		#~ testTree = eeTreeReRecoSignal.CopyTree("eventNr == %d && lumiSec == %d && runNr == %d"%(ev.eventNr,ev.lumiSec,ev.runNr))
+		#~ 
+		#~ if testTree.GetEntries() == 1:
+			#~ overlap = overlap +1
+		#~ elif testTree.GetEntries() == 0:
+			#~ testTree = eeTreeReReco.CopyTree("eventNr == %d && lumiSec == %d && runNr == %d"%(ev.eventNr,ev.lumiSec,ev.runNr))
+			#~ if testTree.GetEntries() == 0:
+				#~ other = other + 1
+			#~ elif testTree.GetEntries() == 1:
+				#~ for ev2 in testTree:
+					#~ if ev2.p4.M() > 70 or ev2.p4.M() < 20:
+						#~ mll = mll + 1
+					#~ if ev2.pt1 < 20 or ev2.pt2 < 20:
+						#~ pt = pt +1
+					#~ if (ev2.met > 100 and ev2.nJets < 3) or (ev2.met > 150 and ev2.nJets < 2):
+						#~ nJets = nJets +1
+					#~ if (ev2.nJets >=3 and ev2.met < 100) or (ev2.met < 150 and ev2.nJets >= 2):
+						#~ met = met +1 
+						#~ 
+	#~ print met, nJets, mll, pt, other, overlap					
+		#~ if (ev.p4.M() > 20 and ev.p4.M() < 70 and ((ev.nJets >=2 and ev.met > 150) or (ev.nJets >=3 and ev.met > 100)) and ev.deltaR > 0.3 and ):
+	
 	
 
-
-
+#~ 
+#~ 
 	print "In ReReco but not in Prompt OF :"
 	for ev in emCountTreeReReco:
 		found = False
@@ -703,103 +736,103 @@ if (__name__ == "__main__"):
 #~ ### ---- Forward ---- 
 #~ 
 
-	rerecoNotPromptOF = [
-[201062,89,47509787],
-[201173,500,406012656],
-[200525,789,978268841],
-[201278,330,461229015],
-[200976,154,112344849],
-[200041,794,950246680],
-[199754,965,896598114],
-[200075,517,616777901],
-	]
-	promptNotReRecoOF = [
-[199336,50,50647446],
-[199436,273,190712449],
-[199875,279,360281348],
-[200473,958,1005624398],
-[200473,277,276576077],
-[200519,358,484798412],
-[201196,740,568470430],
-[201278,1725,1883270763],
-[201625,630,847024317],
-	]
-	rerecoNotPromptEE = [
-[201278,1743,1896344595],
-	]
-	promptNotReRecoEE = [
-[200041,554,681203523],
-[200075,263,301044436],
-[200369,45,51346195],
-	]
-	
-	rerecoNotPromptMM = [
-[199356,177,162994764],
-[199409,758,898831232],
-[200600,356,514199849],
-[200991,555,702485686],
-[201173,477,389143433],
-	]
-	promptNotReRecoMM = [
-[199409,227,308053002],
-[201624,91,55651911],
-	]
-
-
-	print "events in Prompt Reco with are not in ReReco OF"					
-	for ev in emTreeReReco:
-		for event in promptNotReRecoOF:
-			if ev.runNr == event[0] and ev.lumiSec == event[1] and ev.eventNr == event[2]:
-				print "%d:%d:%d"%(event[0],event[1],event[2])
-				print "MET: %.2f nJets: %d mll %.2f pt1: %.2f pt2: %.2f"%(ev.met,ev.nJets,ev.p4.M(),ev.pt1,ev.pt2)
-				for ev2 in emTreeSignal:
-					if ev2.runNr == event[0] and ev2.lumiSec == event[1] and ev2.eventNr == event[2]:
-						print "MET: %.2f nJets: %d mll %.2f pt1: %.2f pt2: %.2f"%(ev2.met,ev2.nJets,ev2.p4.M(),ev2.pt1,ev2.pt2)
-	print "events in ReReco with are not in PromptReco OF"
-	for ev in emTree:
-		for event in rerecoNotPromptOF:
-			if ev.runNr == event[0] and ev.lumiSec == event[1] and ev.eventNr == event[2]:
-				print "%d:%d:%d"%(event[0],event[1],event[2])
-				print "MET: %.2f nJets: %d mll %.2f pt1: %.2f pt2: %.2f"%(ev.met,ev.nJets,ev.p4.M(),ev.pt1,ev.pt2)
-				for ev2 in emTreeReRecoSignal:
-					if ev2.runNr == event[0] and ev2.lumiSec == event[1] and ev2.eventNr == event[2]:
-						print "MET: %.2f nJets: %d mll %.2f pt1: %.2f pt2: %.2f"%(ev2.met,ev2.nJets,ev2.p4.M(),ev2.pt1,ev2.pt2)
-	print "events in Prompt Reco with are not in ReReco EE"					
-	for ev in eeTreeReReco:
-		for event in promptNotReRecoEE:
-			if ev.runNr == event[0] and ev.lumiSec == event[1] and ev.eventNr == event[2]:
-				print "%d:%d:%d"%(event[0],event[1],event[2])
-				print "MET: %.2f nJets: %d mll %.2f pt1: %.2f pt2: %.2f"%(ev.met,ev.nJets,ev.p4.M(),ev.pt1,ev.pt2)
-				for ev2 in eeTreeSignal:
-					if ev2.runNr == event[0] and ev2.lumiSec == event[1] and ev2.eventNr == event[2]:
-						print "MET: %.2f nJets: %d mll %.2f pt1: %.2f pt2: %.2f"%(ev2.met,ev2.nJets,ev2.p4.M(),ev2.pt1,ev2.pt2)
-	print "events in ReReco with are not in PromptReco EE"
-	for ev in eeTree:
-		for event in rerecoNotPromptEE:
-			if ev.runNr == event[0] and ev.lumiSec == event[1] and ev.eventNr == event[2]:
-				print "%d:%d:%d"%(event[0],event[1],event[2])
-				print "MET: %.2f nJets: %d mll %.2f pt1: %.2f pt2: %.2f"%(ev.met,ev.nJets,ev.p4.M(),ev.pt1,ev.pt2)
-				for ev2 in eeTreeReRecoSignal:
-					if ev2.runNr == event[0] and ev2.lumiSec == event[1] and ev2.eventNr == event[2]:
-						print "MET: %.2f nJets: %d mll %.2f pt1: %.2f pt2: %.2f"%(ev2.met,ev2.nJets,ev2.p4.M(),ev2.pt1,ev2.pt2)
-	print "events in Prompt Reco with are not in ReReco MM"					
-	for ev in mmTreeReReco:
-		for event in promptNotReRecoMM:
-			if ev.runNr == event[0] and ev.lumiSec == event[1] and ev.eventNr == event[2]:
-				print "%d:%d:%d"%(event[0],event[1],event[2])
-				print "MET: %.2f nJets: %d mll %.2f pt1: %.2f pt2: %.2f"%(ev.met,ev.nJets,ev.p4.M(),ev.pt1,ev.pt2)
-				for ev2 in mmTreeSignal:
-					if ev2.runNr == event[0] and ev2.lumiSec == event[1] and ev2.eventNr == event[2]:
-						print "MET: %.2f nJets: %d mll %.2f pt1: %.2f pt2: %.2f"%(ev2.met,ev2.nJets,ev2.p4.M(),ev2.pt1,ev2.pt2)
-	print "events in ReReco with are not in PromptReco MM"
-	for ev in mmTree:
-		for event in rerecoNotPromptMM:
-			if ev.runNr == event[0] and ev.lumiSec == event[1] and ev.eventNr == event[2]:
-				print "%d:%d:%d"%(event[0],event[1],event[2])
-				print "MET: %.2f nJets: %d mll %.2f pt1: %.2f pt2: %.2f"%(ev.met,ev.nJets,ev.p4.M(),ev.pt1,ev.pt2)
-				for ev2 in mmTreeReRecoSignal:
-					if ev2.runNr == event[0] and ev2.lumiSec == event[1] and ev2.eventNr == event[2]:
-						print "MET: %.2f nJets: %d mll %.2f pt1: %.2f pt2: %.2f"%(ev2.met,ev2.nJets,ev2.p4.M(),ev2.pt1,ev2.pt2)
-						
-						
-	
+	#~ rerecoNotPromptOF = [
+#~ [201062,89,47509787],
+#~ [201173,500,406012656],
+#~ [200525,789,978268841],
+#~ [201278,330,461229015],
+#~ [200976,154,112344849],
+#~ [200041,794,950246680],
+#~ [199754,965,896598114],
+#~ [200075,517,616777901],
+	#~ ]
+	#~ promptNotReRecoOF = [
+#~ [199336,50,50647446],
+#~ [199436,273,190712449],
+#~ [199875,279,360281348],
+#~ [200473,958,1005624398],
+#~ [200473,277,276576077],
+#~ [200519,358,484798412],
+#~ [201196,740,568470430],
+#~ [201278,1725,1883270763],
+#~ [201625,630,847024317],
+	#~ ]
+	#~ rerecoNotPromptEE = [
+#~ [201278,1743,1896344595],
+	#~ ]
+	#~ promptNotReRecoEE = [
+#~ [200041,554,681203523],
+#~ [200075,263,301044436],
+#~ [200369,45,51346195],
+	#~ ]
+	#~ 
+	#~ rerecoNotPromptMM = [
+#~ [199356,177,162994764],
+#~ [199409,758,898831232],
+#~ [200600,356,514199849],
+#~ [200991,555,702485686],
+#~ [201173,477,389143433],
+	#~ ]
+	#~ promptNotReRecoMM = [
+#~ [199409,227,308053002],
+#~ [201624,91,55651911],
+	#~ ]
+#~ 
+#~ 
+	#~ print "events in Prompt Reco with are not in ReReco OF"					
+	#~ for ev in emTreeReReco:
+		#~ for event in promptNotReRecoOF:
+			#~ if ev.runNr == event[0] and ev.lumiSec == event[1] and ev.eventNr == event[2]:
+				#~ print "%d:%d:%d"%(event[0],event[1],event[2])
+				#~ print "MET: %.2f nJets: %d mll %.2f pt1: %.2f pt2: %.2f"%(ev.met,ev.nJets,ev.p4.M(),ev.pt1,ev.pt2)
+				#~ for ev2 in emTreeSignal:
+					#~ if ev2.runNr == event[0] and ev2.lumiSec == event[1] and ev2.eventNr == event[2]:
+						#~ print "MET: %.2f nJets: %d mll %.2f pt1: %.2f pt2: %.2f"%(ev2.met,ev2.nJets,ev2.p4.M(),ev2.pt1,ev2.pt2)
+	#~ print "events in ReReco with are not in PromptReco OF"
+	#~ for ev in emTree:
+		#~ for event in rerecoNotPromptOF:
+			#~ if ev.runNr == event[0] and ev.lumiSec == event[1] and ev.eventNr == event[2]:
+				#~ print "%d:%d:%d"%(event[0],event[1],event[2])
+				#~ print "MET: %.2f nJets: %d mll %.2f pt1: %.2f pt2: %.2f"%(ev.met,ev.nJets,ev.p4.M(),ev.pt1,ev.pt2)
+				#~ for ev2 in emTreeReRecoSignal:
+					#~ if ev2.runNr == event[0] and ev2.lumiSec == event[1] and ev2.eventNr == event[2]:
+						#~ print "MET: %.2f nJets: %d mll %.2f pt1: %.2f pt2: %.2f"%(ev2.met,ev2.nJets,ev2.p4.M(),ev2.pt1,ev2.pt2)
+	#~ print "events in Prompt Reco with are not in ReReco EE"					
+	#~ for ev in eeTreeReReco:
+		#~ for event in promptNotReRecoEE:
+			#~ if ev.runNr == event[0] and ev.lumiSec == event[1] and ev.eventNr == event[2]:
+				#~ print "%d:%d:%d"%(event[0],event[1],event[2])
+				#~ print "MET: %.2f nJets: %d mll %.2f pt1: %.2f pt2: %.2f"%(ev.met,ev.nJets,ev.p4.M(),ev.pt1,ev.pt2)
+				#~ for ev2 in eeTreeSignal:
+					#~ if ev2.runNr == event[0] and ev2.lumiSec == event[1] and ev2.eventNr == event[2]:
+						#~ print "MET: %.2f nJets: %d mll %.2f pt1: %.2f pt2: %.2f"%(ev2.met,ev2.nJets,ev2.p4.M(),ev2.pt1,ev2.pt2)
+	#~ print "events in ReReco with are not in PromptReco EE"
+	#~ for ev in eeTree:
+		#~ for event in rerecoNotPromptEE:
+			#~ if ev.runNr == event[0] and ev.lumiSec == event[1] and ev.eventNr == event[2]:
+				#~ print "%d:%d:%d"%(event[0],event[1],event[2])
+				#~ print "MET: %.2f nJets: %d mll %.2f pt1: %.2f pt2: %.2f"%(ev.met,ev.nJets,ev.p4.M(),ev.pt1,ev.pt2)
+				#~ for ev2 in eeTreeReRecoSignal:
+					#~ if ev2.runNr == event[0] and ev2.lumiSec == event[1] and ev2.eventNr == event[2]:
+						#~ print "MET: %.2f nJets: %d mll %.2f pt1: %.2f pt2: %.2f"%(ev2.met,ev2.nJets,ev2.p4.M(),ev2.pt1,ev2.pt2)
+	#~ print "events in Prompt Reco with are not in ReReco MM"					
+	#~ for ev in mmTreeReReco:
+		#~ for event in promptNotReRecoMM:
+			#~ if ev.runNr == event[0] and ev.lumiSec == event[1] and ev.eventNr == event[2]:
+				#~ print "%d:%d:%d"%(event[0],event[1],event[2])
+				#~ print "MET: %.2f nJets: %d mll %.2f pt1: %.2f pt2: %.2f"%(ev.met,ev.nJets,ev.p4.M(),ev.pt1,ev.pt2)
+				#~ for ev2 in mmTreeSignal:
+					#~ if ev2.runNr == event[0] and ev2.lumiSec == event[1] and ev2.eventNr == event[2]:
+						#~ print "MET: %.2f nJets: %d mll %.2f pt1: %.2f pt2: %.2f"%(ev2.met,ev2.nJets,ev2.p4.M(),ev2.pt1,ev2.pt2)
+	#~ print "events in ReReco with are not in PromptReco MM"
+	#~ for ev in mmTree:
+		#~ for event in rerecoNotPromptMM:
+			#~ if ev.runNr == event[0] and ev.lumiSec == event[1] and ev.eventNr == event[2]:
+				#~ print "%d:%d:%d"%(event[0],event[1],event[2])
+				#~ print "MET: %.2f nJets: %d mll %.2f pt1: %.2f pt2: %.2f"%(ev.met,ev.nJets,ev.p4.M(),ev.pt1,ev.pt2)
+				#~ for ev2 in mmTreeReRecoSignal:
+					#~ if ev2.runNr == event[0] and ev2.lumiSec == event[1] and ev2.eventNr == event[2]:
+						#~ print "MET: %.2f nJets: %d mll %.2f pt1: %.2f pt2: %.2f"%(ev2.met,ev2.nJets,ev2.p4.M(),ev2.pt1,ev2.pt2)
+						#~ 
+						#~ 
+	#~ 

@@ -272,7 +272,7 @@ def DrawPlot(sfLeptons,ofLeptons,dyLineShape,ofErrors,binWidth,regionName,subcut
 	style = tdrStyle()
 	
 	#~ canv = TCanvas("canv", "",800,int(800*1.25))
-	canv = TCanvas("canv", "",0,0,600,750)
+	canv = TCanvas("canv", "",0,0,600,600)
 	canv.SetTopMargin(0.08)
 	canv.SetBottomMargin(0.013)
 	canv.SetLeftMargin(0.013)
@@ -393,7 +393,7 @@ def DrawPlot(sfLeptons,ofLeptons,dyLineShape,ofErrors,binWidth,regionName,subcut
 	#~ print regionName
 	#~ print subcutName
 	#~ print canv.GetWh(), canv.GetWw()
-	canv.SetWindowSize(600,750)
+	canv.SetWindowSize(600,600)
 	#~ print canv.GetWh(), canv.GetWw()
 	if dilepton != "":
 		canv.Print("fig/mll_Datadriven_%s_%s_%s.pdf"%(regionName, subcutName,dilepton))
@@ -434,7 +434,7 @@ def main():
 		}
 
  	
-	maxY = 300
+	maxY = 100
 	
 	if regionName == "SignalNonRectInclusive":
 		maxY = 400.

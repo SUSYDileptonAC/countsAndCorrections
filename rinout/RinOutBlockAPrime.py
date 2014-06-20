@@ -26,7 +26,7 @@ def readTreeFromFile(path, dileptonCombination):
 	"""
 	from ROOT import TChain
 	result = TChain()
-	result.Add("%s/cutsV22DileptonFinalTrees/%sDileptonTree"%(path, dileptonCombination))
+	result.Add("%s/cutsV23DileptonFinalTrees/%sDileptonTree"%(path, dileptonCombination))
 	return result
 	
 def getFilePathsAndSampleNames(path):
@@ -40,8 +40,9 @@ def getFilePathsAndSampleNames(path):
 	from glob import glob
 	from re import match
 	result = {}
-	for filePath in glob("%s/sw532*.root"%path):
-		sampleName = match(".*sw532v.*\.processed.*\.(.*).root", filePath).groups()[0]
+	for filePath in glob("%s/sw538*.root"%path):
+
+		sampleName = match(".*sw538v.*\.processed.*\.(.*).root", filePath).groups()[0]
 		#for the python enthusiats: yield sampleName, filePath is more efficient here :)
 		result[sampleName] = filePath
 	return result
@@ -68,7 +69,7 @@ def readTrees(path, dileptonCombination):
 	returns: dict of sample names ->  trees containing events (for all samples for one dileptonCombination)
 	"""
 	result = {}
-	print path
+	print (path)
 	for sampleName, filePath in getFilePathsAndSampleNames(path).iteritems():
 		
 		result[sampleName] = readTreeFromFile(filePath, dileptonCombination)
@@ -250,16 +251,14 @@ def setTDRStyle():
 
 
 
-corrections = {"MergedData":{"Barrel":{"EE":[0.45,0.03],"MM":[0.55,0.03],"SF":[1.00,0.04]},"Endcap":{"EE":[0.48,0.06],"MM":[0.63,0.07],"SF":[1.11,0.07]}},
-	"MergedData_BlockA":{"Barrel":{"EE":[0.47,0.03],"MM":[0.54,0.04],"SF":[1.02,0.05]},"Endcap":{"EE":[0.43,0.06],"MM":[0.57,0.08],"SF":[1.04,0.08]}},
+corrections = {"MergedData":{"Barrel":{"EE":[0.44,0.03],"MM":[0.55,0.03],"SF":[1.00,0.04]},"Endcap":{"EE":[0.49,0.06],"MM":[0.64,0.07],"SF":[1.13,0.08]}},
+	"MergedData_BlockA":{"Barrel":{"EE":[0.46,0.03],"MM":[0.54,0.04],"SF":[1.01,0.05]},"Endcap":{"EE":[0.44,0.06],"MM":[0.58,0.08],"SF":[1.05,0.08]}},
     "MergedData_BlockB":{"Barrel":{"EE":[0.43,0.03],"MM":[0.56,0.04],"SF":[1.00,0.05]},"Endcap":{"EE":[0.53,0.07],"MM":[0.70,0.09],"SF":[1.18,0.09]}},}
-
-correctionsHighMass = {"MergedData":{"Barrel":{"EE":[0.50,0.03],"MM":[0.56,0.03],"SF":[1.05,0.05]},"Endcap":{"EE":[0.46,0.04],"MM":[0.58,0.05],"SF":[1.07,0.06]}},}
 
 	
 if (__name__ == "__main__"):
 	setTDRStyle()
-	path = "/home/jan/Trees/sw532v0474/"
+	path = "/home/jan/Trees/sw538v0475/"
 	from sys import argv
 	import pickle	
 	from ROOT import TCanvas, TPad, TH1F, TH1I, THStack, TLegend, TF1
@@ -291,14 +290,9 @@ if (__name__ == "__main__"):
 	legend.SetFillStyle(0)
 	legend.SetBorderSize(1)
 	ROOT.gStyle.SetOptStat(0)
-	path = "/home/jan/Trees/sw538v0476/"
 	EMutrees = readTrees(path, "EMu")
 	EEtrees = readTrees(path, "EE")
 	MuMutrees = readTrees(path, "MuMu")
-	path = "/home/jan/Trees/sw532v0474/"
-	EMutrees532 = readTrees(path, "EMu",use532=True)
-	EEtrees532 = readTrees(path, "EE",use532=True)
-	MuMutrees532 = readTrees(path, "MuMu",use532=True)
 	Cutlabel = ROOT.TLatex()
 	Cutlabel.SetTextAlign(12)
 	Cutlabel.SetTextSize(0.03)
@@ -369,90 +363,26 @@ if (__name__ == "__main__"):
 		MuMuhist = stackMM.theHistogram.Clone("mmHist")
 		EMuhist = stackEM.theHistogram.Clone("emuHist")
 		lumi = lumi / 1000
-	else:
-		if argv[3] == "BlockB":			
-			for name, tree in EEtrees.iteritems():
-				if name == sampleName:
-					EEhist = createHistoFromTree(tree,  variable, cuts, nBins, firstBin, lastBin, nEvents)
-					#~ eeTree = tree.CopyTree(cuts)
-					eeTreeLowMass = tree.CopyTree(cutsLowMass)
-					eeTreePeak = tree.CopyTree(cutsPeak)
-			for name, tree in MuMutrees.iteritems():
-				if name == sampleName:
-					MuMuhist = createHistoFromTree(tree,  variable, cuts, nBins, firstBin, lastBin, nEvents)
-					#~ mmTree = tree.CopyTree(cuts)
-					mmTreeLowMass = tree.CopyTree(cutsLowMass)
-					mmTreePeak = tree.CopyTree(cutsPeak)				
-			for name, tree in EMutrees.iteritems():
-				if name == sampleName:
+	else:			
+		for name, tree in EEtrees.iteritems():
+			if name == sampleName:
+				EEhist = createHistoFromTree(tree,  variable, cuts, nBins, firstBin, lastBin, nEvents)
+				eeTree = tree.CopyTree(cuts)
+				eeTreeLowMass = tree.CopyTree(cutsLowMass)
+				eeTreePeak = tree.CopyTree(cutsPeak)
+		for name, tree in MuMutrees.iteritems():
+			if name == sampleName:
+				MuMuhist = createHistoFromTree(tree,  variable, cuts, nBins, firstBin, lastBin, nEvents)
+				mmTree = tree.CopyTree(cuts)
+				mmTreeLowMass = tree.CopyTree(cutsLowMass)
+				mmTreePeak = tree.CopyTree(cutsPeak)				
+		for name, tree in EMutrees.iteritems():
+			if name == sampleName:
 
-					EMuhist = createHistoFromTree(tree,  variable, cuts, nBins, firstBin, lastBin, nEvents)
-					#~ emTree = tree.CopyTree(cuts)
-					emTreeLowMass = tree.CopyTree(cutsLowMass)
-					emTreePeak = tree.CopyTree(cutsPeak)				
-		elif argv[3] == "BlockA":			
-			for name, tree in EEtrees532.iteritems():
-				if name == sampleName:
-					EEhist = createHistoFromTree(tree,  variable, cuts, nBins, firstBin, lastBin, nEvents)
-					#~ eeTree = tree.CopyTree(cuts)
-					eeTreeLowMass = tree.CopyTree(cutsLowMass)
-					eeTreePeak = tree.CopyTree(cutsPeak)
-			for name, tree in MuMutrees532.iteritems():
-				if name == sampleName:
-					MuMuhist = createHistoFromTree(tree,  variable, cuts, nBins, firstBin, lastBin, nEvents)
-					#~ mmTree = tree.CopyTree(cuts)
-					mmTreeLowMass = tree.CopyTree(cutsLowMass)
-					mmTreePeak = tree.CopyTree(cutsPeak)				
-			for name, tree in EMutrees532.iteritems():
-				if name == sampleName:
-
-					EMuhist = createHistoFromTree(tree,  variable, cuts, nBins, firstBin, lastBin, nEvents)
-					#~ emTree = tree.CopyTree(cuts)
-					emTreeLowMass = tree.CopyTree(cutsLowMass)
-					emTreePeak = tree.CopyTree(cutsPeak)				
-		else:
-			print EEtrees532
-			sampleName = "MergedData_BlockA"			
-			for name, tree in EEtrees532.iteritems():
-				if name == sampleName:
-					EEhist = createHistoFromTree(tree,  variable, cuts, nBins, firstBin, lastBin, nEvents)
-					eeTree532 = tree.CopyTree(cuts)
-					eeTreeLowMass532 = tree.CopyTree(cutsLowMass)
-					eeTreePeak532 = tree.CopyTree(cutsPeak)
-			for name, tree in MuMutrees532.iteritems():
-				if name == sampleName:
-					MuMuhist = createHistoFromTree(tree,  variable, cuts, nBins, firstBin, lastBin, nEvents)
-					mmTree532 = tree.CopyTree(cuts)
-					mmTreeLowMass532 = tree.CopyTree(cutsLowMass)
-					mmTreePeak532 = tree.CopyTree(cutsPeak)				
-			for name, tree in EMutrees532.iteritems():
-				if name == sampleName:
-
-					EMuhist = createHistoFromTree(tree,  variable, cuts, nBins, firstBin, lastBin, nEvents)
-					emTree532= tree.CopyTree(cuts)
-					emTreeLowMass532 = tree.CopyTree(cutsLowMass)
-					emTreePeak532 = tree.CopyTree(cutsPeak)				
-			sampleName = "MergedData_BlockB"			
-			for name, tree in EEtrees.iteritems():
-				
-				if name == sampleName:
-					EEhist.Add(createHistoFromTree(tree,  variable, cuts, nBins, firstBin, lastBin, nEvents))
-					eeTree = tree.CopyTree(cuts)
-					eeTreeLowMass = tree.CopyTree(cutsLowMass)
-					eeTreePeak = tree.CopyTree(cutsPeak)
-			for name, tree in MuMutrees.iteritems():
-				if name == sampleName:
-					MuMuhist.Add(createHistoFromTree(tree,  variable, cuts, nBins, firstBin, lastBin, nEvents))
-					mmTree = tree.CopyTree(cuts)
-					mmTreeLowMass = tree.CopyTree(cutsLowMass)
-					mmTreePeak = tree.CopyTree(cutsPeak)				
-			for name, tree in EMutrees.iteritems():
-				if name == sampleName:
-
-					EMuhist.Add(createHistoFromTree(tree,  variable, cuts, nBins, firstBin, lastBin, nEvents))
-					emTree = tree.CopyTree(cuts)
-					emTreeLowMass = tree.CopyTree(cutsLowMass)
-					emTreePeak = tree.CopyTree(cutsPeak)				
+				EMuhist = createHistoFromTree(tree,  variable, cuts, nBins, firstBin, lastBin, nEvents)
+				emTree = tree.CopyTree(cuts)
+				emTreeLowMass = tree.CopyTree(cutsLowMass)
+				emTreePeak = tree.CopyTree(cutsPeak)				
 			
 			
 	if argv[2] == "SF":	
@@ -482,63 +412,33 @@ if (__name__ == "__main__"):
 
 		
 	else:
-		if argv[3] == "BlockA" or argv[3] == "BlockB":
-			if argv[2] == "SF":
-				peak = mmTreePeak.GetEntries() + eeTreePeak.GetEntries() - emTreePeak.GetEntries()*nllPredictionScale 
-				peakError = sqrt(sqrt(mmTreePeak.GetEntries())**2 +sqrt(eeTreePeak.GetEntries())**2 + sqrt(emTreePeak.GetEntries()*nllPredictionScale)**2 + sqrt(emTreePeak.GetEntries()*nllPredictionScaleErr*nllPredictionScale)**2 )
-				continuum = mmTreeLowMass.GetEntries() + eeTreeLowMass.GetEntries() - emTreeLowMass.GetEntries()*nllPredictionScale
-				continuumError =  sqrt(sqrt(mmTreeLowMass.GetEntries())**2 + sqrt(eeTreeLowMass.GetEntries())**2 + sqrt(emTreeLowMass.GetEntries()*nllPredictionScale)**2 + sqrt(emTreeLowMass.GetEntries()*nllPredictionScaleErr*nllPredictionScale)**2 )
-				result["peakSF"] = mmTreePeak.GetEntries() + eeTreePeak.GetEntries()
-				result["peakOF"] = emTreePeak.GetEntries()
-				result["continuumSF"] = mmTreeLowMass.GetEntries() + eeTreeLowMass.GetEntries()
-				result["continuumOF"] = emTreeLowMass.GetEntries()	
-			elif argv[2] == "EE":
-				peak = (eeTreePeak.GetEntries() - emTreePeak.GetEntries()*nllPredictionScale) 
-				peakError = sqrt(sqrt(eeTreePeak.GetEntries())**2 + sqrt(emTreePeak.GetEntries()*nllPredictionScale)**2 + sqrt(emTreePeak.GetEntries()*nllPredictionScaleErr*nllPredictionScale)**2 )
-				continuum = (eeTreeLowMass.GetEntries() - emTreeLowMass.GetEntries()*nllPredictionScale)
-				continuumError =  sqrt(sqrt(eeTreeLowMass.GetEntries())**2 + sqrt(emTreeLowMass.GetEntries()*nllPredictionScale)**2 + sqrt(emTreeLowMass.GetEntries()*nllPredictionScaleErr*nllPredictionScale)**2 )
-				result["peakSF"] = eeTreePeak.GetEntries()
-				result["peakOF"] = emTreePeak.GetEntries()
-				result["continuumSF"] = eeTreeLowMass.GetEntries()
-				result["continuumOF"] = emTreeLowMass.GetEntries()		
-			else:
-				peak = (mmTreePeak.GetEntries() - emTreePeak.GetEntries()*nllPredictionScale) 
-				peakError = sqrt(sqrt(mmTreePeak.GetEntries())**2 + sqrt(emTreePeak.GetEntries()*nllPredictionScale)**2 + sqrt(emTreePeak.GetEntries()*nllPredictionScaleErr*nllPredictionScale)**2 )
-				continuum = (mmTreeLowMass.GetEntries() - emTreeLowMass.GetEntries()*nllPredictionScale)
-				continuumError =  sqrt(sqrt(mmTreeLowMass.GetEntries())**2 + sqrt(emTreeLowMass.GetEntries()*nllPredictionScale)**2 + sqrt(emTreeLowMass.GetEntries()*nllPredictionScaleErr*nllPredictionScale)**2 )
-				result["peakSF"] = mmTreePeak.GetEntries()
-				result["peakOF"] = emTreePeak.GetEntries()
-				result["continuumSF"] = mmTreeLowMass.GetEntries()
-				result["continuumOF"] = emTreeLowMass.GetEntries()
+		if argv[2] == "SF":
+			peak = mmTreePeak.GetEntries() + eeTreePeak.GetEntries() - emTreePeak.GetEntries()*nllPredictionScale 
+			peakError = sqrt(sqrt(mmTreePeak.GetEntries())**2 +sqrt(eeTreePeak.GetEntries())**2 + sqrt(emTreePeak.GetEntries()*nllPredictionScale)**2 + sqrt(emTreePeak.GetEntries()*nllPredictionScaleErr*nllPredictionScale)**2 )
+			continuum = mmTreeLowMass.GetEntries() + eeTreeLowMass.GetEntries() - emTreeLowMass.GetEntries()*nllPredictionScale
+			continuumError =  sqrt(sqrt(mmTreeLowMass.GetEntries())**2 + sqrt(eeTreeLowMass.GetEntries())**2 + sqrt(emTreeLowMass.GetEntries()*nllPredictionScale)**2 + sqrt(emTreeLowMass.GetEntries()*nllPredictionScaleErr*nllPredictionScale)**2 )
+			result["peakSF"] = mmTreePeak.GetEntries() + eeTreePeak.GetEntries()
+			result["peakOF"] = emTreePeak.GetEntries()
+			result["continuumSF"] = mmTreeLowMass.GetEntries() + eeTreeLowMass.GetEntries()
+			result["continuumOF"] = emTreeLowMass.GetEntries()	
+		elif argv[2] == "EE":
+			peak = (eeTreePeak.GetEntries() - emTreePeak.GetEntries()*nllPredictionScale) 
+			peakError = sqrt(sqrt(eeTreePeak.GetEntries())**2 + sqrt(emTreePeak.GetEntries()*nllPredictionScale)**2 + sqrt(emTreePeak.GetEntries()*nllPredictionScaleErr*nllPredictionScale)**2 )
+			continuum = (eeTreeLowMass.GetEntries() - emTreeLowMass.GetEntries()*nllPredictionScale)
+			continuumError =  sqrt(sqrt(eeTreeLowMass.GetEntries())**2 + sqrt(emTreeLowMass.GetEntries()*nllPredictionScale)**2 + sqrt(emTreeLowMass.GetEntries()*nllPredictionScaleErr*nllPredictionScale)**2 )
+			result["peakSF"] = eeTreePeak.GetEntries()
+			result["peakOF"] = emTreePeak.GetEntries()
+			result["continuumSF"] = eeTreeLowMass.GetEntries()
+			result["continuumOF"] = emTreeLowMass.GetEntries()		
 		else:
-		
-			if argv[2] == "SF":
-				peak = mmTreePeak.GetEntries() + eeTreePeak.GetEntries() + mmTreePeak532.GetEntries() + eeTreePeak532.GetEntries() - (emTreePeak.GetEntries() + emTreePeak532.GetEntries())*nllPredictionScale 
-				peakError = sqrt(sqrt(mmTreePeak.GetEntries() + mmTreePeak532.GetEntries())**2 +sqrt(eeTreePeak.GetEntries() + eeTreePeak532.GetEntries())**2 + sqrt((emTreePeak.GetEntries()+ emTreePeak532.GetEntries())*nllPredictionScale)**2 + sqrt((emTreePeak.GetEntries() + emTreePeak532.GetEntries())*nllPredictionScaleErr*nllPredictionScale)**2 )
-				continuum =mmTreeLowMass.GetEntries() + eeTreeLowMass.GetEntries() + mmTreeLowMass532.GetEntries() + eeTreeLowMass532.GetEntries() - (emTreeLowMass.GetEntries() + emTreeLowMass532.GetEntries())*nllPredictionScale 
-				continuumError =  sqrt(sqrt(mmTreeLowMass.GetEntries() + mmTreeLowMass532.GetEntries())**2 +sqrt(eeTreeLowMass.GetEntries() + eeTreeLowMass532.GetEntries())**2 + sqrt((emTreeLowMass.GetEntries()+ emTreeLowMass532.GetEntries())*nllPredictionScale)**2 + sqrt((emTreeLowMass.GetEntries() + emTreeLowMass532.GetEntries())*nllPredictionScaleErr*nllPredictionScale)**2 )
-				result["peakSF"] = mmTreePeak.GetEntries() + eeTreePeak.GetEntries() + mmTreePeak532.GetEntries() + eeTreePeak532.GetEntries()
-				result["peakOF"] = emTreePeak.GetEntries() + emTreePeak532.GetEntries()
-				result["continuumSF"] = mmTreeLowMass.GetEntries() + eeTreeLowMass.GetEntries() + mmTreeLowMass532.GetEntries() + eeTreeLowMass532.GetEntries()
-				result["continuumOF"] = emTreeLowMass.GetEntries() + emTreeLowMass532.GetEntries()	
-			elif argv[2] == "EE":
-				peak = eeTreePeak.GetEntries() + eeTreePeak532.GetEntries() - (emTreePeak.GetEntries() + emTreePeak532.GetEntries())*nllPredictionScale 
-				peakError = sqrt(sqrt(eeTreePeak.GetEntries() + eeTreePeak532.GetEntries())**2 + sqrt((emTreePeak.GetEntries()+ emTreePeak532.GetEntries())*nllPredictionScale)**2 + sqrt((emTreePeak.GetEntries() + emTreePeak532.GetEntries())*nllPredictionScaleErr*nllPredictionScale)**2 )
-				continuum = eeTreeLowMass.GetEntries() + eeTreeLowMass532.GetEntries() - (emTreeLowMass.GetEntries() + emTreeLowMass532.GetEntries())*nllPredictionScale 
-				continuumError =  sqrt( sqrt(eeTreeLowMass.GetEntries() + eeTreeLowMass532.GetEntries())**2 + sqrt((emTreeLowMass.GetEntries()+ emTreeLowMass532.GetEntries())*nllPredictionScale)**2 + sqrt((emTreeLowMass.GetEntries() + emTreeLowMass532.GetEntries())*nllPredictionScaleErr*nllPredictionScale)**2 )
-				result["peakSF"] = eeTreePeak.GetEntries() + eeTreePeak532.GetEntries()
-				result["peakOF"] = emTreePeak.GetEntries() + emTreePeak532.GetEntries()
-				result["continuumSF"] = eeTreeLowMass.GetEntries() + eeTreeLowMass532.GetEntries()
-				result["continuumOF"] = emTreeLowMass.GetEntries() + emTreeLowMass532.GetEntries()		
-			else:
-				peak = mmTreePeak.GetEntries() + mmTreePeak532.GetEntries() - (emTreePeak.GetEntries() + emTreePeak532.GetEntries())*nllPredictionScale 
-				peakError = sqrt(sqrt(mmTreePeak.GetEntries() + mmTreePeak532.GetEntries())**2 + sqrt((emTreePeak.GetEntries()+ emTreePeak532.GetEntries())*nllPredictionScale)**2 + sqrt((emTreePeak.GetEntries() + emTreePeak532.GetEntries())*nllPredictionScaleErr*nllPredictionScale)**2 )
-				continuum =mmTreeLowMass.GetEntries() + mmTreeLowMass532.GetEntries() - (emTreeLowMass.GetEntries() + emTreeLowMass532.GetEntries())*nllPredictionScale 
-				continuumError =  sqrt(sqrt(mmTreeLowMass.GetEntries() + mmTreeLowMass532.GetEntries())**2  + sqrt((emTreeLowMass.GetEntries()+ emTreeLowMass532.GetEntries())*nllPredictionScale)**2 + sqrt((emTreeLowMass.GetEntries() + emTreeLowMass532.GetEntries())*nllPredictionScaleErr*nllPredictionScale)**2 )
-				result["peakSF"] = mmTreePeak.GetEntries() + mmTreePeak532.GetEntries()
-				result["peakOF"] = emTreePeak.GetEntries() + emTreePeak532.GetEntries()
-				result["continuumSF"] = mmTreeLowMass.GetEntries() + mmTreeLowMass532.GetEntries()
-				result["continuumOF"] = emTreeLowMass.GetEntries() + emTreeLowMass532.GetEntries()		
+			peak = (mmTreePeak.GetEntries() - emTreePeak.GetEntries()*nllPredictionScale) 
+			peakError = sqrt(sqrt(mmTreePeak.GetEntries())**2 + sqrt(emTreePeak.GetEntries()*nllPredictionScale)**2 + sqrt(emTreePeak.GetEntries()*nllPredictionScaleErr*nllPredictionScale)**2 )
+			continuum = (mmTreeLowMass.GetEntries() - emTreeLowMass.GetEntries()*nllPredictionScale)
+			continuumError =  sqrt(sqrt(mmTreeLowMass.GetEntries())**2 + sqrt(emTreeLowMass.GetEntries()*nllPredictionScale)**2 + sqrt(emTreeLowMass.GetEntries()*nllPredictionScaleErr*nllPredictionScale)**2 )
+			result["peakSF"] = mmTreePeak.GetEntries()
+			result["peakOF"] = emTreePeak.GetEntries()
+			result["continuumSF"] = mmTreeLowMass.GetEntries()
+			result["continuumOF"] = emTreeLowMass.GetEntries()	
 				
 	result["peak"] = peak
 	result["peakError"] = peakError
@@ -571,8 +471,8 @@ if (__name__ == "__main__"):
 	outFilePkl.close()	
 	
 	
-	SFhist.Rebin(25)
-	EMuhist.Rebin(25)
+	SFhist.Rebin(5)
+	EMuhist.Rebin(5)
 	SFhist.GetXaxis().SetRangeUser(15,200)
 	SFhist.Draw("")
 	SFhist.GetXaxis().SetTitle("m(ll) [GeV]")
@@ -622,7 +522,7 @@ if (__name__ == "__main__"):
 	SFhist.GetYaxis().SetTitle("Events / 5 GeV")
 	EMuhist.Draw("samehist")
 	#EMuhist.SetLineColor(855)
-	EMuhist.SetFillColor(855)http://forum.tylers-kneipe.de/index.php
+	EMuhist.SetFillColor(855)
 	#legend.AddEntry(SFhist,"SF events","p")
 	#legend.AddEntry(EMuhist,"OF events","f")
 	legend.Draw("same")
