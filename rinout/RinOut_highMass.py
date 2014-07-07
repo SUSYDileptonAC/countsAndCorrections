@@ -259,7 +259,7 @@ correctionsHighMass = {"MergedData":{"Barrel":{"EE":[0.50,0.03],"MM":[0.56,0.03]
 	
 if (__name__ == "__main__"):
 	setTDRStyle()
-	path = "/home/jan/Trees/sw532v0474/"
+	path = "/user/jschulte/sw532v0474/"
 	from sys import argv
 	import pickle	
 	from ROOT import TCanvas, TPad, TH1F, TH1I, THStack, TLegend, TF1
@@ -291,11 +291,12 @@ if (__name__ == "__main__"):
 	legend.SetFillStyle(0)
 	legend.SetBorderSize(1)
 	ROOT.gStyle.SetOptStat(0)
-	path = "/home/jan/Trees/sw538v0476/"
+	path = "/user/jschulte/Trees/sw538v0476/"
 	EMutrees = readTrees(path, "EMu")
 	EEtrees = readTrees(path, "EE")
 	MuMutrees = readTrees(path, "MuMu")
-	path = "/home/jan/Trees/sw532v0474/"
+	print MuMutrees
+	path = "/user/jschulte/Trees/sw532v0474/"
 	EMutrees532 = readTrees(path, "EMu",use532=True)
 	EEtrees532 = readTrees(path, "EE",use532=True)
 	MuMutrees532 = readTrees(path, "MuMu",use532=True)

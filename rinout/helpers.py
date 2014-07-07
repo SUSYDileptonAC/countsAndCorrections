@@ -236,7 +236,7 @@ class Process:
 	scaleFac = 1.
 	additionalSelection = None
 	
-	def __init__(self, samplename=["none"],Counts={"none",-1},labels = "none",color=0,lineColor=0,uncertainty=0.,scaleFac=1.,Run2011=False, additionalSelection=None):
+	def __init__(self, samplename=["none"],Counts={"none":-1},labels = "none",color=0,lineColor=0,uncertainty=0.,scaleFac=1.,Run2011=False, additionalSelection=None):
 		self.samples = []
 		self.xsecs = []
 		self.nEvents = []
