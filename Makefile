@@ -1,5 +1,5 @@
 #DATA_TREES=../../../sw532v0458/processedTrees/sw532v0460.processed.MergedData.root
-TREE_PATH=/home/jan/Trees/sw538v0476/
+TREE_PATH=/home/jan/Trees/sw538v0477/
 TREE_PATHMET=/home/jan/Trees/sw538v0475/
 TREE_PATHA=/home/jan/Trees/sw532v0474/
 DATA_TREESA=$(TREE_PATHA)/sw532v0474.processed.MergedData_BlockA.root

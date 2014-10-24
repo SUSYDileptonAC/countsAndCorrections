@@ -5,7 +5,7 @@ from defs import myColors
 from defs import mainConfig
 from ConfigParser import ConfigParser
 
-config_path = "/home/jan/Doktorarbeit/Dilepton/projects/SubmitScripts/Input"
+config_path = "/home/home4/institut_1b/jschulte/Doktorarbeit/Dilepton/projects/SubmitScripts/Input"
 config = ConfigParser()
 config.read("%s/Master53X.ini"%config_path)
 
@@ -236,7 +236,7 @@ class Process:
 	scaleFac = 1.
 	additionalSelection = None
 	
-	def __init__(self, samplename=["none"],Counts={"none",-1},labels = "none",color=0,lineColor=0,uncertainty=0.,scaleFac=1.,Run2011=False, additionalSelection=None):
+	def __init__(self, samplename=["none"],Counts={"none":-1},labels = "none",color=0,lineColor=0,uncertainty=0.,scaleFac=1.,Run2011=False, additionalSelection=None):
 		self.samples = []
 		self.xsecs = []
 		self.nEvents = []
