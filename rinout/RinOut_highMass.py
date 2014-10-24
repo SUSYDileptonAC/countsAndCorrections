@@ -564,6 +564,7 @@ if (__name__ == "__main__"):
 	result["rInOutSyst"] = ErrRinoutSyst
 
 	if not useMC:
+		print "doing it"
 		outFilePkl = open("shelves/rInOut_highMass_Data_%s.pkl"%suffix,"w")
 	else:
 		outFilePkl = open("shelves/rInOut_highMass_MC_%s.pkl"%suffix,"w")

@@ -262,9 +262,9 @@ def setTDRStyle():
 	
 	tdrStyle.cd()
 	
-def getUncert(sf,of):
+def getUncert(sf,of,factorUncert):
 
-		result = (sf + of + (of*0.04)**2)**0.5
+		result = (sf + of + (of*factorUncert)**2)**0.5
 		return result
 		
 if (__name__ == "__main__"):
@@ -295,7 +295,9 @@ if (__name__ == "__main__"):
 	variable = "p4.M()"
 	etaCut = etaCuts[argv[1]]
 	suffix = argv[1]	
-	
+	label = "Central"
+	if suffix == "Endcap":
+		label = "Forward"
 	treeOF = readTreeFromFile(path, "EMu").CopyTree("nJets >=2 && met > 100")
 	treeEE = readTreeFromFile(path, "EE").CopyTree("nJets >=2 && met > 100")
 	treeMM = readTreeFromFile(path, "MuMu").CopyTree("nJets >=2 && met > 100")
@@ -310,9 +312,10 @@ if (__name__ == "__main__"):
 	
 
 	minMll = 20
-	legend = TLegend(0.6, 0.7, 0.95, 0.95)
+	legend = TLegend(0.15, 0.7, 0.6, 0.95)
 	legend.SetFillStyle(0)
-	legend.SetBorderSize(1)
+	legend.SetBorderSize(0)
+	legend.SetTextFont(42)
 	ROOT.gStyle.SetOptStat(0)
 	Cutlabel = ROOT.TLatex()
 	Cutlabel.SetTextAlign(12)
@@ -333,8 +336,8 @@ if (__name__ == "__main__"):
 	#~ runCuts = [[190645,194897]]
 
 	#~ xValues = [2,4,6,8,10,12,14,16,18,19.4]
-	xValues = [1,2,3,4,5,6,7,8,9,10]
-	xValuesUncert = [0,0,0,0,0,0,0,0,0]
+	xValues = [1,3,5,7,9,11,13,15,17,18.7]
+	xValuesUncert = [1,1,1,1,1,1,1,1,1,0.7]
 	
 	yValues = []
 	yValuesUncert = []
@@ -371,9 +374,13 @@ if (__name__ == "__main__"):
 	eeValuesUncert = []
 	mmValuesUncert = []
 	
-	
+	factor = 1.0
+	factorUncert = 0.04
+	if suffix == "Endcap":
+		factor = 1.11
+		factorUncert = 0.07
 	for cutPair in runCuts:
-		cuts = "weight*(chargeProduct < 0 && %s && p4.M() > 20 && p4.M() < 70 && ((met > 100 && nJets >= 3) ||  (met > 150 && nJets >=2)) && %s && runNr >= %d && runNr <= %d && deltaR > 0.3)"%(ptCut,etaCut,cutPair[0],cutPair[1])
+		cuts = "weight*(chargeProduct < 0 && %s && p4.M() > 20 && p4.M() < 70 && ((met > 100 && nJets >= 3) ||  (met > 150 && nJets >=2)) && %s && runNr >= %d && runNr <= %d && deltaR > 0.3)"%(ptCut,etaCut,runCuts[0][0],cutPair[1])
 		cutsBTagged = "weight*(chargeProduct < 0 && %s && p4.M() > 20 && p4.M() < 70 && ((met > 100 && nJets >= 3) ||  (met > 150 && nJets >=2)) && %s && runNr >= %d && runNr <= %d && deltaR > 0.3 && nBJets >= 1)"%(ptCut,etaCut,cutPair[0],cutPair[1])
 		cutsBVeto = "weight*(chargeProduct < 0 && %s && p4.M() > 20 && p4.M() < 70 && ((met > 100 && nJets >= 3) ||  (met > 150 && nJets >=2)) && %s && runNr >= %d && runNr <= %d && deltaR > 0.3 && nBJets == 0)"%(ptCut,etaCut,cutPair[0],cutPair[1])
 		eeHist = createHistoFromTree(treeEE,  variable, cuts, nBins, firstBin, lastBin, -1)
@@ -389,7 +396,7 @@ if (__name__ == "__main__"):
 		ee = eeHist.Integral() 
 		mm = mmHist.Integral() 
 		sf = eeHist.Integral() + mmHist.Integral()
-		of = emHist.Integral()
+		of = emHist.Integral()*factor
 		eeBTagged = eeHistBTagged.Integral() 
 		mmBTagged = mmHistBTagged.Integral() 
 		sfBTagged = eeHistBTagged.Integral() + mmHistBTagged.Integral()
@@ -398,24 +405,24 @@ if (__name__ == "__main__"):
 		mmBVeto = mmHistBVeto.Integral() 
 		sfBVeto = eeHistBVeto.Integral() + mmHistBVeto.Integral()
 		ofBVeto = emHistBVeto.Integral()
-		print ee, mm, sf, of, getUncert(sf,of)
+		print ee, mm, sf, of, getUncert(sf,of,factorUncert)
 		
 		yValues.append(sf-of)
-		yValuesUncert.append(getUncert(sf,of))
+		yValuesUncert.append(getUncert(sf,of,factorUncert))
 		sfList.append(sf)
 		ofList.append(of)
 		sfValuesUncert.append(sf**0.5)
-		ofValuesUncert.append(of**0.5)
+		ofValuesUncert.append((of+(of*factorUncert)**2)**0.5)
 		print "hallo1"		
 		yValuesBTagged.append(sfBTagged-ofBTagged)
-		yValuesUncertBTagged.append(getUncert(sfBTagged,ofBTagged))
+		yValuesUncertBTagged.append(getUncert(sfBTagged,ofBTagged,factorUncert))
 		sfListBTagged.append(sfBTagged)
 		ofListBTagged.append(ofBTagged)
 		sfValuesUncertBTagged.append(sfBTagged**0.5)
 		ofValuesUncertBTagged.append(ofBTagged**0.5)	
 		print "hallo2"	
 		yValuesBVeto.append(sfBVeto-ofBVeto)
-		yValuesUncertBVeto.append(getUncert(sfBVeto,ofBVeto))
+		yValuesUncertBVeto.append(getUncert(sfBVeto,ofBVeto,factorUncert))
 		sfListBVeto.append(sfBVeto)
 		ofListBVeto.append(ofBVeto)
 		sfValuesUncertBVeto.append(sfBVeto**0.5)
@@ -435,15 +442,19 @@ if (__name__ == "__main__"):
 		#~ yValuesUncert.append(getUncert(sf,of))
 		#~ sfValuesUncert.append(sf**0.5)
 		#~ ofValuesUncert.append(of**0.5)
-	
-	hCanvas.DrawFrame(0,-20,11,150,"; %s ; %s" %("# lumi block","Events / approx. 2fb^{-1}"))
+	if suffix == "Endcap":
+		hCanvas.DrawFrame(0,-20,20,200,"; %s ; %s" %("integrated luminosity [fb^{-1}]","Events"))
+		
+	else:	
+		hCanvas.DrawFrame(0,-20,20,1000,"; %s ; %s" %("integrated luminosity [fb^{-1}]","Events"))
 	arg2 = numpy.array(xValues,"d")
 	arg4 = numpy.array(xValuesUncert,"d")
 	print "hallo4"
-	
+	print yValues
 	arg3 = numpy.array(yValues,"d")
 	arg5 = numpy.array(yValuesUncert,"d")	
-		
+	print sfList
+	print ofList	
 	sfArray = numpy.array(sfList,"d")
 	ofArray = numpy.array(ofList,"d")
 	sfUncertArray = numpy.array(sfValuesUncert,"d")
@@ -509,20 +520,39 @@ if (__name__ == "__main__"):
 	from ROOT import TH1F,kWhite
 	legendHistDing = TH1F()
 	legendHistDing.SetFillColor(kWhite)
-	legend.AddEntry(legendHistDing,"Signal Region %s"%suffix,"h")	
+	legend.AddEntry(legendHistDing,"Signal Region %s"%label,"h")	
 	
 	legend.AddEntry(graphSF,"Same Flavour","p")	
-	legend.AddEntry(graphOF,"Opposite Flavour","p")	
-	legend.AddEntry(graph,"N_{SF}-N_{OF}","p")	
+	legend.AddEntry(graphOF,"Prediction from Opposite Flavour","p")	
+	legend.AddEntry(graph,"N_{SF}-N_{prediction}","p")	
 	#~ legend.AddEntry(graph,"SF - OF","p")	
 	legend.Draw("same")
 	
+	
+	
 	latex = ROOT.TLatex()
-	latex.SetTextSize(0.04)
 	latex.SetTextFont(42)
+	latex.SetTextAlign(31)
+	latex.SetTextSize(0.04)
 	latex.SetNDC(True)
-	latex.DrawLatex(0.13, 0.96, "CMS Preliminary,    #sqrt{s} = 8 TeV,     #scale[0.6]{#int}Ldt = 19.4 fb^{-1}")
-	print "hallo11"
+	latexCMS = ROOT.TLatex()
+	latexCMS.SetTextFont(61)
+	#latexCMS.SetTextAlign(31)
+	latexCMS.SetTextSize(0.06)
+	latexCMS.SetNDC(True)
+	latexCMSExtra = ROOT.TLatex()
+	latexCMSExtra.SetTextFont(52)
+	#latexCMSExtra.SetTextAlign(31)
+	latexCMSExtra.SetTextSize(0.045)
+	latexCMSExtra.SetNDC(True)	
+	latex.DrawLatex(0.98, 0.96, "%s fb^{-1} (8 TeV)"%("19.4",))
+	
+
+	cmsExtra = "Unpublished"		
+	latexCMS.DrawLatex(0.15,0.955,"CMS")
+	latexCMSExtra.DrawLatex(0.28,0.955,"%s"%(cmsExtra))	
+	
+	
 	hCanvas.Print("YieldvsLumi_%s.pdf"%suffix)
 	
 	hCanvas.DrawFrame(0,-20,11,150,"; %s ; %s" %("# lumi block","Events / approx. 2fb^{-1}"))

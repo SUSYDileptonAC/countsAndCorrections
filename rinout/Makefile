@@ -1,4 +1,5 @@
 MAKERinout = python RinOut_Syst.py
+MAKERinoutHighMass = python RinOut_Syst_highMass.py
 MAKERinoutMC = python RinOut_Syst_MC.py
 MAKERinoutPlot = python RinOut.py
 AN_PATH = /home/jan/Doktorarbeit/Dilepton/projects/DileptonAN
@@ -22,6 +23,13 @@ RinoutSyst: RinOut_Syst.py
 		$(MAKERinout) Endcap EE
 		$(MAKERinout) Barrel MM
 		$(MAKERinout) Endcap MM
+RinoutSystHighMass: RinOut_Syst_highMass.py
+		$(MAKERinoutHighMass) Barrel SF
+		$(MAKERinoutHighMass) Endcap SF
+		$(MAKERinoutHighMass) Barrel EE
+		$(MAKERinoutHighMass) Endcap EE
+		$(MAKERinoutHighMass) Barrel MM
+		$(MAKERinoutHighMass) Endcap MM
 	
 		
 RinoutMC: RinOut.py

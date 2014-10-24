@@ -10,7 +10,7 @@ ROOT.gStyle.SetOptStat(0)
 
 etaCuts = {
 			"Barrel":"abs(eta1) < 1.4 && abs(eta2) < 1.4",
-			"Endcap":"(((abs(eta1) < 1.4 || abs(eta1) > 1.6) && (abs(eta2) < 1.4 || abs(eta2) > 1.6)) && 1.6 <= TMath::Max(abs(eta1),abs(eta2)))",
+			"Endcap":"(((abs(eta1) < 1.4 || abs(eta1) > 1.6) && (abs(eta2) < 1.4 || abs(eta2) > 1.6)) && 1.6 <= TMath::Max(abs(eta1),abs(eta2))) && abs(eta1) < 2.4 && abs(eta2) < 2.4",
 			"BothEndcap":"abs(eta1) > 1.6 && abs(eta2) > 1.6",
 			"Inclusive":"abs(eta1) < 2.4 && abs(eta2) < 2.4 && ((abs(eta1) < 1.4 || abs(eta1) > 1.6) && (abs(eta2) < 1.4 || abs(eta2) > 1.6))"
 			}
@@ -26,7 +26,19 @@ def readTreeFromFile(path, dileptonCombination):
 	"""
 	from ROOT import TChain
 	result = TChain()
-	result.Add("%s/cutsV22DileptonFinalTrees/%sDileptonTree"%(path, dileptonCombination))
+	result.Add("%s/cutsV23DileptonFinalTrees/%sDileptonTree"%(path, dileptonCombination))
+	return result
+def readTreeFromFileDoubleMu(path, dileptonCombination):
+	"""
+	helper functionfrom argparse import ArgumentParser
+	path: path to .root file containing simulated events
+	dileptonCombination: EMu, EMu, or EMu for electron-electron, electron-muon, or muon-muon events
+
+	returns: tree containing events for on sample and dileptonCombination
+	"""
+	from ROOT import TChain
+	result = TChain()
+	result.Add("%s/cutsV23DileptonDoubleMuFinalTrees/%sDileptonTree"%(path, dileptonCombination))
 	return result
 	
 def getFilePathsAndSampleNames(path):
@@ -40,9 +52,9 @@ def getFilePathsAndSampleNames(path):
 	from glob import glob
 	from re import match
 	result = {}
-	print path
+	#~ print path
 	for filePath in glob("%s/sw538*.root"%path):
-		print filePath
+		#~ print filePath
 		sampleName = match(".*sw538v.*\.processed.*\.(.*).root", filePath).groups()[0]
 		#for the python enthusiats: yield sampleName, filePath is more efficient here :)
 		result[sampleName] = filePath
@@ -70,7 +82,7 @@ def readTrees(path, dileptonCombination):
 	returns: dict of sample names ->  trees containing events (for all samples for one dileptonCombination)
 	"""
 	result = {}
-	print (path)
+	#~ print (path)
 	for sampleName, filePath in getFilePathsAndSampleNames(path).iteritems():
 		
 		result[sampleName] = readTreeFromFile(filePath, dileptonCombination)
@@ -97,30 +109,6 @@ def createHistoFromTree(tree, variable, weight, nBins, firstBin, lastBin, nEvent
 	result = TH1F(name, "", nBins, firstBin, lastBin)
 	result.Sumw2()
 	tree.Draw("%s>>%s"%(variable, name), weight, "goff", nEvents)
-	return result
-	
-def create2DHistoFromTree(tree, variable1,variable2, weight, nBins1, firstBin1, lastBin1, nBins2, firstBin2, lastBin2, nEvents = -1):
-	"""
-	tree: tree to create histo from)
-	variable: variable to plot (must be a branch of the tree)
-	weight: weights to apply (e.g. "var1*(var2 > 15)" will use weights from var1 and cut on var2 > 15
-	nBins, firstBin, lastBin: number of bins, first bin and last bin (same as in TH1F constructor)
-	nEvents: number of events to process (-1 = all)
-	"""
-	from ROOT import TH2F
-	from random import randint
-	from sys import maxint
-	if nEvents < 0:
-		nEvents = maxint
-	#make a random name you could give something meaningfull here,
-	#but that would make this less readable
-	name = "%x"%(randint(0, maxint))
-	result = TH2F(name, "", nBins1, firstBin1, lastBin1, nBins2, firstBin2, lastBin2)
-	result.Sumw2()
-	#~ tree.Draw("%s>>%s"%(variable, name), weight, "goff", nEvents)
-	cutTree = tree.CopyTree(weight)
-	for ev in cutTree:
-		result.Fill(getattr(ev,variable1),getattr(ev,variable2))
 	return result
 	
 	
@@ -203,9 +191,9 @@ def setTDRStyle():
 	# tdrStyle->SetStatY(Float_t y = 0);
 	
 	# Margins:
-	tdrStyle.SetPadTopMargin(0.05)
-	tdrStyle.SetPadBottomMargin(0.13)
-	tdrStyle.SetPadLeftMargin(0.2)
+	tdrStyle.SetPadTopMargin(0.15)
+	tdrStyle.SetPadBottomMargin(0.225)
+	tdrStyle.SetPadLeftMargin(0.13)
 	tdrStyle.SetPadRightMargin(0.05)
 	
 	# For the Global title:
@@ -225,18 +213,18 @@ def setTDRStyle():
 	# For the axis titles:
 	tdrStyle.SetTitleColor(1, "XYZ")
 	tdrStyle.SetTitleFont(42, "XYZ")
-	tdrStyle.SetTitleSize(0.06, "XYZ")
+	tdrStyle.SetTitleSize(0.1, "XYZ")
 	# tdrStyle->SetTitleXSize(Float_t size = 0.02); # Another way to set the size?
 	# tdrStyle->SetTitleYSize(Float_t size = 0.02);
-	tdrStyle.SetTitleXOffset(0.9)
-	tdrStyle.SetTitleYOffset(1.5)
+	tdrStyle.SetTitleXOffset(0.95)
+	tdrStyle.SetTitleYOffset(0.65)
 	# tdrStyle->SetTitleOffset(1.1, "Y"); # Another way to set the Offset
 	
 	# For the axis labels:
 	tdrStyle.SetLabelColor(1, "XYZ")
 	tdrStyle.SetLabelFont(42, "XYZ")
-	tdrStyle.SetLabelOffset(0.007, "XYZ")
-	tdrStyle.SetLabelSize(0.05, "XYZ")
+	tdrStyle.SetLabelOffset(0.005, "XYZ")
+	tdrStyle.SetLabelSize(0.1, "XYZ")
 	
 	# For the axis:
 	tdrStyle.SetAxisColor(1, "XYZ")
@@ -274,19 +262,29 @@ def setTDRStyle():
 	
 	tdrStyle.cd()
 	
-	
+def getUncert(sf,of,factorUncert):
+
+		result = (sf + of + (of*factorUncert)**2)**0.5
+		return result
+		
 if (__name__ == "__main__"):
 	setTDRStyle()
-	path = "/home/jan/Trees/sw538v0476/"
+	#~ path = "missing16JanEvent.cutsV23DileptonDoubleMu.AOD.root"
+	path = "/home/jan/Trees/sw538v0478/sw538v0478.processed.MergedData.root"
 	from sys import argv
 	import pickle	
-	from ROOT import TCanvas, TPad, TH1F, TH1I, THStack, TLegend, TF1
+	from ROOT import TCanvas, TPad, TH1F, TH1I, THStack, TLegend, TF1, TGraphErrors
 	import ratios
-	
-	hCanvas = TCanvas("hCanvas", "Distribution", 800,800)
+	from messageLogger import messageLogger as log
+	import numpy
+
+
+	#~ (pt1 > 20 && pt2 > 10 || pt1 > 10 && pt2 > 20) && chargeProduct==-1 && (runNr < 207833 || runNr > 208307) && (runNr > 201678 || (runNr >= 198022 && runNr <= 198523) || runNr == 201671 || runNr == 201669 || runNr == 201668 || runNr == 201658 || runNr == 201657 || runNr == 200976 || runNr == 200961 || (runNr == 200229 && (lumiSec == 532 || lumiSec == 533)) || (runNr == 199812 && (lumiSec >= 182 && lumiSec <= 186)) || runNr == 190782 || runNr == 190895 || runNr == 190906 || runNr == 190945 || runNr == 190949 || runNr == 190646 || runNr == 190659 || runNr == 190679 || runNr == 190688 || runNr == 190702 || runNr == 190703 || runNr == 190706 || runNr == 190707 || runNr == 190708 || runNr == 190733 || runNr == 190736 || (runNr == 191271 && lumiSec >= 159) || runNr == 193192 || runNr == 193193 || runNr == 194631 || (runNr == 195540 && lumiSec <=120) || runNr == 201191) && not(runNr == 190705 && ((lumiSec >= 66 && lumiSec <= 76) || (lumiSec >=78 && lumiSec < 80))) && not(runNr == 190705 && ((lumiSec >= 66 && lumiSec <= 76) || (lumiSec >=78 && lumiSec < 80))) && not(runNr == 191830 && (lumiSec >= 243 && lumiSec <= 244)) && not(runNr == 194115 && (lumiSec >= 732 && lumiSec <= 818)) && not(runNr == 194223 && (lumiSec >= 9 && lumiSec <= 51)) && not(runNr == 195016 && ((lumiSec >= 252 && lumiSec <= 253) || (lumiSec >=561 && lumiSec < 562))) && not(runNr == 195774 && lumiSec == 138) && not(runNr == 195918 && lumiSec == 45)
+	hCanvas = TCanvas("hCanvas", "Distribution", 800,300)
+
 
 	setTDRStyle()		
-
+	
 
 	legend = TLegend(0.7, 0.55, 0.95, 0.95)
 	legend.SetFillStyle(0)
@@ -294,30 +292,31 @@ if (__name__ == "__main__"):
 	
 	ptCut = "pt1 > 20 && pt2 > 20"#(pt1 > 10 && pt2 > 20 || pt1 > 20 && pt2 > 10)
 	ptCutLabel = "20"#"20(10)"
-
+	variable = "p4.M()"
 	etaCut = etaCuts[argv[1]]
-	suffix = argv[1]
-	data = False
-	if argv[2] == "Data":
-		data = True
-	#~ cuts = "weight*(chargeProduct < 0 && %s && met < 100 && nJets ==2 && abs(eta1) < 2.4 && abs(eta2) < 2.4 && deltaR > 0.3 && runNr < 201657 && (runNr < 198049 || runNr > 198522))"%ptCut
-	cutsBlockA = "weight*(chargeProduct < 0 && %s  && p4.M() > 20 && p4.M() < 70 && ((met > 100 && nJets >= 3) ||  (met > 150 && nJets >=2)) && %s && deltaR > 0.3 && runNr <= 201678 && !(runNr >= 198049 && runNr <= 198522) && !(runNr == 195649 && lumiSec == 49 && eventNr == 75858433) && !(runNr == 201191) && !(runNr == 195749 && lumiSec == 108 && eventNr == 216906941)  && !(runNr == 190646 || runNr == 190659 || runNr == 190679 || runNr == 190688 || runNr == 190702 || runNr == 190703 || runNr == 190706 || runNr == 190707 || runNr == 190708 || runNr == 190733 || runNr == 190736 || (runNr == 191271 && lumiSec >= 159) || runNr == 193192 || runNr == 193193 || runNr == 190782 || runNr == 190895 || runNr == 190906 || runNr == 190945 || runNr == 190949 || runNr == 201191) )"%(ptCut,etaCut)
-	cutsBlockB = "weight*(chargeProduct < 0 && %s  && p4.M() > 20 && p4.M() < 70 && ((met > 100 && nJets >= 3) ||  (met > 150 && nJets >=2)) && %s && deltaR > 0.3 && (runNr > 201678 || (runNr >= 198049 && runNr <= 198522) || runNr == 201671 || runNr == 201669 || runNr == 201668 || runNr == 201658 || runNr == 201657 || runNr == 200976 || runNr == 200961 || (runNr == 200229 && (lumiSec == 532 || lumiSec == 533)) || (runNr == 199812 && (lumiSec >= 182 && lumiSec <= 186)) || runNr == 190782 || runNr == 190895 || runNr == 190906 || runNr == 190945 || runNr == 190949 || runNr == 190646 || runNr == 190659 || runNr == 190679 || runNr == 190688 || runNr == 190702 || runNr == 190703 || runNr == 190706 || runNr == 190707 || runNr == 190708 || runNr == 190733 || runNr == 190736 || (runNr == 191271 && lumiSec >= 159) || runNr == 193192 || runNr == 193193 || runNr == 194631 || (runNr == 195540 && lumiSec <=120)))"%(ptCut,etaCut)
-	print cutsBlockA
-	print cutsBlockB
-	nEvents=-1
+	suffix = argv[1]	
+	label = "Central"
+	if suffix == "Endcap":
+		label = "Forward"
+	treeOF = readTreeFromFile(path, "EMu").CopyTree("nJets >=2 && met > 100")
+	treeEE = readTreeFromFile(path, "EE").CopyTree("nJets >=2 && met > 100")
+	treeMM = readTreeFromFile(path, "MuMu").CopyTree("nJets >=2 && met > 100")
+#~ 
+
+	nBins = 60
+	firstBin = 0
+	lastBin = 300
+
 	
-	lumi = 9.2
+	lumi = 19.4
 	
 
 	minMll = 20
-	legend = TLegend(0.6, 0.7, 0.95, 0.95)
+	legend = TLegend(0.15, 0.7, 0.6, 0.9)
 	legend.SetFillStyle(0)
-	legend.SetBorderSize(1)
+	legend.SetBorderSize(0)
+	legend.SetTextFont(42)
 	ROOT.gStyle.SetOptStat(0)
-	EMutrees = readTrees(path, "EMu")
-	EEtrees = readTrees(path, "EE")
-	MuMutrees = readTrees(path, "MuMu")
 	Cutlabel = ROOT.TLatex()
 	Cutlabel.SetTextAlign(12)
 	Cutlabel.SetTextSize(0.03)
@@ -329,68 +328,61 @@ if (__name__ == "__main__"):
 	Labelout.SetTextAlign(12)
 	Labelout.SetTextSize(0.07)
 	Labelout.SetTextColor(ROOT.kBlack)
-	
-	variable1 = "met"	
-	nBins1 = 4000
-	firstBin1 = 100
-	lastBin1 = 500
-	
-	variable2 = "nJets"	
-	nBins2 = 40
-	firstBin2 = 2
-	lastBin2 = 7
-	
-	if data:
-		SampleName = "MergedData"
-	else: 
-		SampleName = "TTJets_MGDecays_Trigger_madgraph_Summer12"
-	
-	for name, tree in EEtrees.iteritems():
-		if name == SampleName:
-			print name
-			EEhistBlockA = create2DHistoFromTree(tree,  variable1, variable2, cutsBlockA, nBins1, firstBin1, lastBin1 , nBins2, firstBin2, lastBin2, nEvents)
-	for name, tree in MuMutrees.iteritems():
-		if name == SampleName:
 
-			MuMuhistBlockA = create2DHistoFromTree(tree,  variable1, variable2, cutsBlockA, nBins1, firstBin1, lastBin1 , nBins2, firstBin2, lastBin2, nEvents)
-	for name, tree in EMutrees.iteritems():
-		print name
-		if name == SampleName:
-			print SampleName
-			fullTree = tree.Clone()
-			EMuhistBlockA = create2DHistoFromTree(tree,  variable1, variable2, cutsBlockA, nBins1, firstBin1, lastBin1 , nBins2, firstBin2, lastBin2, nEvents)
-			EMuhistBlockB = create2DHistoFromTree(tree,  variable1, variable2, cutsBlockB, nBins1, firstBin1, lastBin1 , nBins2, firstBin2, lastBin2, nEvents)
-		
+	
 
-	EMuhistBlockA.SetMarkerStyle(21)
-	EMuhistBlockB.SetMarkerStyle(22)
-	EEhistBlockA.SetMarkerStyle(22)
-	EMuhistBlockA.SetMarkerColor(ROOT.kGreen+3)
-	EMuhistBlockB.SetMarkerColor(ROOT.kBlack)
-	EEhistBlockA.SetMarkerColor(ROOT.kBlack)
-	
-	EEhistBlockA.Add(MuMuhistBlockA.Clone())
-	
-	
-	
-	hCanvas.DrawFrame(80,1,500,7,"; %s ; %s" %("E_{T}^{miss} [GeV]","N_{jets}"))
+	cuts = "weight*(chargeProduct < 0 && %s && p4.M() > 20  && met > 100 && met < 150 && nJets ==2 && %s && deltaR > 0.3)"%(ptCut,etaCut)
 
-	EMuhistBlockA.Draw("samep")
-	EEhistBlockA.Draw("samep")
+	eeHist = createHistoFromTree(treeEE,  variable, cuts, nBins, firstBin, lastBin, -1)
+	mmHist = createHistoFromTree(treeMM,  variable, cuts, nBins, firstBin, lastBin, -1)
+	emHist = createHistoFromTree(treeOF,  variable, cuts, nBins, firstBin, lastBin, -1)
+
+	sfHist = eeHist.Clone()
+	sfHist.Add(mmHist)
+	sfHist.Divide(emHist)
 	
-	legend.AddEntry(EMuhistBlockA,"First 9.2 fb^{-1}","p")	
-	legend.AddEntry(EMuhistBlockB,"Unblinded Data","p")	
+	hCanvas.DrawFrame(20,0,300,3,"; %s ; %s" %("m_{ll} [GeV]","SF/OF"))
+	
+	
+	from ROOT import TH1F,kWhite
+	legendHistDing = TH1F()
+	legendHistDing.SetFillColor(kWhite)
+	legend.AddEntry(legendHistDing,"Control Region %s"%label,"h")	
+	
+	#~ legend.AddEntry(sfHist,"SF/OF","p")	
 	legend.Draw("same")
-	hCanvas.Print("OFUnblindingScatter.pdf")
-		
-	hCanvas.Clear()
-	hCanvas.DrawFrame(80,1,500,7,"; %s ; %s" %("E_{T}^{miss} [GeV]","N_{jets}"))
-	EMuhistBlockA.Draw("samep")
-	EEhistBlockA.Draw("samep")
-	legend.Clear()
-	legend.AddEntry(EMuhistBlockA,"First 9.2 fb^{-1} OF","p")	
-	legend.AddEntry(EEhistBlockA,"First 9.2 fb^{-1} SF","p")			
-	legend.Draw("same")	
+
+	zeroLine = ROOT.TLine(20, 1., 300,1.)
+	zeroLine.SetLineWidth(1)
+	zeroLine.SetLineColor(ROOT.kBlue)
+	zeroLine.SetLineStyle(2)
+	zeroLine.Draw("same")
 	
-	hCanvas.Print("OFSFScatter.pdf")
+	sfHist.Draw("sameE0")
 	
+	latex = ROOT.TLatex()
+	latex.SetTextFont(42)
+	latex.SetTextAlign(31)
+	latex.SetTextSize(0.1)
+	latex.SetNDC(True)
+	latexCMS = ROOT.TLatex()
+	latexCMS.SetTextFont(61)
+	#latexCMS.SetTextAlign(31)
+	latexCMS.SetTextSize(0.12)
+	latexCMS.SetNDC(True)
+	latexCMSExtra = ROOT.TLatex()
+	latexCMSExtra.SetTextFont(52)
+	#latexCMSExtra.SetTextAlign(31)
+	latexCMSExtra.SetTextSize(0.1)
+	latexCMSExtra.SetNDC(True)	
+	latex.DrawLatex(0.98, 0.88, "%s fb^{-1} (8 TeV)"%("19.8",))
+	
+
+	cmsExtra = "Private Work"		
+	latexCMS.DrawLatex(0.13,0.88,"CMS")
+	latexCMSExtra.DrawLatex(0.225,0.88,"%s"%(cmsExtra))	
+	
+	
+	hCanvas.Print("ControlRegionRatio_%s.pdf"%suffix)
+	
+
