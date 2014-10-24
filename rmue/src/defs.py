@@ -71,19 +71,19 @@ class Colors:
 
 class ConstantsBorg(object):
     lumi7TeV=4982. #pb
-    lumi8TeV=9200#9300#8700#5100 #1598. #2400.
+    lumi8TeV=19800#9300#8700#5100 #1598. #2400.
     lumi = lumi8TeV
 
-    #Triggereffizien 8TeV Data (aus same sign Analyse Juli 2012)
-    eff8TeVData_ee=0.97/1
+    #Triggereffizien 8TeV Data (selbst gemessen)
+    eff8TeVData_ee=0.973/1
     sigma8TeVData_ee_p= 0.05
     sigma8TeVData_ee_m=-0.05
 
-    eff8TeVData_emu=0.943/1 #3.2626-Faktor wegen Korrektur von weights
+    eff8TeVData_emu=0.937/1 #3.2626-Faktor wegen Korrektur von weights
     sigma8TeVData_emu_p=0.05
     sigma8TeVData_emu_m=-0.05
 
-    eff8TeVData_mumu=0.964/1
+    eff8TeVData_mumu=0.968/1
     sigma8TeVData_mumu_p=0.05
     sigma8TeVData_mumu_m=-0.05
     
