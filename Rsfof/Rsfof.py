@@ -10,7 +10,7 @@ ROOT.gStyle.SetOptStat(0)
 
 etaCuts = {
 			"Barrel":"abs(eta1) < 1.4 && abs(eta2) < 1.4",
-			"Endcap":"(((abs(eta1) < 1.4 || abs(eta1) > 1.6) && (abs(eta2) < 1.4 || abs(eta2) > 1.6)) && 1.6 <= TMath::Max(abs(eta1),abs(eta2)))",
+			"Endcap":"(((abs(eta1) < 1.4 || abs(eta1) > 1.6) && (abs(eta2) < 1.4 || abs(eta2) > 1.6)) && 1.6 <= TMath::Max(abs(eta1),abs(eta2)) && abs(eta1) < 2.4 && abs(eta2) < 2.4)",
 			"BothEndcap":"abs(eta1) > 1.6 && abs(eta2) > 1.6",
 			"Inclusive":"abs(eta1) < 2.4 && abs(eta2) < 2.4 && ((abs(eta1) < 1.4 || abs(eta1) > 1.6) && (abs(eta2) < 1.4 || abs(eta2) > 1.6))"
 			}
@@ -262,9 +262,9 @@ def setTDRStyle():
 
 def produceRSFOF(EETrees,MuMuTrees,EMuTrees,cuts,cutsTransfer,SampleName,suffix):
 
-	nBins = 200
+	nBins =1000
 	firstBin = 0
-	lastBin = 200
+	lastBin = 1000
 	
 	for name, tree in EEtrees.iteritems():
 		if name == SampleName:
@@ -294,10 +294,10 @@ def produceRSFOF(EETrees,MuMuTrees,EMuTrees,cuts,cutsTransfer,SampleName,suffix)
 	eeTransfer = EEhistTransfer.Integral()
 	mmTransfer = MuMuhistTransfer.Integral()
 	sf = SFhist.Integral() 
-	of = EMuhist.Integral()-1 
+	of = EMuhist.Integral() 
 	sfTransfer = SFhistTransfer.Integral() 
 	ofTransfer = EMuhistTransfer.Integral() 
-	
+	print sfTransfer, ofTransfer
 	rsfof = float(sf)/float(of)
 	rsfofErr = rsfof*(sf/sf**2+of/of**2)**0.5
 	rsfofTransfer = float(sfTransfer)/float(ofTransfer)
@@ -344,7 +344,7 @@ def produceRSFOF(EETrees,MuMuTrees,EMuTrees,cuts,cutsTransfer,SampleName,suffix)
 	
 if (__name__ == "__main__"):
 	setTDRStyle()
-	path = "/home/jan/Trees/sw538v0476/"
+	path = "/home/jan/Trees/sw538v0478/"
 	from sys import argv
 	import pickle	
 	from ROOT import TCanvas, TPad, TH1F, TH1I, THStack, TLegend, TF1
@@ -358,13 +358,15 @@ if (__name__ == "__main__"):
 	
 	#~ cuts = "weight*(chargeProduct < 0 && %s && met < 100 && nJets ==2 && abs(eta1) < 2.4 && abs(eta2) < 2.4 && deltaR > 0.3 && runNr < 201657 && (runNr < 198049 || runNr > 198522))"%ptCut
 	cuts532 = "weight*(chargeProduct < 0 && %s && p4.M() > 20 && p4.M() < 70 && met > 100 && met < 150 && nJets ==2 && %s && deltaR > 0.3 && runNr <= 201678 && !(runNr >= 198049 && runNr <= 198522) )"%(ptCut,etaCut)
-	cuts = "weight*(chargeProduct < 0 && %s && p4.M() > 20 && p4.M() < 70 && met > 100 && met < 150 && nJets ==2 && %s && deltaR > 0.3  )"%(ptCut,etaCut)
-	cutsTransfer = "weight*(chargeProduct < 0 && %s && p4.M() > 20 && p4.M() < 70 && ((met > 100 && nJets >= 3) ||  (met > 150 && nJets >=2)) && %s && deltaR > 0.3 )"%(ptCut,etaCut)
+	#~ cuts = "weight*(chargeProduct < 0 && %s && p4.M() > 20 && p4.M() < 70 && met > 100 && met < 150 && nJets ==2 && %s && deltaR > 0.3  )"%(ptCut,etaCut)
+	cuts = "weight*(chargeProduct < 0 && %s && ((p4.M() > 20 && p4.M() < 70 )|| (p4.M() > 120))&& met > 100 && met < 150 && nJets ==2 && %s && deltaR > 0.3  )"%(ptCut,etaCut)
+	#~ cutsTransfer = "weight*(chargeProduct < 0 && %s && p4.M() > 20 && p4.M() < 70 && ((met > 100 && nJets >= 3) ||  (met > 150 && nJets >=2)) && %s && deltaR > 0.3 )"%(ptCut,etaCut)
+	cutsTransfer = "weight*(chargeProduct < 0 && %s && ((p4.M() > 20 && p4.M() < 70 )|| (p4.M() > 120)) && ((met > 100 && nJets >= 3) ||  (met > 150 && nJets >=2)) && %s && deltaR > 0.3 )"%(ptCut,etaCut)
 	cutsTransfer532 = "weight*(chargeProduct < 0 && %s && p4.M() > 20 && p4.M() < 70 && ((met > 100 && nJets >= 3) ||  (met > 150 && nJets >=2)) && %s && deltaR > 0.3 && runNr <= 201678 && !(runNr >= 198049 && runNr <= 198522) )"%(ptCut,etaCut)
 	print cuts
 	nEvents=-1
 	
-	lumi = 9.2
+	lumi = 19.8
 	
 
 	minMll = 20
@@ -375,9 +377,6 @@ if (__name__ == "__main__"):
 	EMutrees = readTrees(path, "EMu")
 	EEtrees = readTrees(path, "EE")
 	MuMutrees = readTrees(path, "MuMu")
-	EMutrees532 = readTrees(path, "EMu", use532 = True)
-	EEtrees532 = readTrees(path, "EE", use532 = True)
-	MuMutrees532 = readTrees(path, "MuMu", use532 = True)
 	Cutlabel = ROOT.TLatex()
 	Cutlabel.SetTextAlign(12)
 	Cutlabel.SetTextSize(0.03)
@@ -395,6 +394,7 @@ if (__name__ == "__main__"):
 	
 	#~ produceRSFOF(EEtrees, MuMutrees, EMutrees, cuts, cutsTransfer, "MergedData", "Full2012_"+suffix)
 	#~ produceRSFOF(EEtrees, MuMutrees, EMutrees, cuts, cutsTransfer, "MergedData_BlockB", "BlockB_"+suffix)
-	produceRSFOF(EEtrees, MuMutrees, EMutrees, cuts, cutsTransfer, "MergedData_BlockA", "BlockA_"+suffix)
+	#~ produceRSFOF(EEtrees, MuMutrees, EMutrees, cuts, cutsTransfer, "TTJets_MGDecays_madgraph_Summer12", "ReReco_"+suffix)
+	produceRSFOF(EEtrees, MuMutrees, EMutrees, cuts, cutsTransfer, "MergedData", "ReReco_"+suffix)
 	#~ produceRSFOF(EEtrees532, MuMutrees532, EMutrees532, cuts532, cutsTransfer532, "MergedData", "BlockAOld_"+suffix)
 	

@@ -1,3 +1,0 @@
-\begin{table}[hbp] \caption{$r_{\mu e}$-values for data and MC in the ['Central'] region with OS, $p_{T} > 20(20)$ GeV and 60 GeV $< m_{ll} <$ 120 GeV} \centering \renewcommand{\arraystretch}{1.2} \begin{tabular}{|l|c|c|c|c|c|}     \hline    $$ & $n_{\mu\mu}$ & $n_{ee}$ & $r_{\mu e} \pm \sigma_{stat} \pm \sigma_{syst}$    \\    \hline\hline 
-    $MC$ & $              1768475$ & $              1434585$ & $              1.110\pm               0.001^{+              0.118}_{-              0.118}$    \\ 
-    $Data$ & $              1865931$ & $              1538212$ & $              1.101\pm               0.001^{+              0.110}_{-              0.110}$    \\    \hline     \end{tabular}  \label{tab:RValues_Central}\end{table}

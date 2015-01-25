@@ -1,3 +1,0 @@
-\begin{table}[hbp] \caption{$r_{\mu e}$-values for data and MC in region 1 with $nJets = 0$, region 2 with $nJets \ge 2$ and region 3 without $nJets$} \centering \renewcommand{\arraystretch}{1.2} \begin{tabular}{|l|c|c|c|c|c|}     \hline    $$ & $n_{\mu\mu}$ & $n_{ee}$ & $r_{\mu e} \pm \sigma_{stat} \pm \sigma_{syst}$    \\    \hline\hline 
-    $MC$ & $              3403796$ & $              2495537$ & $              1.168\pm               0.000^{+              0.124}_{-              0.124}$    \\ 
-    $Data$ & $              3425678$ & $              2568913$ & $              1.155\pm               0.000^{+              0.115}_{-              0.115}$    \\    \hline     \end{tabular}  \label{tab:RValues}\end{table}

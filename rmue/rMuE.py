@@ -26,15 +26,77 @@ from defs import getRegion, getPlot, getRunRange, Backgrounds
 from setTDRStyle import setTDRStyle
 from helpers import readTrees, getDataHist, TheStack, totalNumberOfGeneratedEvents, Process
 
-from corrections import systematics, triggerEffs
+from corrections import systematics, triggerEffs, rSFOF
 
 from locations import locations
 
-def getHistograms(path,plot,runRange,isMC,backgrounds,region):
+
+def rMuEMeasure(eeHist,mumuHist):
+	from math import sqrt
+	result = {"vals":[],"errs":[]}
+	for x in range(1,eeHist.GetNbinsX()+1):
+		if mumuHist.GetBinContent(x) > 0 and eeHist.GetBinContent(x) > 0:
+			val = sqrt(mumuHist.GetBinContent(x)/eeHist.GetBinContent(x))	
+			#~ err = 1./(0.5*val)*sqrt((sqrt(mumuHist.GetBinContent(x))/eeHist.GetBinContent(x))**2+(mumuHist.GetBinContent(x)/eeHist.GetBinContent(x)**2*sqrt(eeHist.GetBinContent(x)))**2)
+			err = 0.5*val*sqrt(1./float(eeHist.GetBinContent(x)) + 1./float(mumuHist.GetBinContent(x)) )
+			result["vals"].append(val)
+			result["errs"].append(err)
+		else:
+			result["vals"].append(0)
+			result["errs"].append(0)
+	return result
+
+
+
+def rMuEFromSFOF(eeHist,mumuHist,emuHist,corr,corrErr):
+	from math import sqrt
+	result = {"up":[],"down":[]}
+	resultErr = {"up":[],"down":[]}
+	
+	for x in range(1,eeHist.GetNbinsX()+1):
+		sf = float(eeHist.GetBinContent(x) + mumuHist.GetBinContent(x))
+		of = emuHist.GetBinContent(x)*corr
+		if of > 0:
+			rSFOF = sf/of
+			if eeHist.GetBinContent(x) >0 or mumuHist.GetBinContent(x) >0:
+				eemmPart = 1./(eeHist.GetBinContent(x)+mumuHist.GetBinContent(x))
+			else: 
+				eemmPart = 0.
+			if emuHist.GetBinContent(x) >0:
+				emPart = 1./emuHist.GetBinContent(x)
+			else: 
+				emPart = 0.
+				
+			relErrRSFOF = sqrt(eemmPart + emPart)
+			if rSFOF >1.001:
+				result["up"].append(rSFOF + sqrt(rSFOF**2-1) )
+				result["down"].append(rSFOF - sqrt(rSFOF**2-1) )
+				
+				resultErr["up"].append(rSFOF*relErrRSFOF*(1+rSFOF/sqrt(rSFOF**2-1)))
+				resultErr["down"].append(rSFOF*relErrRSFOF*(1-rSFOF/sqrt(rSFOF**2-1)))
+			else:
+				result["up"].append(rSFOF)
+				result["down"].append(rSFOF)
+				
+				resultErr["up"].append(rSFOF*relErrRSFOF)
+				resultErr["down"].append(rSFOF*relErrRSFOF)				
+		else:
+			result["up"].append(0)
+			result["down"].append(0)
+			
+			resultErr["up"].append(0)
+			resultErr["down"].append(0)			
+		
+	return result, resultErr
+
+def getHistograms(path,plot,runRange,isMC,backgrounds,region,EM=False):
 
 
 	treesEE = readTrees(path,"EE")
-	treesMM = readTrees(path,"MuMu")	
+	treesEM = readTrees(path,"EMu")
+	treesMM = readTrees(path,"MuMu")
+		
+	
 	
 	if isMC:
 		
@@ -47,13 +109,21 @@ def getHistograms(path,plot,runRange,isMC,backgrounds,region):
 		histoMM = TheStack(processes,runRange.lumi,plot,treesMM,"None",1.0,1.0,1.0).theHistogram
 		histoEE.Scale(getattr(triggerEffs,region).effEE.val)
 		histoEE.Scale(getattr(triggerEffs,region).effMM.val)
-			
+		
+		if EM:
+			histoEM = TheStack(processes,runRange.lumi,plot,treesEM,"None",1.0,1.0,1.0).theHistogram		
+			histoEM.Scale(getattr(triggerEffs,region).effEM.val)
 		
 	else:
 		histoEE = getDataHist(plot,treesEE)
 		histoMM = getDataHist(plot,treesMM)
+		if EM:
+			histoEM = getDataHist(plot,treesEM)
 	
-	return histoEE , histoMM
+	if EM:
+		return histoEE , histoMM, histoEM
+	else:
+		return histoEE , histoMM
 
 def centralValues(path,selection,runRange,isMC,backgrounds):
 
@@ -94,7 +164,7 @@ def centralValues(path,selection,runRange,isMC,backgrounds):
 	return result
 	
 	
-def dependencies(path,selection,plots,runRange,isMC,backgrounds,cmsExtra):
+def dependencies(path,selection,plots,runRange,isMC,backgrounds,cmsExtra,fit):
 	for name in plots:
 		plot = getPlot(name)
 		plot.addRegion(selection)
@@ -267,6 +337,21 @@ def dependencies(path,selection,plots,runRange,isMC,backgrounds,cmsExtra):
 		leg.SetLineWidth(2)
 		leg.SetTextAlign(22)
 		
+	
+		if fit:
+			fit = TF1("dataFit","pol1",0,300)
+			fit.SetLineColor(ROOT.kGreen+3)
+			fitMC = TF1("mcFit","pol1",0,300)
+			fitMC.SetLineColor(ROOT.kBlue+3)
+			rMuE.Fit("dataFit")
+			rMuEMC.Fit("mcFit")			
+			
+			latex = ROOT.TLatex()
+			latex.SetTextSize(0.035)	
+			latex.SetNDC()	
+			latex.DrawLatex(0.2, 0.25, "Fit on data: %.2f #pm %.2f %.5f #pm %.5f * m_{ll}"%(fit.GetParameter(0),fit.GetParError(0),fit.GetParameter(1),fit.GetParError(1)))
+			latex.DrawLatex(0.2, 0.20, "Fit on MC:   %.2f #pm %.2f %.5f #pm %.5f * m_{ll}"%(fitMC.GetParameter(0),fitMC.GetParError(0),fitMC.GetParameter(1),fitMC.GetParError(1)))			
+	
 		
 		# Pfeile
 		
@@ -307,7 +392,162 @@ def dependencies(path,selection,plots,runRange,isMC,backgrounds,cmsExtra):
 
 		hCanvas.Print("fig/rMuE_%s_%s_%s_%s.pdf"%(selection.name,runRange.label,plot.variablePlotName,plot.additionalName))	
 	
+	
+def signalRegion(path,selection,plots,runRange,isMC,backgrounds,cmsExtra):
+
+	for name in plots:
+		plot = getPlot(name)
+		plot.addRegion(selection)
+		plot.cleanCuts()	
+		plot.cuts = plot.cuts % runRange.runCut	
+
+		if not "Forward" in selection.name:
+			corr = rSFOF.central.val
+			corrErr = rSFOF.central.err
+			if "Central" in selection.name:
+				region = "central"
+			else:
+				region = "inclusive"
+		else:	
+			corr = rSFOF.forward.val
+			corrErr = rSFOF.forward.err
+			region = "forward"
+
 		
+		histEE, histMM, histEM = getHistograms(path,plot,runRange,isMC, backgrounds,region,EM=True)	
+
+		rMuEMeasured = rMuEMeasure(histEE,histMM)	
+		rMuE, rMuEUncert = rMuEFromSFOF(histEE,histMM,histEM,corr,corrErr)
+		
+		hCanvas = TCanvas("hCanvas", "Distribution", 800,800)
+		plotPad = TPad("plotPad","plotPad",0,0,1,1)
+		
+		style=setTDRStyle()
+		plotPad.UseCurrentStyle()
+		plotPad.Draw()	
+		plotPad.cd()				
+		
+		plotPad.DrawFrame(20,0,300,5,"; %s ; %s" %("m_{ll} [GeV]","r_{#mu e}"))			
+		latex = ROOT.TLatex()
+		latex.SetTextSize(0.04)
+		latex.SetNDC(True)
+
+		
+		if "Central" in selection.name:
+			centralName = "DrellYanControlZPeakCentral"
+		elif "Forward" in selection.name:
+			centralName = "DrellYanControlZPeakForward"
+		else:
+			centralName = "DrellYanControlZPeak"
+		
+		if os.path.isfile("shelves/rMuE_%s_%s.pkl"%(centralName,runRange.label)):
+			centralVals = pickle.load(open("shelves/rMuE_%s_%s.pkl"%(centralName,runRange.label),"rb"))
+		else:
+			centralVals = centralValues(path,getRegion(centralName),runRange,False,backgrounds)
+		
+		x= array("f",[plot.firstBin, plot.lastBin]) 
+		y= array("f", [centralVals["rMuE"],centralVals["rMuE"]]) 
+		ex= array("f", [0.,0.])
+		ey= array("f", [centralVals["rMuESystErr"],centralVals["rMuESystErr"]])
+		ge= ROOT.TGraphErrors(2, x, y, ex, ey)
+		ge.SetFillColor(ROOT.kOrange-9)
+		ge.SetFillStyle(1001)
+		ge.SetLineColor(ROOT.kWhite)
+		ge.Draw("SAME 3")
+		
+		rmueLine= ROOT.TF1("rmueline","%f"%centralVals["rMuE"],plot.firstBin,plot.lastBin)
+		rmueLine.SetLineColor(ROOT.kOrange+3)
+		rmueLine.SetLineWidth(3)
+		rmueLine.SetLineStyle(2)
+		rmueLine.Draw("SAME")	
+				
+		
+	
+		arrayRMuEHigh = array("f",rMuE["up"])
+		arrayRMuELow = array("f",rMuE["down"])
+		arrayRMuEMeasured = array("f",rMuEMeasured["vals"])
+		arrayRMuEHighUncert = array("f",rMuEUncert["up"])
+		arrayRMuELowUncert = array("f",rMuEUncert["down"])
+		arrayRMuEMeasuredUncert = array("f",rMuEMeasured["errs"])
+		xValues = []
+		xValuesUncert = []
+
+		for x in range(0,histEE.GetNbinsX()):	
+			xValues.append(plot.firstBin+ (plot.lastBin-plot.firstBin)/plot.nBins + x*((plot.lastBin-plot.firstBin)/plot.nBins))
+			xValuesUncert.append(0)
+
+		
+		arrayXValues = array("f",xValues)
+		arrayXValuesUncert = array("f",xValuesUncert)
+
+		
+		graphHigh = ROOT.TGraphErrors(histEE.GetNbinsX(),arrayXValues,arrayRMuEHigh,arrayXValuesUncert,arrayRMuEHighUncert)
+		graphLow = ROOT.TGraphErrors(histEE.GetNbinsX(),arrayXValues,arrayRMuELow,arrayXValuesUncert,arrayRMuEHighUncert)
+		graphMeasured = ROOT.TGraphErrors(histEE.GetNbinsX(),arrayXValues,arrayRMuEMeasured,arrayXValuesUncert,arrayRMuEMeasuredUncert)
+		
+		
+		graphHigh.SetMarkerStyle(21)
+		graphLow.SetMarkerStyle(22)
+		graphMeasured.SetMarkerStyle(23)
+		graphHigh.SetMarkerColor(ROOT.kRed)
+		graphLow.SetMarkerColor(ROOT.kBlue)
+		graphHigh.SetLineColor(ROOT.kRed)
+		graphLow.SetLineColor(ROOT.kBlue)
+		
+		graphHigh.Draw("sameEP0")
+		graphLow.Draw("sameEP0")
+		graphMeasured.Draw("sameEP0")
+		
+		
+		
+		
+		legend = TLegend(0.5, 0.6, 0.95, 0.95)
+		legend.SetFillStyle(0)
+		legend.SetBorderSize(0)
+		entryHist = TH1F()
+		entryHist.SetFillColor(ROOT.kWhite)
+		legend.AddEntry(entryHist,selection.latex,"h")
+		legend.AddEntry(graphHigh,"r_{#mu e} = N_{SF}/N_{OF} + #sqrt{(N_{SF}/N_{OF})^{2} -1}","p")
+		legend.AddEntry(graphLow,"r_{#mu e} = N_{SF}/N_{OF} - #sqrt{(N_{SF}/N_{OF})^{2} -1}","p")
+		legend.AddEntry(rmueLine,"r_{#mu e} from Z peak","l")
+		legend.AddEntry(ge,"Syst. Uncert. of r_{#mu e}","f")
+		legend.AddEntry(graphMeasured,"r_{#mu e} = #sqrt{N_{#mu#mu}/N_{ee}} in SF signal region","p")
+		
+		legend.Draw("same")
+	
+
+
+
+		latex = ROOT.TLatex()
+		latex.SetTextFont(42)
+		latex.SetNDC(True)
+		latex.SetTextAlign(31)
+		latex.SetTextSize(0.04)
+
+		latex.DrawLatex(0.95, 0.96, "%s fb^{-1} (8 TeV)"%runRange.printval)
+
+		latexCMS = ROOT.TLatex()
+		latexCMS.SetTextFont(61)
+		latexCMS.SetTextSize(0.06)
+		latexCMS.SetNDC(True)
+		latexCMSExtra = ROOT.TLatex()
+		latexCMSExtra.SetTextFont(52)
+		latexCMSExtra.SetTextSize(0.045)
+		latexCMSExtra.SetNDC(True)				
+
+		latexCMS.DrawLatex(0.19,0.89,"CMS")
+		if "Simulation" in cmsExtra:
+			yLabelPos = 0.82	
+		else:
+			yLabelPos = 0.85	
+
+		latexCMSExtra.DrawLatex(0.19,yLabelPos,"%s"%(cmsExtra))		
+		
+		plotPad.RedrawAxis()
+		if isMC:
+			hCanvas.Print("fig/rMuESignal_%s_%s_%s_%s_MC.pdf"%(selection.name,runRange.label,plot.variablePlotName,plot.additionalName))				
+		else:	
+			hCanvas.Print("fig/rMuESignal_%s_%s_%s_%s.pdf"%(selection.name,runRange.label,plot.variablePlotName,plot.additionalName))				
 	
 def main():
 
@@ -331,6 +571,10 @@ def main():
 						  help="backgrounds to plot.")
 	parser.add_argument("-d", "--dependencies", action="store_true", dest="dependencies", default= False,
 						  help="make dependency plots")	
+	parser.add_argument("-z", "--signalRegion", action="store_true", dest="signalRegion", default= False,
+						  help="make rMuE in signal region plot")	
+	parser.add_argument("-f", "--fit", action="store_true", dest="fit", default= False,
+						  help="do dependecy fit")	
 	parser.add_argument("-x", "--private", action="store_true", dest="private", default=False,
 						  help="plot is private work.")	
 
@@ -374,6 +618,8 @@ def main():
 		outFilePkl.close()
 		
 	if args.dependencies:
-		 dependencies(path,selection,args.plots,runRange,args.mc,args.backgrounds,cmsExtra)		
+		 dependencies(path,selection,args.plots,runRange,args.mc,args.backgrounds,cmsExtra,args.fit)		
+	if args.signalRegion:
+		 signalRegion(path,selection,args.plots,runRange,args.mc,args.backgrounds,cmsExtra)		
 
 main()

@@ -622,7 +622,7 @@ def getTableRare( trees, cuts, Samples,groups,order,titles = None, cutOrder = No
 
 def main():
 	from sys import argv
-	path = "/home/jan/Trees/sw538v0475/"
+	path = "/home/jan/Trees/sw538v0478/"
 	EMutrees = readTrees(path, "EMu")
 	EEtrees = readTrees(path, "EE")
 	MuMutrees = readTrees(path, "MuMu")
@@ -639,8 +639,10 @@ def main():
 	print eventCounts
 	Samples = { 
 		"ZJets"         : [eventCounts["ZJets_madgraph_Summer12"],3503.71,0.04],
-		"TT_Powheg_Summer12_v2"        : [eventCounts["TT_Powheg_Summer12_v2"], 225.2,0.07], 
-		"TTJets_MGDecays_madgraph_Summer12"        : [eventCounts["TTJets_MGDecays_madgraph_Summer12"], 22.6,0.07], 
+		#~ "TT_Powheg_Summer12_v2"        : [eventCounts["TT_Powheg_Summer12_v2"], 225.2,0.07], 
+		"TTJets_MGDecays_madgraph_Summer12"        : [eventCounts["TTJets_MGDecays_madgraph_Summer12"], 22.4,0.07], 
+		"TTJets_MGDecays_FullHad_madgraph_Summer12"        : [eventCounts["TTJets_MGDecays_FullHad_madgraph_Summer12"], 88.8,0.07], 
+		"TTJets_MGDecays_SemiLept_madgraph_Summer12"        : [eventCounts["TTJets_MGDecays_SemiLept_madgraph_Summer12"], 88.6,0.07], 
 		"ZZJetsTo2L2Q"  : [eventCounts["ZZJetsTo2L2Q_madgraph_Summer12"],2.46,0.5], 
 		"ZZJetsTo2L2Nu" : [eventCounts["ZZJetsTo2L2Nu_madgraph_Summer12"],0.365,0.5], 
 		"ZZJetsTo4L"    : [eventCounts["ZZJetsTo4L_madgraph_Summer12"],0.177,0.5],
@@ -674,7 +676,7 @@ def main():
 		"SingleTop":["TBar_tWChannel","TBar_tChannel","TBar_sChannel","T_tWChannel","T_tChannel","T_sChannel"],
 		"Diboson":["ZZJetsTo2L2Q","ZZJetsTo2L2Nu","ZZJetsTo4L","WZJetsTo3LNu","WZJetsTo2L2Q","WWJetsTo2L2Nu"],		
 		"DY":["AStar","ZJets"],
-		"TTJets_MGDecays_madgraph_Summer12":["TTJets_MGDecays_madgraph_Summer12"]
+		"TTJets_MGDecays_madgraph_Summer12":["TTJets_MGDecays_madgraph_Summer12","TTJets_MGDecays_FullHad_madgraph_Summer12","TTJets_MGDecays_SemiLept_madgraph_Summer12"]
 		
 	}
 
