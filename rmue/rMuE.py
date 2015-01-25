@@ -553,7 +553,7 @@ def main():
 
 
 
-	parser = argparse.ArgumentParser(description='Trigger efficiency measurements.')
+	parser = argparse.ArgumentParser(description='rMuE measurements.')
 	
 	parser.add_argument("-v", "--verbose", action="store_true", dest="verbose", default=False,
 						  help="Verbose mode.")
