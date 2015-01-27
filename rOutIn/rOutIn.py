@@ -26,7 +26,7 @@ from defs import getRegion, getPlot, getRunRange, Backgrounds
 from setTDRStyle import setTDRStyle
 from helpers import readTrees, getDataHist, TheStack, totalNumberOfGeneratedEvents, Process
 
-from corrections import rSFOF, rEEOF, rMMOF, mllBins
+from corrections import rSFOF, rEEOF, rMMOF
 from centralConfig import regionsToUse, runRanges, backgroundLists, plotLists, systematics, mllBins
 import corrections
 
