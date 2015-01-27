@@ -26,8 +26,8 @@ from defs import getRegion, getPlot, getRunRange, Backgrounds
 from setTDRStyle import setTDRStyle
 from helpers import readTrees, getDataHist, TheStack, totalNumberOfGeneratedEvents, Process
 
-from corrections import systematics, triggerEffs, rSFOF
-
+from corrections import triggerEffs, rSFOF
+from centralConfig import regionsToUse, runRanges, backgroundLists, plotLists, systematics
 from locations import locations
 
 
@@ -559,11 +559,11 @@ def main():
 						  help="Verbose mode.")
 	parser.add_argument("-m", "--mc", action="store_true", dest="mc", default=False,
 						  help="use MC, default is to use data.")
-	parser.add_argument("-s", "--selection", dest = "selection" , nargs=1, default=["DrellYanControl"],
+	parser.add_argument("-s", "--selection", dest = "selection" , action="append", default=[],
 						  help="selection which to apply.")
 	parser.add_argument("-p", "--plot", dest="plots", action="append", default=[],
 						  help="select dependencies to study, default is all.")
-	parser.add_argument("-r", "--runRange", dest="runRange", nargs=1, default="Full2012",
+	parser.add_argument("-r", "--runRange", dest="runRange", action="append", default=[],
 						  help="name of run range.")
 	parser.add_argument("-c", "--centralValues", action="store_true", dest="central", default=False,
 						  help="calculate effinciecy central values")
@@ -577,21 +577,23 @@ def main():
 						  help="do dependecy fit")	
 	parser.add_argument("-x", "--private", action="store_true", dest="private", default=False,
 						  help="plot is private work.")	
-
+	parser.add_argument("-w", "--write", action="store_true", dest="write", default=False,
+						  help="write results to central repository")	
 					
 	args = parser.parse_args()
 
 
 
 	if len(args.backgrounds) == 0:
-		args.backgrounds = ["Rare","SingleTop","TTJets_SpinCorrelations","Diboson","DrellYanTauTau","DrellYan"]
+		args.backgrounds = backgroundLists.default
 	if len(args.plots) == 0:
-		args.plots = ["nJetsPlotRMuE","nBJetsPlotRMuE","leadingPtPlotRMuE","trailigPtPlotRMuE","trailigPtPlotRMuELeading30","mllPlotRMuE","htPlotRMuE","metPlotRMuE","nVtxPlotRMuE","tralingEtaPlotRMuE","deltaRPlotRMuE"]
-	
-	runRange = getRunRange(args.runRange)
-	
-	
-	selection = getRegion(args.selection[0])
+		args.plots = plotLists.rMuE
+	if len(args.selection) == 0:
+		args.selection.append(regionsToUse.rMuE.central.name)	
+		args.selection.append(regionsToUse.rMuE.forward.name)	
+		args.selection.append(regionsToUse.rMuE.inclusive.name)	
+	if len(args.runRange) == 0:
+		args.runRange.append(runRanges.name)		
 
 	path = locations.dataSetPath	
 
@@ -606,20 +608,33 @@ def main():
 	else:
 		cmsExtra = "Preliminary"
 
+	for runRangeName in args.runRange:
+		runRange = getRunRange(runRangeName)
+	
+		for selectionName in args.selection:
+			
+			selection = getRegion(selectionName)
 
-
-	if args.central:
-		centralVal = centralValues(path,selection,runRange,args.mc,args.backgrounds)
-		if args.mc:
-			outFilePkl = open("shelves/rMuE_%s_%s_MC.pkl"%(selection.name,runRange.label),"w")
-		else:
-			outFilePkl = open("shelves/rMuE_%s_%s.pkl"%(selection.name,runRange.label),"w")
-		pickle.dump(centralVal, outFilePkl)
-		outFilePkl.close()
-		
-	if args.dependencies:
-		 dependencies(path,selection,args.plots,runRange,args.mc,args.backgrounds,cmsExtra,args.fit)		
-	if args.signalRegion:
-		 signalRegion(path,selection,args.plots,runRange,args.mc,args.backgrounds,cmsExtra)		
+			if args.central:
+				centralVal = centralValues(path,selection,runRange,args.mc,args.backgrounds)
+				if args.mc:
+					outFilePkl = open("shelves/rMuE_%s_%s_MC.pkl"%(selection.name,runRange.label),"w")
+				else:
+					outFilePkl = open("shelves/rMuE_%s_%s.pkl"%(selection.name,runRange.label),"w")
+				pickle.dump(centralVal, outFilePkl)
+				outFilePkl.close()
+				
+			if args.dependencies:
+				 dependencies(path,selection,args.plots,runRange,args.mc,args.backgrounds,cmsExtra,args.fit)		
+			if args.signalRegion:
+				 signalRegion(path,selection,args.plots,runRange,args.mc,args.backgrounds,cmsExtra)	
+				 
+			if args.write:
+				import subprocess
+				if args.mc:
+					bashCommand = "cp shelves/rMuE_%s_%s_MC.pkl %s/shelves"%(selection.name,runRange.label,pathes.basePath)		
+				else:	
+					bashCommand = "cp shelves//rMuE_%s_%s.pkl %s/shelves"%(selection.name,runRange.label,pathes.basePath)
+				process = subprocess.Popen(bashCommand.split())				 	
 
 main()

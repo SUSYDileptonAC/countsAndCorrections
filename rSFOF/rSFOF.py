@@ -24,7 +24,8 @@ from defs import getRegion, getPlot, getRunRange, Backgrounds
 from setTDRStyle import setTDRStyle
 from helpers import readTrees, getDataHist, TheStack, totalNumberOfGeneratedEvents, Process
 
-from corrections import systematics, rSFOF, rEEOF, rMMOF, mllBins, rMuE, rSFOFTrig
+from corrections import rSFOF, rEEOF, rMMOF, rMuE, rSFOFTrig
+from centralConfig import regionsToUse, runRanges, backgroundLists, plotLists, systematics, mllBins
 import corrections
 
 
@@ -356,8 +357,6 @@ def centralValues(path,selection,runRange,isMC,backgrounds,cmsExtra):
 	histSFSignal.Add(histMMSignal.Clone())
 	result = {}
 	
-	print plot.cuts
-	print plotSignal.cuts
 
 	lowMassLow = mllBins.lowMass.low
 	lowMassHigh = mllBins.lowMass.high
@@ -391,9 +390,6 @@ def centralValues(path,selection,runRange,isMC,backgrounds,cmsExtra):
 	of = ofLowMass + ofHighMass
 	ofErr = (ofLowMassErr**2 + ofHighMassErr**2)**0.5
 
-	print eeLowMass, eeHighMass
-	print mmLowMass, mmHighMass
-	print ofLowMass, ofHighMass
 	
 	sf = ee + mm 
 	sfErr = (eeErr**2 + mmErr**2)**0.5
@@ -426,12 +422,6 @@ def centralValues(path,selection,runRange,isMC,backgrounds,cmsExtra):
 	sfSignal = eeSignal + mmSignal 
 	sfErrSignal = (eeErrSignal**2 + mmErrSignal**2)**0.5
 	
-
-	print eeLowMassSignal, eeHighMassSignal
-	print mmLowMassSignal, mmHighMassSignal
-	print ofLowMassSignal, ofHighMassSignal
-
-	print (eeLowMass+mmLowMass) / ofLowMass, (eeLowMassSignal+mmLowMassSignal) / ofLowMassSignal
 	
 	rsfof = float(sf)/float(of)
 	rsfofErr = rsfof*(sfErr**2/sf**2+ofErr**2/of**2)**0.5
@@ -493,11 +483,11 @@ def main():
 						  help="Verbose mode.")
 	parser.add_argument("-m", "--mc", action="store_true", dest="mc", default=False,
 						  help="use MC, default is to use data.")
-	parser.add_argument("-s", "--selection", dest = "selection" , nargs=1, default=["DrellYanControl"],
+	parser.add_argument("-s", "--selection", dest = "selection" , action="append", default=[],
 						  help="selection which to apply.")
 	parser.add_argument("-p", "--plot", dest="plots", action="append", default=[],
 						  help="select dependencies to study, default is all.")
-	parser.add_argument("-r", "--runRange", dest="runRange", nargs=1, default="Full2012",
+	parser.add_argument("-r", "--runRange", dest="runRange", action="append", default=[],
 						  help="name of run range.")
 	parser.add_argument("-c", "--centralValues", action="store_true", dest="central", default=False,
 						  help="calculate effinciecy central values")
@@ -511,20 +501,23 @@ def main():
 						  help="plot is private work.")	
 	parser.add_argument("-i", "--illustrate", action="store_true", dest="illustrate", default=False,
 						  help="plot dependency illustrations.")	
-
+	parser.add_argument("-w", "--write", action="store_true", dest="write", default=False,
+						  help="write results to central repository")	
 					
 	args = parser.parse_args()
 
 
 	if len(args.backgrounds) == 0:
-		args.backgrounds = ["Rare","SingleTop","TTJets_SpinCorrelations","Diboson","DrellYanTauTau","DrellYan"]
+		args.backgrounds = backgroundLists.default
 	if len(args.plots) == 0:
-		args.plots = ["mllPlot"]
-	
-	runRange = getRunRange(args.runRange)
-	
-	
-	selection = getRegion(args.selection[0])
+		args.plots = plotLists.rSFOF
+	if len(args.selection) == 0:
+		args.selection.append(regionsToUse.rSFOF.central.name)	
+		args.selection.append(regionsToUse.rSFOF.forward.name)	
+		args.selection.append(regionsToUse.rSFOF.inclusive.name)	
+	if len(args.runRange) == 0:
+		args.runRange.append(runRanges.name)	
+			
 
 	path = locations.dataSetPath	
 
@@ -539,21 +532,34 @@ def main():
 	else:
 		cmsExtra = "Preliminary"
 
+	for runRangeName in args.runRange:
+		runRange = getRunRange(runRangeName)
+	
+		for selectionName in args.selection:
+			
+			selection = getRegion(selectionName)
 
-
-	if args.central:
-		
-		centralVal = centralValues(path,selection,runRange,args.mc,args.backgrounds,cmsExtra)
-		if args.mc:
-			outFilePkl = open("shelves/rSFOF_%s_%s_MC.pkl"%(selection.name,runRange.label),"w")
-		else:
-			outFilePkl = open("shelves/rSFOF_%s_%s.pkl"%(selection.name,runRange.label),"w")
-		pickle.dump(centralVal, outFilePkl)
-		outFilePkl.close()
-		
-	if args.dependencies:
-		 dependencies(path,selection,args.plots,runRange,args.mc,args.backgrounds,cmsExtra,args.fit)		
-		
-	if args.illustrate:
-		illustration()
+			if args.central:
+				
+				centralVal = centralValues(path,selection,runRange,args.mc,args.backgrounds,cmsExtra)
+				if args.mc:
+					outFilePkl = open("shelves/rSFOF_%s_%s_MC.pkl"%(selection.name,runRange.label),"w")
+				else:
+					outFilePkl = open("shelves/rSFOF_%s_%s.pkl"%(selection.name,runRange.label),"w")
+				pickle.dump(centralVal, outFilePkl)
+				outFilePkl.close()
+				
+			if args.dependencies:
+				 dependencies(path,selection,args.plots,runRange,args.mc,args.backgrounds,cmsExtra,args.fit)		
+				
+			if args.illustrate:
+				illustration()
+				
+			if args.write:
+				import subprocess
+				if args.mc:
+					bashCommand = "cp shelves/rSFOF_%s_%s_MC.pkl %s/shelves"%(selection.name,runRange.label,pathes.basePath)		
+				else:	
+					bashCommand = "cp shelves//rSFOF_%s_%s.pkl %s/shelves"%(selection.name,runRange.label,pathes.basePath)
+				process = subprocess.Popen(bashCommand.split())					
 main()
