@@ -1,12 +1,38 @@
 #!/usr/bin/env python
 import gc
+import sys
+sys.path.append('cfg/')
+from frameworkStructure import pathes
+sys.path.append(pathes.basePath)
+
+import os
+import pickle
+
+from messageLogger import messageLogger as log
+
+import math
+from math import sqrt
+from array import array
+
+import argparse	
+
+from defs import getRegion, getPlot, getRunRange, Backgrounds, theCuts
+
+from setTDRStyle import setTDRStyle
+from helpers import getDataTrees, TheStack, totalNumberOfGeneratedEvents, Process
+
+
+from centralConfig import regionsToUse, runRanges, backgroundLists, plotLists, systematics, mllBins, cutNCountXChecks
+
+from locations import locations
+
+
 def getEventLists(trees, cut, colNames = ["eventNr","lumiSec","runNr"]):
 	result = {
 		"columns": colNames,
 		"cut": cut
 		}
 	for comb in trees:
-		print cut
 		subtree = trees[comb].CopyTree(cut)
 		result[comb] = set()
 		#~ print comb
@@ -17,236 +43,142 @@ def getEventLists(trees, cut, colNames = ["eventNr","lumiSec","runNr"]):
 			for varName in colNames:
 				cols.append( getattr(ev, varName) )
 			result[comb].add(tuple(cols))
-		del subtree
+		subtree.IsA().Destructor(subtree) ### ROOT destructor to really get the memeory released
 		gc.collect()
 	return result
 
 def getCounts(trees, cut):
 	
 	n= {
-		"MuMu": trees["MuMu"].GetEntries(cut),
+		"MM": trees["MM"].GetEntries(cut),
 		"EE": trees["EE"].GetEntries(cut),
-		"EMu": trees["EMu"].GetEntries(cut),
+		"EM": trees["EM"].GetEntries(cut),
 		}
 	#~ print cut, n
 	n["cut"] = cut
 	return n
 
-
-def getTable( trees, cuts, titles = None, cutOrder = None):
-	if cutOrder is None:
-		cutOrder = cuts.keys()
-
-	if titles is None:
-		titles = {}
-			
-	for name in cutOrder:
-		if not name in titles:
-			titles[name] = name
-
-	result = ""
-	for name in cutOrder:
-		lineTemplate = r"%(title)50s & %(EE)4i & %(MuMu)4i & %(EMu)4i & $%(nS)3.1f \pm %(nSUncert)3.1f$ \\"+"\n"
-		oldLineTemplate = r"%(title)50s & %(EE)4i & %(MuMu)4i & %(EMu)4i & $%(rmueSR)5.2f$ ($%(rmueSR-reldiff)3.2f$) & $%(nS)3.1f$ \\"+"\n"
-		repMap = { "title": titles[name]}
-		#print "%20s"%name, "(%s)"%(") && (".join(cuts[name]))
-#		print cuts[name]
-		repMap.update( getCounts(trees, "(%s)"%(") && (".join(cuts[name]))) )
-		result += lineTemplate%repMap
-	return tableTemplate%result
-
-def cutAndCountForRegion(trees, cut, name,period):
-	from src.defs import Regions
-	cut = getattr(Regions, name).cut
 	
-	import pickle
-	base = "1"#chargeProduct < 0 && ((pt1 > 20 && pt2 > 10 ) || (pt2 > 20 && pt1 > 10 )) && abs(eta1) < 2.4  && abs(eta2) < 2.4 && deltaR > 0.3 &&  p4.M() > 30 && p4.M() < 80"
-	edgeMass = "(20 < inv && inv < 70)"
-	onShellMass = "(81 < inv && inv < 101)"
-	highMass = "(inv > 120)"
-	pt2010 = "((pt1 > 20 && pt2 > 10)||(pt2 > 20 && pt1 > 10))"
-	pt2020 = "pt1 > 20 && pt2 > 20"
-	pt3020 = "((pt1 > 30 && pt2 > 20)||(pt1 > 20 && pt2 > 30))"
-	pt3010 = "((pt1 > 30 && pt2 > 10)||(pt1 > 10 && pt2 > 30))"
-	pt3030 = "pt1 > 30 && pt2 > 30"
-	tightEta = "(abs(eta1) <1.4 && abs(eta2) < 1.4)"
-	lowPU = "nVertices < 11"
-	midPU = "11 <= nVertices && nVertices < 16"
-	highPU = "16 <= nVertices"
-	MET50Ge2Jets = " nJets >= 2 && ht > 100 && met > 50"
-	MET100Ge2Jets = " nJets >= 2 && ht > 100 && met > 100"
-	highPU = "16 <= nVertices"
-	bTag0 = "nBJets == 0"
-	bTag1 = "nBJets == 1"
-	bTag2 = "nBJets == 2"
-	bTagGe2 = "nBJets >= 2"
-	bTagGe3 = "nBJets >= 3"
-	lowHT = "100 < ht && ht < 300"
-	highHT = "ht > 300"
-	tightIso = "id1 < 0.05 && id2 < 0.05"
-	countMass = " inv > 20"
-	catA = "pt1 > 20 && pt2 > 20 && abs(eta1) < 1.4 && abs(eta2) < 1.4"
-	catB = "pt1 > 20 && pt2 > 20 && !(abs(eta1) < 1.4 && abs(eta2) < 1.4)"
-	catC = "!(pt1 > 20 && pt2 > 20) && abs(eta1) < 1.4 && abs(eta2) < 1.4"
-	catD = "!(pt1 > 20 && pt2 > 20) && !(abs(eta1) < 1.4 && abs(eta2) < 1.4)"
-	runAB = "(runNr <= 196531)"
-	runC = "(runNr > 196531)"
-	barrel = "abs(eta1) < 1.4 && abs(eta2) < 1.4"
-	endcap = "1.6 <= TMath::Max(abs(eta1),abs(eta2))"
-	type1Met = "(nJets >= 2 && type1Met > 150) || (nJets >=3 && type1Met > 100)"
-	tcMet = "(nJets >= 2 && tcMet > 150) || (nJets >=3 && tcMet > 100)"
-	caloMet = "(nJets >= 2 && caloMet > 150) || (nJets >=3 && caloMet > 100)"
-	MHT = "(nJets >= 2 && mht > 150) || (nJets >=3 && mht > 100)"
+	
+	
+	
 
 
-	mllcuts= {
-		"default": [],
-		"edgeMass": [edgeMass ],
-		"onShellMass": [onShellMass],
-		"highMass": [highMass],
-		}
-	subcuts= {
-		"default":[base, cut],
-		"Pt3010":[base, cut,pt3010],
-		"Pt3020":[base, cut,pt3020],
-		"Pt3030":[base, cut,pt3030],
-		"LowPU": [base, cut, lowPU],
-		"MidPU": [base, cut, midPU],
-		"HighPU": [base, cut, highPU],
-		"0BTag":[base, cut, bTag0],
-		"1BTag":[base, cut, bTag1],
-		"2BTag":[base, cut, bTag2],
-		"Ge2BTag":[base, cut, bTagGe2],
-		"Ge3BTag":[base, cut, bTagGe3],
-		#~ "Barrel":[base, cut, tightEta],
-		"LowHT": [base, cut, lowHT],
-		"HighHT": [base, cut, highHT],
-		"TightIso":[base, cut, tightIso],
-		"Pt2020":[base,cut, pt2020],
-		"Pt2010":[base,cut, pt2010],
-		"CountCuts":[base,cut, pt2020, countMass],
-		"CatA":[base, cut, catA],
-		"CatB":[base, cut, catB],
-		"CatC":[base, cut, catC],
-		"CatD":[base, cut ,catD],
-		"RunAB":[base, cut, runAB],
-		"RunC":[base, cut, runC],
-		"MET50Ge2Jets":[base, cut, MET50Ge2Jets],
-		"MET100Ge2Jets":[base, cut, MET100Ge2Jets],
-		"Barrel":[base, cut, barrel],
-		"Endcap":[base, cut, endcap],
-		"Type1MET":[base, cut, type1Met],
-		"TcMET":[base, cut, tcMet],
-		"CaloMET":[base, cut, caloMet],
-		"MHTMET":[base, cut, MHT],
-		}
-		
-	if "SingleLepton" in name:
-		subcuts= {
-			"default":[base, cut],
-			"Pt3010":[base, cut,pt3010],
-			"Pt3020":[base, cut,pt3020],
-			"Pt3030":[base, cut,pt3030],
-			"LowPU": [base, cut, lowPU],
-			"MidPU": [base, cut, midPU],
-			"HighPU": [base, cut, highPU],
-			"0BTag":[base, cut, bTag0],
-			"1BTag":[base, cut, bTag1],
-			"2BTag":[base, cut, bTag2],
-			"Ge2BTag":[base, cut, bTagGe2],
-			"Ge3BTag":[base, cut, bTagGe3],
-			#~ "Barrel":[gc.collect()base, cut, tightEta],
-			"LowHT": [base, cut, lowHT],
-			"HighHT": [base, cut, highHT],
-			"TightIso":[base, cut, tightIso],
-			"Pt2020":[base,cut, pt2020],
-			"Pt2010":[base,cut, pt2010],
-			"CountCuts":[base,cut, pt2020, countMass],
-			"CatA":[base, cut, catA],
-			"CatB":[base, cut, catB],
-			"CatC":[base, cut, catC],
-			"CatD":[base, cut ,catD],
-			"RunAB":[base, cut, runAB],
-			"RunC":[base, cut, runC],
-			"MET50Ge2Jets":[base, cut, MET50Ge2Jets],
-			"MET100Ge2Jets":[base, cut, MET100Ge2Jets],
-			"Barrel":[base, cut, barrel],
-			"Endcap":[base, cut, endcap],
-			"Type1MET":[base, cut, type1Met],
-			"TcMET":[base, cut, tcMet],
-			"CaloMET":[base, cut, caloMet],
-			"MHTMET":[base, cut, MHT],
-			}
-	counts = {name:{}}
-	eventLists = {name:{}}
-	for subcutName, subcut in subcuts.iteritems():
-		
+def cutAndCountForRegion(path,selection,plots,runRange,isMC,backgrounds,preselection):
+	
+	trees = getDataTrees(path)
+	for label, tree in trees.iteritems():
+		trees[label] = tree.CopyTree(preselection)
+	for plotName in plots:
+		plot = getPlot(plotName)
+		plot.addRegion(selection)
+		plot.cleanCuts()
+		plot.cuts = plot.cuts % runRange.runCut	
 
-		
-		counts[name][subcutName] = {}
-		eventLists[name][subcutName] = {}		
-		for mllcutName, mllcut in mllcuts.iteritems():
-			fullcut = "(%s)"%(") && (".join(subcut+mllcut))
-			fullcut = fullcut.replace("inv", "p4.M()")
-			if subcutName == "Pt3010" or subcutName == "Pt2010":
-				fullcut = fullcut.replace("&& pt1 > 20 && pt2 > 20"," ")
-			if subcutName == "Pt2010":
-				fullcut = fullcut.replace("p4.M() > 20","p4.M() > 15 ")			
-				fullcut = fullcut.replace("20 < p4.M() ","p4.M() > 15 ")		
-			if subcutName == "MET50Ge2Jets" or subcutName == "MET100Ge2Jets" or subcutName == "Type1MET" or subcutName == "CaloMET" or subcutName == "TcMET" or subcutName == "MHTMET":
-				fullcut = fullcut.replace("((nJets >= 2 && met > 150) || (nJets >=3 && met > 100)) &&"," ")			
-				#~ print subcutName
-				#~ print fullcut	
-			counts[name][subcutName][mllcutName] = getCounts(trees, fullcut)
-			eventLists[name][subcutName][mllcutName] = getEventLists(trees, fullcut)
 
-	outFile = open("shelves/cutAndCount_%s_%s.pkl"%(name,period),"w")
-	pickle.dump(counts, outFile)
-	outFile.close()
+		counts = {}
+		eventLists = {}
+		massRanges = ["default","edgeMass","zMass","highMass"]
+		counts["default"] = {}
+		eventLists["default"] = {}
+		for mllCut in massRanges:
+			counts["default"][getattr(theCuts.massCuts,mllCut).name] = getCounts(trees, plot.cuts+"*(%s)"%getattr(theCuts.massCuts,mllCut).cut)
+			eventLists["default"][getattr(theCuts.massCuts,mllCut).name] = getEventLists(trees, plot.cuts+"*(%s)"%getattr(theCuts.massCuts,mllCut).cut)		
 
-	outFile = open("shelves/eventLists_%s.pkl"%name,"w")
-	pickle.dump(eventLists, outFile)
-	outFile.close()
+		for categoryName, category in cutNCountXChecks.cutList.iteritems():
+			if categoryName == "leptonPt":
+				for subcut in category:
+					counts[subcut] = {}
+					eventLists[subcut] = {}
+					
+					for mllCut in massRanges:
+						cut = plot.cuts.replace("pt1 > 20 && pt > 20 &&","")
+						cut = cut+"*(%s)"%getattr(theCuts.ptCuts,subcut).cut + "*(%s)"%getattr(theCuts.massCuts,mllCut).cut
+						for mllCut in massRanges:
+							counts[getattr(theCuts.ptCuts,subcut).name][getattr(theCuts.massCuts,mllCut).name] = getCounts(trees, cut)
+							eventLists[getattr(theCuts.ptCuts,subcut).name][getattr(theCuts.massCuts,mllCut).name] = getEventLists(trees, cut)
+			elif categoryName == "mets":
+				for subcut in category:
+					counts[subcut] = {}
+					eventLists[subcut] = {}					
+					
+					for mllCut in massRanges:
+						cut = plot.cuts.replace("met",subcut)
+						cut = cut + "*(%s)"%getattr(theCuts.massCuts,mllCut).cut
+						counts[subcut][getattr(theCuts.massCuts,mllCut).name] = getCounts(trees, cut)
+						eventLists[subcut][getattr(theCuts.massCuts,mllCut).name] = getEventLists(trees, cut)			
+				
+			else:
+				for subcut in category:
+					counts[subcut] = {}
+					eventLists[subcut] = {}					
+					
+					for mllCut in massRanges:
+						cut = plot.cuts+"*(%s)"%getattr(getattr(theCuts,categoryName),subcut).cut
+						cut = cut + "*(%s)"%getattr(theCuts.massCuts,mllCut).cut
+						counts[subcut][getattr(theCuts.massCuts,mllCut).name] = getCounts(trees, cut)
+						eventLists[subcut][getattr(theCuts.massCuts,mllCut).name] = getEventLists(trees, cut)				
+
+		outFile = open("shelves/cutAndCount_%s_%s.pkl"%(selection.name,runRange.label),"w")
+		pickle.dump(counts, outFile)
+		outFile.close()
+
+		outFile = open("shelves/eventLists_%s_%s.pkl"%(selection.name,runRange.label),"w")
+		pickle.dump(eventLists, outFile)
+		outFile.close()
 
 
 
 def main():
-	from sys import argv
-	from src.defs import Regions
-	from src.datasets import readTreeFromFile
+	parser = argparse.ArgumentParser(description='produce cut & count event yields.')
 	
-	cuts = {}
-	for regionName in filter(lambda x: not x.endswith("_"), dir(Regions)):
-		cuts[regionName] = getattr(Regions, regionName).cut
-	
-	for cut in cuts.keys():
-		cuts["%s_METPD"%cut] = cuts[cut]
-		cuts["%s_SingleLepton"%cut] = cuts[cut]
+	parser.add_argument("-v", "--verbose", action="store_true", dest="verbose", default=False,
+						  help="Verbose mode.")
+	parser.add_argument("-m", "--mc", action="store_true", dest="mc", default=False,
+						  help="use MC, default is to use data.")
+	parser.add_argument("-s", "--selection", dest = "selection" , action="append", default=[],
+						  help="selection which to apply.")
+	parser.add_argument("-p", "--plot", dest="plots", action="append", default=[],
+						  help="select dependencies to study, default is all.")
+	parser.add_argument("-r", "--runRange", dest="runRange", action="append", default=[],
+						  help="name of run range.")
+	parser.add_argument("-b", "--backgrounds", dest="backgrounds", action="append", default=[],
+						  help="backgrounds to plot.")	
+	parser.add_argument("-w", "--write", action="store_true", dest="write", default=False,
+						  help="write results to central repository")	
+					
+	args = parser.parse_args()
+
+
+
+	if len(args.backgrounds) == 0:
+		args.backgrounds = backgroundLists.default
+	if len(args.plots) == 0:
+		args.plots = plotLists.signal
+	if len(args.selection) == 0:
+		args.selection.append(regionsToUse.signal.central.name)	
+		args.selection.append(regionsToUse.signal.forward.name)	
+		args.selection.append(regionsToUse.signal.inclusive.name)	
+	if len(args.runRange) == 0:
+		args.runRange.append(runRanges.name)	
+
+
+	path = locations.dataSetPath	
 
 	preselection = "nJets >= 2 && deltaR > 0.3"
-	if "SingleLepton" in argv[2]:
-		trees = {
-			"MuMu": readTreeFromFile(argv[1], "MuMu", preselection,SingleLepton=True),
-			"EMu": readTreeFromFile(argv[1], "EMu", preselection,SingleLepton=True),
-			"EE": readTreeFromFile(argv[1], "EE", preselection,SingleLepton=True),
-			}		
-	elif "BlockA" in argv[1]:
-		trees = {
-			"MuMu": readTreeFromFile(argv[1], "MuMu", preselection, use532=True),
-			"EMu": readTreeFromFile(argv[1], "EMu", preselection, use532=True),
-			"EE": readTreeFromFile(argv[1], "EE", preselection, use532=True),
-			}		
-		
-	else:
-		trees = {
-			"MuMu": readTreeFromFile(argv[1], "MuMu", preselection),
-			"EMu": readTreeFromFile(argv[1], "EMu", preselection),
-			"EE": readTreeFromFile(argv[1], "EE", preselection),
-			}
-	datasetName = argv[1].split("/")[-1].split(".")[2]
-	isMC = (not "MergedData" in datasetName)
-	name = argv[3]
-	cutAndCountForRegion(trees, preselection, argv[2],name)
+	for runRangeName in args.runRange:
+		runRange = getRunRange(runRangeName)
+	
+		for selectionName in args.selection:
+			
+			selection = getRegion(selectionName)
+
+
+			cutAndCountForRegion(path,selection,args.plots,runRange,args.mc,args.backgrounds,preselection)
+
+	
+
+
 		
 
 main()

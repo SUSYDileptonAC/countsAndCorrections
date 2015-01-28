@@ -18,6 +18,7 @@ import argparse
 
 
 import ROOT
+ROOT.gROOT.SetBatch(True)
 from ROOT import TCanvas, TEfficiency, TPad, TH1F, TH1I, THStack, TLegend, TMath, TGraphAsymmErrors, TF1, gStyle
 
 
@@ -430,6 +431,9 @@ def centralValues(path,selection,runRange,isMC,backgrounds,cmsExtra,additionalLa
 	for combination in ["EE","MM","SF"]:
 		corr = getattr(corrections,"r%sOF"%combination).central.val
 		corrErr = getattr(corrections,"r%sOF"%combination).central.err
+		if isMC:
+			corr = getattr(corrections,"r%sOF"%combination).central.valMC
+			corrErr = getattr(corrections,"r%sOF"%combination).central.errMC
 		peak = result["peak%s"%combination] - result["peakOF"]*corr			
 		peakErr = sqrt(result["peak%s"%combination] + (sqrt(result["peakOF"])*corr)**2 + (sqrt(result["peakOF"])*corr*corrErr)**2)
 		lowMass = result["lowMass%s"%combination] - result["lowMassOF"]*corr			
@@ -461,13 +465,16 @@ def centralValues(path,selection,runRange,isMC,backgrounds,cmsExtra,additionalLa
 		
 		if isMC:
 			additionalLabel += "_MC"
+
+		histEMToPlot = histEM.Clone()
+		histEMToPlot.Scale(corr)
 		
 		if combination == "EE":
-			plotMllSpectra(histEE.Clone(),histEM.Clone(),runRange,selection,combination,cmsExtra,additionalLabel)
+			plotMllSpectra(histEE.Clone(),histEMToPlot,runRange,selection,combination,cmsExtra,additionalLabel)
 		elif combination == "MM":	
-			plotMllSpectra(histMM.Clone(),histEM.Clone(),runRange,selection,combination,cmsExtra,additionalLabel)
+			plotMllSpectra(histMM.Clone(),histEMToPlot,runRange,selection,combination,cmsExtra,additionalLabel)
 		else:	
-			plotMllSpectra(histSF.Clone(),histEM.Clone(),runRange,selection,combination,cmsExtra,additionalLabel)
+			plotMllSpectra(histSF.Clone(),histEMToPlot,runRange,selection,combination,cmsExtra,additionalLabel)
 
 
 

@@ -17,7 +17,7 @@ import argparse
 
 import ROOT
 from ROOT import TCanvas, TEfficiency, TPad, TH1F, TH1I, THStack, TLegend, TMath, TGraphAsymmErrors, TF1, gStyle
-
+ROOT.gROOT.SetBatch(True)
 
 from defs import getRegion, getPlot, getRunRange, Backgrounds
 
@@ -422,6 +422,8 @@ def centralValues(path,selection,runRange,isMC,backgrounds,cmsExtra):
 	sfSignal = eeSignal + mmSignal 
 	sfErrSignal = (eeErrSignal**2 + mmErrSignal**2)**0.5
 	
+	print (eeLowMass+mmLowMass)/ofLowMass, (eeLowMassSignal+mmLowMassSignal)/ofLowMassSignal 
+	
 	
 	rsfof = float(sf)/float(of)
 	rsfofErr = rsfof*(sfErr**2/sf**2+ofErr**2/of**2)**0.5
@@ -508,7 +510,7 @@ def main():
 
 
 	if len(args.backgrounds) == 0:
-		args.backgrounds = backgroundLists.default
+		args.backgrounds = backgroundLists.rSFOF
 	if len(args.plots) == 0:
 		args.plots = plotLists.rSFOF
 	if len(args.selection) == 0:

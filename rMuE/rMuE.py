@@ -19,7 +19,7 @@ import argparse
 
 import ROOT
 from ROOT import TCanvas, TEfficiency, TPad, TH1F, TH1I, THStack, TLegend, TMath, TGraphAsymmErrors, TF1, gStyle
-
+ROOT.gROOT.SetBatch(True)
 
 from defs import getRegion, getPlot, getRunRange, Backgrounds
 

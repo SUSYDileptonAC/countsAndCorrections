@@ -187,7 +187,7 @@ int ratios_ReReco(void) {
   
   int nEM = 1458*lumifactor, nEE = 669*lumifactor, nMM = 806*lumifactor;
   getRatioAndError(nEE+nMM,nEM,RSFcr_c.v,RSFcr_c.e);
-  RSFcr_c.s = RSFcr_c.v*0.01; // Syst. unc. from MC closure
+  RSFcr_c.s = RSFcr_c.v* 0.011157841911518905; // Syst. unc. from MC closure
   getRatioAndError(nEE,nEM,Reecr_c.v,Reecr_c.e);
   Reecr_c.s = Reecr_c.v*0.02; // Syst. unc. from MC closure
   getRatioAndError(nMM,nEM,Rmmcr_c.v,Rmmcr_c.e);
