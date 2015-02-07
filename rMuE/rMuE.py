@@ -129,8 +129,9 @@ def centralValues(path,selection,runRange,isMC,backgrounds):
 
 	plot = getPlot("mllPlot")
 	plot.addRegion(selection)
-	plot.cleanCuts()
+	#~ plot.cleanCuts()
 	plot.cuts = plot.cuts % runRange.runCut		
+
 
 	
 	if not "Forward" in selection.name:
@@ -398,7 +399,7 @@ def signalRegion(path,selection,plots,runRange,isMC,backgrounds,cmsExtra):
 	for name in plots:
 		plot = getPlot(name)
 		plot.addRegion(selection)
-		plot.cleanCuts()	
+		#~ plot.cleanCuts()	
 		plot.cuts = plot.cuts % runRange.runCut	
 
 		if not "Forward" in selection.name:

@@ -15,18 +15,17 @@ observation %(nObs).0f
 # the second 'process' line must have a positive number for backgrounds, and 0 for signal
 # then we list the independent sources of uncertainties, and give their effect (syst. error)
 # on each process and bin
-bin                 1           1           1           1
-process             Sig         EMu         Fakes       DY
-process             0           1           2           3
-rate                1           %(nEM).3f       %(nFake).3f     %(nDY).3f 
+bin                 1           1           1           
+process             Sig         EMu         DY       
+process             0           1           2           
+rate                1           %(nEM).3f          %(nDY).3f 
 ------------
-deltaS  lnN         1.          -           -           -
-uncertEM  lnN       -     %(uncertEM).2f        -           -
-uncertFake  lnN     -           -           %(uncertFake).2f  -
-uncertDY  lnN       -           -           -           %(uncertDY).2f
+deltaS  lnN         1.          -           -               -
+uncertEMu  lnN      -     %(uncertEM).3f        -           -
+EmuStat  gmN        %(nEM)      -       1.00    -           -
+uncertDY  lnN       -           -       %(uncertDY).2f      -
 """ %anaDict
     return txt
-
 
 def main():
 	from sys import argv

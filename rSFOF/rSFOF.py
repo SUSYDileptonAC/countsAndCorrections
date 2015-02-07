@@ -206,12 +206,12 @@ def dependencies(path,selection,plots,runRange,isMC,backgrounds,cmsExtra,fit):
 		plot.cleanCuts()	
 		plot.cuts = plot.cuts % runRange.runCut	
 
-
 		histEE, histMM, histEM = getHistograms(path,plot,runRange,isMC, backgrounds)
-		
 		histRSFOF = histEE.Clone("histRSFOF")
 		histRSFOF.Add(histMM.Clone())
 		histRSFOF.Divide(histEM)				
+		histEE.Divide(histEM)				
+		histMM.Divide(histEM)				
 		
 		hCanvas = TCanvas("hCanvas", "Distribution", 800,300)
 		
@@ -235,11 +235,11 @@ def dependencies(path,selection,plots,runRange,isMC,backgrounds,cmsExtra,fit):
 		from ROOT import TH1F,kWhite
 		legendHistDing = TH1F()
 		legendHistDing.SetFillColor(kWhite)
-		legend = ROOT.TLegend(0.65,0.7,1,0.9)
+		legend = ROOT.TLegend(0.65,0.6,1,0.85)
 		legend.SetFillStyle(0)
 		legend.SetBorderSize(0)			
 		legend.AddEntry(legendHistDing,"%s"%selection.latex,"h")	
-		legend.Draw("same")
+
 
 		zeroLine = ROOT.TLine(plot.firstBin, 1., plot.lastBin , 1.)
 		zeroLine.SetLineWidth(1)
@@ -250,6 +250,23 @@ def dependencies(path,selection,plots,runRange,isMC,backgrounds,cmsExtra,fit):
 		histRSFOF.SetMarkerColor(ROOT.kBlack)
 		histRSFOF.SetMarkerStyle(20)
 		histRSFOF.Draw("sameE0")
+		histEE.SetLineColor(ROOT.kBlue)
+		histEE.SetMarkerColor(ROOT.kBlue)
+		histEE.SetMarkerStyle(20)
+		histEE.Draw("sameE0")
+		histMM.SetLineColor(ROOT.kRed)
+		histMM.SetMarkerColor(ROOT.kRed)
+		histMM.SetMarkerStyle(20)
+		histMM.Draw("sameE0")
+
+
+		legend.AddEntry(histRSFOF,"R_{SF/OF}","p")	
+		legend.AddEntry(histEE,"R_{EE/OF}","p")	
+		legend.AddEntry(histMM,"R_{MM/OF}","p")	
+
+
+		legend.Draw("same")
+
 		
 		latex = ROOT.TLatex()
 		latex.SetTextFont(42)
@@ -340,7 +357,7 @@ def centralValues(path,selection,runRange,isMC,backgrounds,cmsExtra):
 	if "Forward" in selection.name:
 		plotSignal.addRegion(getRegion("SignalForward"))
 	elif "Central" in selection.name:
-		plotSignal.addRegion(getRegion("SignalBarrel"))
+		plotSignal.addRegion(getRegion("SignalCentral"))
 	else:		
 		plotSignal.addRegion(getRegion("SignalInclusive"))
 
@@ -392,7 +409,11 @@ def centralValues(path,selection,runRange,isMC,backgrounds,cmsExtra):
 
 	
 	sf = ee + mm 
+	sfLowMass = eeLowMass + mmLowMass 
+	sfHighMass = eeHighMass + mmHighMass 
 	sfErr = (eeErr**2 + mmErr**2)**0.5
+	sfLowMassErr = (eeLowMassErr**2 + mmLowMassErr**2)**0.5
+	sfHighMassErr = (eeHighMassErr**2 + mmHighMassErr**2)**0.5
 
 	eeLowMassErrSignal = ROOT.Double()
 	eeLowMassSignal = histEESignal.IntegralAndError(histEESignal.FindBin(lowMassLow+0.01),histEESignal.FindBin(lowMassHigh-0.01),eeLowMassErrSignal)
@@ -421,9 +442,7 @@ def centralValues(path,selection,runRange,isMC,backgrounds,cmsExtra):
 	
 	sfSignal = eeSignal + mmSignal 
 	sfErrSignal = (eeErrSignal**2 + mmErrSignal**2)**0.5
-	
-	print (eeLowMass+mmLowMass)/ofLowMass, (eeLowMassSignal+mmLowMassSignal)/ofLowMassSignal 
-	
+		
 	
 	rsfof = float(sf)/float(of)
 	rsfofErr = rsfof*(sfErr**2/sf**2+ofErr**2/of**2)**0.5
@@ -449,10 +468,30 @@ def centralValues(path,selection,runRange,isMC,backgrounds,cmsExtra):
 	result["MM"] = mm
 	result["SF"] = sf
 	result["OF"] = of
+	result["EELowMass"] = eeLowMass
+	result["MMLowMass"] = mmLowMass
+	result["SFLowMass"] = eeLowMass + mmLowMass
+	result["OFLowMass"] = ofLowMass
+	result["EEHighMass"] = eeHighMass
+	result["MMHighMass"] = mmHighMass
+	result["SFHighMass"] = eeHighMass + mmHighMass
+	result["OFHighMass"] = ofHighMass
 	result["EESignal"] = eeSignal
 	result["MMSignal"] = mmSignal
 	result["SFSignal"] = sfSignal
 	result["OFSignal"] = ofSignal
+	result["rSFOFLowMass"] = sfLowMass / ofLowMass
+	result["rSFOFErrLowMass"] = result["rSFOFLowMass"]*(sfLowMassErr**2/sfLowMass**2+ofLowMassErr**2/ofLowMass**2)**0.5
+	result["rEEOFLowMass"] = eeLowMass / ofLowMass
+	result["rEEOFErrLowMass"] =  result["rEEOFLowMass"]*((eeLowMassErr**2)**0.5**2/sfLowMass**2+ofLowMassErr**2/ofLowMass**2)**0.5
+	result["rMMOFLowMass"] = mmLowMass / ofLowMass
+	result["rMMOFErrLowMass"] =  result["rMMOFLowMass"]*((mmLowMassErr**2)**0.5**2/sfLowMass**2+ofLowMassErr**2/ofLowMass**2)**0.5
+	result["rSFOFHighMass"] = sfHighMass / ofHighMass
+	result["rSFOFErrHighMass"] = result["rSFOFHighMass"]*(sfHighMassErr**2/sfHighMass**2+ofHighMassErr**2/ofHighMass**2)**0.5
+	result["rEEOFHighMass"] = eeHighMass / ofHighMass
+	result["rEEOFErrHighMass"] =  result["rEEOFHighMass"]*((eeHighMassErr**2)**0.5**2/sfHighMass**2+ofHighMassErr**2/ofHighMass**2)**0.5
+	result["rMMOFHighMass"] = mmHighMass / ofHighMass
+	result["rMMOFErrHighMass"] =  result["rMMOFHighMass"]*((mmHighMassErr**2)**0.5**2/sfHighMass**2+ofHighMassErr**2/ofHighMass**2)**0.5
 	result["rSFOF"] = rsfof
 	result["rSFOFErr"] = rsfofErr
 	result["rEEOF"] = rEEOF

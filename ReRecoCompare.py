@@ -217,12 +217,14 @@ def main():
 		#~ args.selection.append(regionsToUse.rOutIn.central.name)	
 		#~ args.selection.append(regionsToUse.rOutIn.forward.name)	
 		#~ args.selection.append(regionsToUse.rOutIn.inclusive.name)	
-		args.selection.append(regionsToUse.signal.central.name)	
-		args.selection.append(regionsToUse.signal.forward.name)	
-		args.selection.append(regionsToUse.signal.inclusive.name)	
-		#~ args.selection.append(regionsToUse.rMuE.central.name)	
-		#~ args.selection.append(regionsToUse.rMuE.forward.name)	
-		#~ args.selection.append(regionsToUse.rMuE.inclusive.name)	
+		#~ args.selection.append(regionsToUse.signal.central.name)	
+		#~ args.selection.append(regionsToUse.signal.forward.name)	
+		#~ args.selection.append(regionsToUse.signal.inclusive.name)	
+		args.selection.append(regionsToUse.rMuE.central.name)	
+		args.selection.append(regionsToUse.rMuE.forward.name)	
+		args.selection.append(regionsToUse.rMuE.inclusive.name)	
+		args.selection.append("Region")	
+
 	if len(args.runRange) == 0:
 		args.runRange.append(runRanges.name)	
 			

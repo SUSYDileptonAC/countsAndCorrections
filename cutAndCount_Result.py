@@ -57,6 +57,17 @@ def getCounts(trees, cut):
 	#~ print cut, n
 	n["cut"] = cut
 	return n
+	
+def getCountsMC(trees, cut):
+	
+	n= {
+		"MM": trees["MM"].GetEntries(cut),
+		"EE": trees["EE"].GetEntries(cut),
+		"EM": trees["EM"].GetEntries(cut),
+		}
+	#~ print cut, n
+	n["cut"] = cut
+	return n
 
 	
 	
@@ -119,14 +130,8 @@ def cutAndCountForRegion(path,selection,plots,runRange,isMC,backgrounds,preselec
 						counts[subcut][getattr(theCuts.massCuts,mllCut).name] = getCounts(trees, cut)
 						eventLists[subcut][getattr(theCuts.massCuts,mllCut).name] = getEventLists(trees, cut)				
 
-		outFile = open("shelves/cutAndCount_%s_%s.pkl"%(selection.name,runRange.label),"w")
-		pickle.dump(counts, outFile)
-		outFile.close()
-
-		outFile = open("shelves/eventLists_%s_%s.pkl"%(selection.name,runRange.label),"w")
-		pickle.dump(eventLists, outFile)
-		outFile.close()
-
+		
+		return counts, eventLists
 
 
 def main():
@@ -166,6 +171,10 @@ def main():
 	path = locations.dataSetPath	
 
 	preselection = "nJets >= 2 && deltaR > 0.3"
+	
+			
+	
+
 	for runRangeName in args.runRange:
 		runRange = getRunRange(runRangeName)
 	
@@ -173,10 +182,24 @@ def main():
 			
 			selection = getRegion(selectionName)
 
+			if args.write:
 
-			cutAndCountForRegion(path,selection,args.plots,runRange,args.mc,args.backgrounds,preselection)
+				import subprocess
 
-	
+				bashCommand = "cp shelves/cutAndCount_%s_%s.pkl %s/shelves"%(selection.name,runRange.label,pathes.basePath)
+				process = subprocess.Popen(bashCommand.split())		
+			
+			else:
+				counts, eventLists = cutAndCountForRegion(path,selection,args.plots,runRange,args.mc,args.backgrounds,preselection)
+			
+				outFile = open("shelves/cutAndCount_%s_%s.pkl"%(selection.name,runRange.label),"w")
+				pickle.dump(counts, outFile)
+				outFile.close()
+
+				outFile = open("shelves/eventLists_%s_%s.pkl"%(selection.name,runRange.label),"w")
+				pickle.dump(eventLists, outFile)
+				outFile.close()
+			
 
 
 		

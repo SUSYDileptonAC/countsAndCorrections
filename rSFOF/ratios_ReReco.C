@@ -185,7 +185,8 @@ int ratios_ReReco(void) {
   Observable RSFcr_c, Reecr_c, Rmmcr_c, rmueCR_c, RTcr_c;
   Observable RSFcr_f, Reecr_f, Rmmcr_f, rmueCR_f, RTcr_f;
   
-  int nEM = 1458*lumifactor, nEE = 669*lumifactor, nMM = 806*lumifactor;
+  //~ int nEM = 1458*lumifactor, nEE = 669*lumifactor, nMM = 806*lumifactor;
+  int nEM = 835*lumifactor, nEE = 803*lumifactor, nMM = 1*lumifactor;
   getRatioAndError(nEE+nMM,nEM,RSFcr_c.v,RSFcr_c.e);
   RSFcr_c.s = RSFcr_c.v* 0.011157841911518905; // Syst. unc. from MC closure
   getRatioAndError(nEE,nEM,Reecr_c.v,Reecr_c.e);
@@ -196,7 +197,8 @@ int ratios_ReReco(void) {
   getRmueAndError(nMM,nEE,rmueCR_c.v,rmueCR_c.e);
   getRTandErrorCR(nEE,nMM,nEM,RTcr_c.v,RTcr_c.e);
 
-  nEM = 547*lumifactor, nEE = 240*lumifactor, nMM = 307*lumifactor;
+  //~ nEM = 547*lumifactor, nEE = 240*lumifactor, nMM = 307*lumifactor;
+  nEM = 187*lumifactor, nEE = 187*lumifactor, nMM = 1*lumifactor;
   getRatioAndError(nEE+nMM,nEM,RSFcr_f.v,RSFcr_f.e);
   RSFcr_f.s = RSFcr_f.v*0.02; // Syst. unc. from MC closure
   getRatioAndError(nEE,nEM,Reecr_f.v,Reecr_f.e);
