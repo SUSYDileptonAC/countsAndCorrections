@@ -207,7 +207,7 @@ def plotMllSpectra(SFhist,EMuhist,runRange,selection,suffix,cmsExtra,additionalL
 
 	latexCMS.DrawLatex(0.19,0.88,"CMS")
 	if "Simulation" in cmsExtra:
-		yLabelPos = 0.81	
+		yLabelPos = 0.825	
 	else:
 		yLabelPos = 0.84	
 
@@ -221,7 +221,7 @@ def plotMllSpectra(SFhist,EMuhist,runRange,selection,suffix,cmsExtra,additionalL
 	
 def dependencies(path,selection,plots,runRange,mc,backgrounds,cmsExtra):
 	hCanvas = TCanvas("hCanvas", "Distribution", 800,800)
-	legend = TLegend(0.6, 0.7, 0.95, 0.95)
+	legend = TLegend(0.6, 0.7, 0.9, 0.9)
 	legend.SetFillStyle(0)
 	legend.SetBorderSize(0)
 	ROOT.gStyle.SetOptStat(0)		
@@ -243,7 +243,7 @@ def dependencies(path,selection,plots,runRange,mc,backgrounds,cmsExtra):
 		else:	
 			relSyst = systematics.rOutIn.forward.val
 			region = "forward"	
-		
+		 
 		if len(plot.binning) == 0:
 			bins = [plot.firstBin+(plot.lastBin-plot.firstBin)/plot.nBins*i for i in range(plot.nBins+1)]
 		else:
@@ -307,8 +307,9 @@ def dependencies(path,selection,plots,runRange,mc,backgrounds,cmsExtra):
 				centralVals = centralValues(path,selection,runRange,mc,backgrounds,cmsExtra)		
 		
 		for combination in ["EE","MM","SF"]:
+			relSystSave = relSyst
 			for region in ["LowMass","HighMass","B","NoB"]:
-			
+				relSyst = relSystSave	
 				hCanvas = TCanvas("hCanvas", "Distribution", 800,800)
 
 				plotPad = TPad("plotPad","plotPad",0,0,1,1)
@@ -332,6 +333,7 @@ def dependencies(path,selection,plots,runRange,mc,backgrounds,cmsExtra):
 					relSyst = 0.
 					bandY = array("f",[centralVals["bFactor%s%s"%(region,combination)],centralVals["bFactor%s%s"%(region,combination)]])
 					bandYErr = array("f",[centralVals["bFactor%s%s"%(region,combination)]*relSyst,centralVals["bFactor%s%s"%(region,combination)]*relSyst])
+					relSyst = relSystSave
 				else:	
 					bandY = array("f",[centralVals["rOutIn%s%s"%(region,combination)],centralVals["rOutIn%s%s"%(region,combination)]])
 					bandYErr = array("f",[centralVals["rOutIn%s%s"%(region,combination)]*relSyst,centralVals["rOutIn%s%s"%(region,combination)]*relSyst])
@@ -404,7 +406,7 @@ def dependencies(path,selection,plots,runRange,mc,backgrounds,cmsExtra):
 
 				latexCMS.DrawLatex(0.19,0.89,"CMS")
 				if "Simulation" in cmsExtra:
-					yLabelPos = 0.82	
+					yLabelPos = 0.83	
 				else:
 					yLabelPos = 0.85	
 

@@ -24,7 +24,7 @@ from defs import getRegion, getPlot, getRunRange, Backgrounds
 from setTDRStyle import setTDRStyle
 from helpers import readTrees, getDataHist, TheStack, totalNumberOfGeneratedEvents, Process
 
-from corrections import rSFOF, rEEOF, rMMOF, rMuE, rSFOFTrig
+from corrections import rSFOF, rEEOF, rMMOF, rMuE, rSFOFTrig, rSFOFFact, triggerEffs
 from centralConfig import regionsToUse, runRanges, backgroundLists, plotLists, systematics, mllBins
 import corrections
 
@@ -33,70 +33,89 @@ import corrections
 from locations import locations
 
 
-def illustration():
-	from corrections import rSFOF
+def illustration(name):
+	
+	if "Forward" in name:
+		label = "forward"
+	else:
+		if "Central" in name:
+			label = "central"
+		else:
+			label = "inclusive"
+	
+	
 	hCanvas = TCanvas("hCanvas", "Distribution", 800,800)
 	plotPad = ROOT.TPad("plotPad","plotPad",0,0,1,1)
 	style = setTDRStyle()
 	plotPad.UseCurrentStyle()		
 	plotPad.Draw()	
 	plotPad.cd()	
-	hCanvas.DrawFrame(0,0,2,2,"; %s ; %s" %("r_{#mu e}","R_{SF/OF}"))	
+	hCanvas.DrawFrame(0,0,3,2,"; %s ; %s" %("r_{#mu e}","R_{SF/OF}"))	
 
-	legend = TLegend(0.15, 0.13, 0.5, 0.5)
+	legend = TLegend(0.55, 0.18, 0.9, 0.525)
 	legend.SetFillStyle(0)
 	legend.SetBorderSize(0)
 	ROOT.gStyle.SetOptStat(0)
 
 
-	x= array("f",[rMuE.central.val-rMuE.central.err, rMuE.central.val+rMuE.central.err]) 
+	x= array("f",[getattr(rMuE,label).val-getattr(rMuE,label).err, getattr(rMuE,label).val+getattr(rMuE,label).err]) 
    	y= array("f",[1.,1.])
    	ey= array("f",[1, 1])
    	ex= array("f",[0,0])
    	ge= ROOT.TGraphErrors(2, x, y,ex,ey)
-   	ge.SetFillColor(ROOT.kGreen-3)
-   	ge.SetFillStyle(3008)
-   	ge.SetLineColor(ROOT.kWhite)
+   	ge.SetFillColor(ROOT.kGreen+3)
+   	ge.SetLineColor(ROOT.kGreen+3)
+   	ge.SetFillStyle(3001)
    	ge.Draw("SAME 3")	
-	x= array("f",[0, 2]) 
+	x= array("f",[0, 3]) 
  	#~ y= array("f", [1.175, 1.175]) # 1.237
  	#~ y= array([rMuEs[region], rMuEs[region]],"f") # 1.237
-   	y= array("f",[rSFOF.central.val,rSFOF.central.val])
-   	ey= array("f",[rSFOF.central.err, rSFOF.central.err])
+   	y= array("f",[getattr(rSFOFFact,label).SF.val,getattr(rSFOFFact,label).SF.val])
+   	ey= array("f",[getattr(rSFOFFact,label).SF.err, getattr(rSFOFFact,label).SF.err])
    	ex= array("f",[0.0,0.0])
    	ge2= ROOT.TGraphErrors(2, x, y,ex,ey)
    	ge2.SetFillColor(ROOT.kBlue-3)
+   	ge2.SetLineColor(ROOT.kBlue-3)
    	ge2.SetFillStyle(3002)
-   	ge2.SetLineColor(ROOT.kWhite)
    	ge2.Draw("SAME 3")	
 	
-	rSFOFLine = TF1("rSFOF","0.5*(x+1./x)*%s"%rSFOFTrig.central.val,0.,2.)
+	
+	#~ print 0.5*((1+getattr(rMuE,label).val-1)+ 1./(1+getattr(rMuE,label).val-1))*getattr(rSFOFTrig,label).val
+	#~ print getattr(rSFOFFact,label).SF.val
+	#~ print 0.5*((getattr(rMuE,label).val-0.183218)+1./(getattr(rMuE,label).val-0.183218))*1.084055
+	#~ print "0.5*((x-%f)+1./(x-%f))*%f"%(getattr(rMuE,label).val-1,getattr(rMuE,label).val-1,getattr(rSFOFTrig,label).val)
+	#~ rSFOFLine = TF1("rSFOF%s"%label,"0.5*((x-%f)+1./(x-%f))*%f"%(getattr(rMuE,label).val-1,getattr(rMuE,label).val-1,getattr(rSFOFTrig,label).val),0.,3.)
+	rSFOFLine = TF1("rSFOF%s"%label,"0.5*((x)+1./(x))*%f"%(getattr(rSFOFTrig,label).val),0.,3.)
 	rSFOFLine.SetLineColor(ROOT.kRed)
 	rSFOFLine.SetLineWidth(2)
-	rSFOFTrigUp = TF1("rSFOF","0.5*(x+1./x)*%s"%(rSFOFTrig.central.val+rSFOFTrig.central.err),0.,2.)
+	#~ rSFOFTrigUp = TF1("rSFOFUp%s"%label,"0.5*((x-%f)+1./(x-%f))*%f"%(getattr(rMuE,label).val-1,getattr(rMuE,label).val-1,getattr(rSFOFTrig,label).val+getattr(rSFOFTrig,label).err),0.,3.)
+	rSFOFTrigUp = TF1("rSFOFUp%s"%label,"0.5*((x)+1./(x))*%f"%(getattr(rSFOFTrig,label).val+getattr(rSFOFTrig,label).err),0.,3.)
 	rSFOFTrigUp.SetLineColor(ROOT.kBlack)
 	rSFOFTrigUp.SetLineWidth(2)
 	rSFOFTrigUp.SetLineStyle(ROOT.kDashed)
-	rSFOFTrigDown = TF1("rSFOF","0.5*(x+1./x)*%s"%(rSFOFTrig.central.val-rSFOFTrig.central.err),0.,2.)
+	#~ rSFOFTrigDown = TF1("rSFOFDown%s"%label,"0.5*((x-%f)+1./(x-%f))*%f"%(getattr(rMuE,label).val-1,getattr(rMuE,label).val-1,getattr(rSFOFTrig,label).val-getattr(rSFOFTrig,label).err),0.,3.)
+	rSFOFTrigDown = TF1("rSFOFDown%s"%label,"0.5*((x)+1./(x))*%f"%(getattr(rSFOFTrig,label).val-getattr(rSFOFTrig,label).err),0.,3.)
 	rSFOFTrigDown.SetLineColor(ROOT.kBlack)
 	rSFOFTrigDown.SetLineWidth(2)
 	rSFOFTrigDown.SetLineStyle(ROOT.kDashed)
 	
-	rmueline= ROOT.TF1("rmueline","%s"%rSFOF.central.val,0, 2)
+	rmueline= ROOT.TF1("rmueline","%s"%getattr(rSFOFFact,label).SF.val,0, 3)
 	rmueline.SetLineColor(ROOT.kBlue)
 	rmueline.SetLineWidth(3)
 	rmueline.SetLineStyle(2)
 	rmueline.Draw("SAME") 
 
-	line1 = ROOT.TLine(rMuE.central.val,0,rMuE.central.val,2)
+	line1 = ROOT.TLine(getattr(rMuE,label).val,0,getattr(rMuE,label).val,2)
 	line1.Draw("Same")
 	line1.SetLineWidth(2)
-	line1.SetLineColor(ROOT.kGreen)
-	
-	legend.AddEntry(rSFOFLine,"R_{SF/OF} from r_{#mu e} & trig. eff.","l")
-	legend.AddEntry(rSFOFTrigDown,"R_{SF/OF} #pm 1 #sigma trig. eff. ","l")
-	legend.AddEntry(ge,"r_{#mu e} #pm 1 #sigma","f")
-	legend.AddEntry(ge2,"R_{SF/OF} #pm 1 #sigma","f")
+	line1.SetLineColor(ROOT.kGreen+3)
+	legendHistDing = ROOT.TH1F()
+	legendHistDing.SetFillColor(ROOT.kWhite)
+	legend.AddEntry(legendHistDing,"Factorization method:","h")
+	legend.AddEntry(rSFOFLine,"R_{SF/OF} (r_{#mu e})","l")
+	legend.AddEntry(rSFOFTrigDown,"R_{SF/OF} (r_{#mu e}) #pm 1 #sigma on R_{T} ","l")
+	legend.AddEntry(ge,"measured r_{#mu e} #pm 1 #sigma","fl")
+	legend.AddEntry(ge2,"measured R_{SF/OF} #pm 1 #sigma","fl")
 	
 	legend.Draw("SAME")
 	
@@ -107,95 +126,11 @@ def illustration():
 	latex = ROOT.TLatex()
 	latex.SetTextSize(0.04)
 	latex.SetNDC(True)
-	latex.DrawLatex(0.15, 0.96, "Central Dilepton Selection")	  	
+	latex.DrawLatex(0.15, 0.96, "%s dilepton selection"%label.title())	  	
 
 	
-	hCanvas.Print("rMuEPropaganda_Central.pdf")
-	hCanvas.Clear()
-	hCanvas.DrawFrame(0,0,2,2,"; %s ; %s" %("r_{#mu e}","R_{SF/OF}"))	
+	hCanvas.Print("fig/rMuEPropaganda_%s.pdf"%label)
 
-	plotPad = ROOT.TPad("plotPad","plotPad",0,0,1,1)
-	style = setTDRStyle()
-	#~ style.SetTitleYOffset(0.70)
-	#~ style.SetTitleSize(0.1, "XYZ")
-	#~ style.SetTitleYOffset(0.35)
-	#~ style.SetTitleXOffset(0.7)
-	#~ style.SetPadLeftMargin(0.1)
-	#~ style.SetPadTopMargin(0.12)
-	#~ style.SetPadBottomMargin(0.17)
-	plotPad.UseCurrentStyle()		
-	plotPad.Draw()	
-	plotPad.cd()	
-	hCanvas.DrawFrame(0,0,2,2,"; %s ; %s" %("r_{#mu e}","R_{SF/OF}"))	
-
-	legend = TLegend(0.15, 0.13, 0.5, 0.5)
-	legend.SetFillStyle(0)
-	legend.SetBorderSize(0)
-	ROOT.gStyle.SetOptStat(0)
-
-
-	x= array("f",[rMuE.forward.val-rMuE.forward.err, rMuE.forward.val+rMuE.forward.err]) 
-   	y= array("f",[1.,1.])
-   	ey= array("f",[1, 1])
-   	ex= array("f",[0,0])
-   	ge= ROOT.TGraphErrors(2, x, y,ex,ey)
-   	ge.SetFillColor(ROOT.kGreen-3)
-   	ge.SetFillStyle(3008)
-   	ge.SetLineColor(ROOT.kWhite)
-   	ge.Draw("SAME 3")	
-	x= array("f",[0, 2]) 
- 	#~ y= array("f", [1.175, 1.175]) # 1.237
- 	#~ y= array([rMuEs[region], rMuEs[region]],"f") # 1.237
-   	y= array("f",[rSFOF.forward.val,rSFOF.forward.val])
-   	ey= array("f",[rSFOF.forward.err, rSFOF.forward.err])
-   	ex= array("f",[0.0,0.0])
-   	ge2= ROOT.TGraphErrors(2, x, y,ex,ey)
-   	ge2.SetFillColor(ROOT.kBlue-3)
-   	ge2.SetFillStyle(3002)
-   	ge2.SetLineColor(ROOT.kWhite)
-   	ge2.Draw("SAME 3")	
-	
-	rSFOFLine = TF1("rSFOF","0.5*(x+1./x)*%s"%rSFOFTrig.forward.val,0.,2.)
-	rSFOFLine.SetLineColor(ROOT.kRed)
-	rSFOFLine.SetLineWidth(2)
-	rSFOFTrigUp = TF1("rSFOF","0.5*(x+1./x)*%s"%(rSFOFTrig.forward.val+rSFOFTrig.forward.err),0.,2.)
-	rSFOFTrigUp.SetLineColor(ROOT.kBlack)
-	rSFOFTrigUp.SetLineWidth(2)
-	rSFOFTrigUp.SetLineStyle(ROOT.kDashed)
-	rSFOFTrigDown = TF1("rSFOF","0.5*(x+1./x)*%s"%(rSFOFTrig.forward.val-rSFOFTrig.forward.err),0.,2.)
-	rSFOFTrigDown.SetLineColor(ROOT.kBlack)
-	rSFOFTrigDown.SetLineWidth(2)
-	rSFOFTrigDown.SetLineStyle(ROOT.kDashed)
-	
-	rmueline= ROOT.TF1("rmueline","%s"%rSFOF.forward.val,0, 2)
-	rmueline.SetLineColor(ROOT.kBlue)
-	rmueline.SetLineWidth(3)
-	rmueline.SetLineStyle(2)
-	rmueline.Draw("SAME") 
-
-	line1 = ROOT.TLine(rMuE.forward.val,0,rMuE.forward.val,2)
-	line1.Draw("Same")
-	line1.SetLineWidth(2)
-	line1.SetLineColor(ROOT.kGreen)
-	
-	legend.AddEntry(rSFOFLine,"R_{SF/OF} from r_{#mu e} & trig. eff.","l")
-	legend.AddEntry(rSFOFTrigDown,"R_{SF/OF} #pm 1 #sigma trig. eff. ","l")
-	legend.AddEntry(ge,"r_{#mu e} #pm 1 #sigma","f")
-	legend.AddEntry(ge2,"R_{SF/OF} #pm 1 #sigma","f")
-	
-	legend.Draw("SAME")
-	
-	rSFOFLine.Draw("SAME")
-	rSFOFTrigUp.Draw("SAME")
-	rSFOFTrigDown.Draw("SAME")
-	
-	latex = ROOT.TLatex()
-	latex.SetTextSize(0.04)
-	latex.SetNDC(True)
-	latex.DrawLatex(0.15, 0.96, "Forward Dilepton Selection")	  	
-
-	
-	hCanvas.Print("rMuEPropaganda_Forward.pdf")	
 
 
 
@@ -206,7 +141,15 @@ def dependencies(path,selection,plots,runRange,isMC,backgrounds,cmsExtra,fit):
 		plot.cleanCuts()	
 		plot.cuts = plot.cuts % runRange.runCut	
 
-		histEE, histMM, histEM = getHistograms(path,plot,runRange,isMC, backgrounds)
+		if "Forward" in selection.name:
+			label = "forward"
+		elif "Central" in selection.name:
+			label = "central"
+		else:		
+			label = "inclusive"
+
+
+		histEE, histMM, histEM = getHistograms(path,plot,runRange,isMC, backgrounds,label)
 		histRSFOF = histEE.Clone("histRSFOF")
 		histRSFOF.Add(histMM.Clone())
 		histRSFOF.Divide(histEM)				
@@ -253,16 +196,16 @@ def dependencies(path,selection,plots,runRange,isMC,backgrounds,cmsExtra,fit):
 		histEE.SetLineColor(ROOT.kBlue)
 		histEE.SetMarkerColor(ROOT.kBlue)
 		histEE.SetMarkerStyle(20)
-		histEE.Draw("sameE0")
+		#~ histEE.Draw("sameE0")
 		histMM.SetLineColor(ROOT.kRed)
 		histMM.SetMarkerColor(ROOT.kRed)
 		histMM.SetMarkerStyle(20)
-		histMM.Draw("sameE0")
+		#~ histMM.Draw("sameE0")
 
 
-		legend.AddEntry(histRSFOF,"R_{SF/OF}","p")	
-		legend.AddEntry(histEE,"R_{EE/OF}","p")	
-		legend.AddEntry(histMM,"R_{MM/OF}","p")	
+		legend.AddEntry(histRSFOF,"R_{SF/OF}","pe")	
+		#~ legend.AddEntry(histEE,"R_{EE/OF}","p")	
+		#~ legend.AddEntry(histMM,"R_{MM/OF}","p")	
 
 
 		legend.Draw("same")
@@ -315,7 +258,7 @@ def dependencies(path,selection,plots,runRange,isMC,backgrounds,cmsExtra,fit):
 
 
 
-def getHistograms(path,plot,runRange,isMC,backgrounds):
+def getHistograms(path,plot,runRange,isMC,backgrounds,region=""):
 
 	treesEE = readTrees(path,"EE")
 	treesEM = readTrees(path,"EMu")
@@ -332,7 +275,10 @@ def getHistograms(path,plot,runRange,isMC,backgrounds):
 		histoEE = TheStack(processes,runRange.lumi,plot,treesEE,"None",1.0,1.0,1.0).theHistogram		
 		histoMM = TheStack(processes,runRange.lumi,plot,treesMM,"None",1.0,1.0,1.0).theHistogram
 		histoEM = TheStack(processes,runRange.lumi,plot,treesEM,"None",1.0,1.0,1.0).theHistogram		
-		
+		histoEE.Scale(getattr(triggerEffs,region).effEE.val)
+		histoEE.Scale(getattr(triggerEffs,region).effMM.val)	
+		histoEM.Scale(getattr(triggerEffs,region).effEM.val)
+			
 	else:
 		histoEE = getDataHist(plot,treesEE)
 		histoMM = getDataHist(plot,treesMM)
@@ -353,23 +299,27 @@ def centralValues(path,selection,runRange,isMC,backgrounds,cmsExtra):
 	plot.cuts = plot.cuts % runRange.runCut		
 
 	plotSignal = getPlot("mllPlot")
+
 	
 	if "Forward" in selection.name:
 		plotSignal.addRegion(getRegion("SignalForward"))
+		label = "forward"
 	elif "Central" in selection.name:
 		plotSignal.addRegion(getRegion("SignalCentral"))
+		label = "central"
 	else:		
 		plotSignal.addRegion(getRegion("SignalInclusive"))
+		label = "inclusive"
 
 	plotSignal.cleanCuts()
 	plotSignal.cuts = plotSignal.cuts % runRange.runCut	
 
 
-	histEE, histMM, histEM = getHistograms(path,plot,runRange,isMC,backgrounds)
+	histEE, histMM, histEM = getHistograms(path,plot,runRange,isMC,backgrounds,label)
 	histSF = histEE.Clone("histSF")
 	histSF.Add(histMM.Clone())
 
-	histEESignal, histMMSignal, histEMSignal = getHistograms(path,plotSignal,runRange,isMC,backgrounds)
+	histEESignal, histMMSignal, histEMSignal = getHistograms(path,plotSignal,runRange,isMC,backgrounds,label)
 	histSFSignal = histEESignal.Clone("histSFSignal")
 	histSFSignal.Add(histMMSignal.Clone())
 	result = {}
@@ -594,7 +544,7 @@ def main():
 				 dependencies(path,selection,args.plots,runRange,args.mc,args.backgrounds,cmsExtra,args.fit)		
 				
 			if args.illustrate:
-				illustration()
+				illustration(selectionName)
 				
 			if args.write:
 				import subprocess

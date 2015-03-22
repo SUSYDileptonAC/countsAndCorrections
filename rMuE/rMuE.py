@@ -166,6 +166,9 @@ def centralValues(path,selection,runRange,isMC,backgrounds):
 	
 	
 def dependencies(path,selection,plots,runRange,isMC,backgrounds,cmsExtra,fit):
+	
+	backgrounds = ["TTJets_SpinCorrelations"]
+	
 	for name in plots:
 		plot = getPlot(name)
 		plot.addRegion(selection)
@@ -395,7 +398,7 @@ def dependencies(path,selection,plots,runRange,isMC,backgrounds,cmsExtra,fit):
 	
 	
 def signalRegion(path,selection,plots,runRange,isMC,backgrounds,cmsExtra):
-
+	plots = ["mllPlotRMuESignal"]
 	for name in plots:
 		plot = getPlot(name)
 		plot.addRegion(selection)
@@ -428,18 +431,18 @@ def signalRegion(path,selection,plots,runRange,isMC,backgrounds,cmsExtra):
 		plotPad.Draw()	
 		plotPad.cd()				
 		
-		plotPad.DrawFrame(20,0,300,5,"; %s ; %s" %("m_{ll} [GeV]","r_{#mu e}"))			
+		plotPad.DrawFrame(plot.firstBin,0,plot.lastBin,5,"; %s ; %s" %(plot.xaxis,"r_{#mu e}"))			
 		latex = ROOT.TLatex()
 		latex.SetTextSize(0.04)
 		latex.SetNDC(True)
 
 		
 		if "Central" in selection.name:
-			centralName = "DrellYanControlZPeakCentral"
+			centralName = "ZPeakControlCentral"
 		elif "Forward" in selection.name:
-			centralName = "DrellYanControlZPeakForward"
+			centralName = "ZPeakControlForward"
 		else:
-			centralName = "DrellYanControlZPeak"
+			centralName = "ZPeakControl"
 		
 		if os.path.isfile("shelves/rMuE_%s_%s.pkl"%(centralName,runRange.label)):
 			centralVals = pickle.load(open("shelves/rMuE_%s_%s.pkl"%(centralName,runRange.label),"rb"))
@@ -590,14 +593,22 @@ def main():
 	if len(args.plots) == 0:
 		args.plots = plotLists.rMuE
 	if len(args.selection) == 0:
-		args.selection.append(regionsToUse.rMuE.central.name)	
-		args.selection.append(regionsToUse.rMuE.forward.name)	
-		args.selection.append(regionsToUse.rMuE.inclusive.name)	
+		
+		if args.signalRegion:
+			args.selection.append(regionsToUse.signal.central.name)	
+			args.selection.append(regionsToUse.signal.forward.name)	
+			args.selection.append(regionsToUse.signal.inclusive.name)		
+		else:
+			args.selection.append(regionsToUse.rMuE.central.name)	
+			args.selection.append(regionsToUse.rMuE.forward.name)	
+			args.selection.append(regionsToUse.rMuE.inclusive.name)
+			
 	if len(args.runRange) == 0:
 		args.runRange.append(runRanges.name)		
 
 	path = locations.dataSetPath	
 
+	
 
 	cmsExtra = ""
 	if args.private:

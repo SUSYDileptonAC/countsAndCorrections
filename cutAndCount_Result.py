@@ -49,6 +49,8 @@ def getEventLists(trees, cut, colNames = ["eventNr","lumiSec","runNr"]):
 
 def getCounts(trees, cut):
 	
+	print cut
+	
 	n= {
 		"MM": trees["MM"].GetEntries(cut),
 		"EE": trees["EE"].GetEntries(cut),
@@ -103,11 +105,10 @@ def cutAndCountForRegion(path,selection,plots,runRange,isMC,backgrounds,preselec
 					eventLists[subcut] = {}
 					
 					for mllCut in massRanges:
-						cut = plot.cuts.replace("pt1 > 20 && pt > 20 &&","")
+						cut = plot.cuts.replace("pt1 > 20 && pt2 > 20 &&","")
 						cut = cut+"*(%s)"%getattr(theCuts.ptCuts,subcut).cut + "*(%s)"%getattr(theCuts.massCuts,mllCut).cut
-						for mllCut in massRanges:
-							counts[getattr(theCuts.ptCuts,subcut).name][getattr(theCuts.massCuts,mllCut).name] = getCounts(trees, cut)
-							eventLists[getattr(theCuts.ptCuts,subcut).name][getattr(theCuts.massCuts,mllCut).name] = getEventLists(trees, cut)
+						counts[getattr(theCuts.ptCuts,subcut).name][getattr(theCuts.massCuts,mllCut).name] = getCounts(trees, cut)
+						eventLists[getattr(theCuts.ptCuts,subcut).name][getattr(theCuts.massCuts,mllCut).name] = getEventLists(trees, cut)
 			elif categoryName == "mets":
 				for subcut in category:
 					counts[subcut] = {}
