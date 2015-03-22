@@ -16,6 +16,7 @@ import argparse
 
 
 import ROOT
+ROOT.PyConfig.IgnoreCommandLineOptions = True
 from ROOT import TCanvas, TEfficiency, TPad, TH1F, TH1I, THStack, TLegend, TMath, TGraphErrors, TF1, gStyle, TGraphAsymmErrors
 ROOT.gROOT.SetBatch(True)
 

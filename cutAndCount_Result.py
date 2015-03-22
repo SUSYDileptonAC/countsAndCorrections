@@ -14,6 +14,8 @@ import math
 from math import sqrt
 from array import array
 
+import ROOT
+ROOT.PyConfig.IgnoreCommandLineOptions = True
 import argparse	
 
 from defs import getRegion, getPlot, getRunRange, Backgrounds, theCuts
