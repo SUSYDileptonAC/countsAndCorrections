@@ -152,7 +152,7 @@ def centralValues(path,selection,runRange,isMC,backgrounds):
 	
 	rMuE= pow(nMM/nEE,0.5)
 
-	rMuEStatErr = pow( pow(nMM**0.5/nEE,2) + pow(nEE**0.5*nMM/(nEE**2),2), 0.5)
+	rMuEStatErr = 0.5*rMuE*(1./nMM + 1./nEE)**0.5
 	rMuESystErr= rMuE*relSyst
 	
 
