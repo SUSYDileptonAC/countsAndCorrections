@@ -194,7 +194,7 @@ def signalRegion(path,selection,plots,runRange,backgrounds,cmsExtra):
 		latex.SetTextSize(0.04)
 		latex.SetNDC(True)
 
-		legend = TLegend(0.5, 0.6, 0.95, 0.95)
+		legend = TLegend(0.5, 0.55, 0.95, 0.9)
 		legend.SetFillStyle(0)
 		legend.SetBorderSize(0)
 		entryHist = TH1F()
@@ -228,11 +228,11 @@ def signalRegion(path,selection,plots,runRange,backgrounds,cmsExtra):
 		latexCMSExtra.SetTextSize(0.045)
 		latexCMSExtra.SetNDC(True)				
 
-		latexCMS.DrawLatex(0.19,0.89,"CMS")
+		latexCMS.DrawLatex(0.19,0.88,"CMS")
 		if "Simulation" in cmsExtra:
-			yLabelPos = 0.82	
+			yLabelPos = 0.81	
 		else:
-			yLabelPos = 0.85	
+			yLabelPos = 0.84	
 
 		latexCMSExtra.DrawLatex(0.19,yLabelPos,"%s"%(cmsExtra))		
 		

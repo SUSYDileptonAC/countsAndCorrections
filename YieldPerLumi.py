@@ -65,7 +65,7 @@ def getUncert(sf,of,factorUncert):
 		result = (sf + of + (of*factorUncert)**2)**0.5
 		return result
 		
-def lumiDependency(path,plotName,selection,runRange,cmsExtra):
+def lumiDependency(path,plotName,selection,runRange,cmsExtra,bins):
 
 
 	plot = getPlot(plotName)
@@ -89,8 +89,12 @@ def lumiDependency(path,plotName,selection,runRange,cmsExtra):
 	#~ runCuts = [[190645,194897]]
 
 	#~ xValues = [2,4,6,8,10,12,14,16,18,19.4]
-	xValues = [1,3,5,7,9,11,13,15,17,18.7]
-	xValuesUncert = [1,1,1,1,1,1,1,1,1,0.7]
+	if bins:
+		xValues = [0.5,1.5,2.5,3.5,4.5,5.5,6.5,7.5,8.5,9.5]
+		xValuesUncert = [0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5]
+	else:	
+		xValues = [1,3,5,7,9,11,13,15,17,18.7]
+		xValuesUncert = [1,1,1,1,1,1,1,1,1,0.7]
 	
 	yValues = []
 	yValuesUncert = []
@@ -129,17 +133,26 @@ def lumiDependency(path,plotName,selection,runRange,cmsExtra):
 	cuts = plot.cuts	
 
 	for cutPair in runCuts:
-		plot.cuts = plot.cuts + "*(runNr >= %d && runNr <= %d)"%(runCuts[0][0],cutPair[1])
+		if bins:
+			plot.cuts = plot.cuts + "*(runNr >= %d && runNr <= %d)"%(cutPair[0],cutPair[1])
+		else:
+			plot.cuts = plot.cuts + "*(runNr >= %d && runNr <= %d)"%(runCuts[0][0],cutPair[1])
 		
 		eeHist, mmHist, emHist = getHistograms(path,plot,runRange,False,[],label)
 		
 		plot.cuts = cuts
-		plot.cuts = plot.cuts + "*(runNr >= %d && runNr <= %d)"%(runCuts[0][0],cutPair[1]) +  "*(nBJets == 0)"
-		
+		if bins:
+			plot.cuts = plot.cuts + "*(runNr >= %d && runNr <= %d)"%(cutPair[0],cutPair[1]) +  "*(nBJets == 0)"
+		else:	
+			plot.cuts = plot.cuts + "*(runNr >= %d && runNr <= %d)"%(runCuts[0][0],cutPair[1]) +  "*(nBJets == 0)"
+			
 		eeHistBVeto, mmHistBVeto, emHistBVeto = getHistograms(path,plot,runRange,False,[],label)
 		
 		plot.cuts = cuts
-		plot.cuts = plot.cuts + "*(runNr >= %d && runNr <= %d)"%(runCuts[0][0],cutPair[1]) +  "*(nBJets >= 1)"
+		if bins:
+			plot.cuts = plot.cuts + "*(runNr >= %d && runNr <= %d)"%(cutPair[0],cutPair[1]) +  "*(nBJets >= 1)"
+		else:	
+			plot.cuts = plot.cuts + "*(runNr >= %d && runNr <= %d)"%(runCuts[0][0],cutPair[1]) +  "*(nBJets >= 1)"
 		
 		eeHistBTagged, mmHistBTagged, emHistBTagged = getHistograms(path,plot,runRange,False,[],label)
 
@@ -188,8 +201,10 @@ def lumiDependency(path,plotName,selection,runRange,cmsExtra):
 	plotPad.UseCurrentStyle()		
 	plotPad.Draw()	
 	plotPad.cd()	
-
-	legend = TLegend(0.19, 0.5, 0.55, 0.85)
+	if bins:
+		legend = TLegend(0.45, 0.6, 0.9, 0.95)
+	else:	
+		legend = TLegend(0.19, 0.5, 0.55, 0.85)
 	legend.SetFillStyle(0)
 	legend.SetBorderSize(0)
 	ROOT.gStyle.SetOptStat(0)
@@ -201,7 +216,10 @@ def lumiDependency(path,plotName,selection,runRange,cmsExtra):
 	
 	yMax = sfList[-1]+150
 	yMin = min(min(yValues)-max(yValuesUncert)*1.25,-10)
-	hCanvas.DrawFrame(0,yMin,20,yMax,"; %s ; %s" %("integrated luminosity [fb^{-1}]","Events"))
+	if bins:
+		hCanvas.DrawFrame(0,yMin,10,yMax,"; %s ; %s" %("bin number","Events / approx. 2 fb^{-1}"))
+	else:
+		hCanvas.DrawFrame(0,yMin,20,yMax,"; %s ; %s" %("integrated luminosity [fb^{-1}]","Events"))
 	
 	zeroLine = ROOT.TLine(0, 0., 20 , 0.)
 	zeroLine.SetLineWidth(1)
@@ -312,15 +330,20 @@ def lumiDependency(path,plotName,selection,runRange,cmsExtra):
 
 	latexCMSExtra.DrawLatex(0.19,yLabelPos,"%s"%(cmsExtra))
 	
-	
-	hCanvas.Print("fig/YieldvsLumi_%s"%(plot.filename%runRange.label))
+	if bins:
+		hCanvas.Print("fig/YieldvsLumi_Bins_%s"%(plot.filename%runRange.label))
+	else:	
+		hCanvas.Print("fig/YieldvsLumi_%s"%(plot.filename%runRange.label))
 	#~ if label == "forward":
 		#~ hCanvas.DrawFrame(0,-20,20,200,"; %s ; %s" %("integrated luminosity [fb^{-1}]","Events"))
 		#~ 
 	#~ else:	
 	yMax = sfListBTagged[-1]+150
 	yMin = min(min(yValuesBTagged)-max(yValuesUncertBTagged)*1.25,-10)
-	hCanvas.DrawFrame(0,yMin,20,yMax,"; %s ; %s" %("integrated luminosity [fb^{-1}]","Events"))
+	if bins:
+		hCanvas.DrawFrame(0,yMin,10,yMax,"; %s ; %s" %("bin number","Events / approx. 2 fb^{-1}"))
+	else:
+		hCanvas.DrawFrame(0,yMin,20,yMax,"; %s ; %s" %("integrated luminosity [fb^{-1}]","Events"))
 	zeroLine.Draw("same")
 	legend.Clear()
 	graphBTagged.Draw("Psame")
@@ -343,8 +366,8 @@ def lumiDependency(path,plotName,selection,runRange,cmsExtra):
 		legend.AddEntry(legendHistDing,"Control region %s - b tagged"%label,"h")		
 	
 	legend.AddEntry(graphSFBTagged,"Same Flavour","p")	
-	legend.AddEntry(graphOFBTagged,"Opposite Flavour","p")	
-	legend.AddEntry(graphBTagged,"N_{SF}-N_{OF}","p")	
+	legend.AddEntry(graphOFBTagged,"Prediction from Opposite Flavour","p")	
+	legend.AddEntry(graphBTagged,"N_{SF}-N_{prediction}","p")		
 
 	legend.Draw("same")
 	
@@ -373,8 +396,10 @@ def lumiDependency(path,plotName,selection,runRange,cmsExtra):
 		yLabelPos = 0.85	
 
 	latexCMSExtra.DrawLatex(0.19,yLabelPos,"%s"%(cmsExtra))
-	
-	hCanvas.Print("fig/YieldvsLumi_BTagged_%s"%(plot.filename%runRange.label))
+	if bins:
+		hCanvas.Print("fig/YieldvsLumi_Bins_BTagged_%s"%(plot.filename%runRange.label))
+	else:	
+		hCanvas.Print("fig/YieldvsLumi_BTagged_%s"%(plot.filename%runRange.label))
 	
 	#~ if label == "forward":
 		#~ hCanvas.DrawFrame(0,-20,20,200,"; %s ; %s" %("integrated luminosity [fb^{-1}]","Events"))
@@ -382,7 +407,10 @@ def lumiDependency(path,plotName,selection,runRange,cmsExtra):
 	#~ else:	
 	yMax = sfListBVeto[-1]+150
 	yMin = min(min(yValuesBVeto)-max(yValuesUncertBVeto)*1.25,-10)
-	hCanvas.DrawFrame(0,yMin,20,yMax,"; %s ; %s" %("integrated luminosity [fb^{-1}]","Events"))
+	if bins:
+		hCanvas.DrawFrame(0,yMin,10,yMax,"; %s ; %s" %("bin number","Events / approx. 2 fb^{-1}"))
+	else:
+		hCanvas.DrawFrame(0,yMin,20,yMax,"; %s ; %s" %("integrated luminosity [fb^{-1}]","Events"))
 	zeroLine.Draw("same")
 	legend.Clear()
 	graphBVeto.Draw("Psame")
@@ -405,8 +433,8 @@ def lumiDependency(path,plotName,selection,runRange,cmsExtra):
 		legend.AddEntry(legendHistDing,"Control region %s - b veto"%label,"h")	
 	
 	legend.AddEntry(graphSFBVeto,"Same Flavour","p")	
-	legend.AddEntry(graphOFBVeto,"Opposite Flavour","p")	
-	legend.AddEntry(graphBVeto,"N_{SF}-N_{OF}","p")	
+	legend.AddEntry(graphOFBVeto,"Prediction from Opposite Flavour","p")	
+	legend.AddEntry(graphBTagged,"N_{SF}-N_{prediction}","p")	
 	#~ legend.AddEntry(graph,"SF - OF","p")	
 	legend.Draw("same")
 	
@@ -435,8 +463,10 @@ def lumiDependency(path,plotName,selection,runRange,cmsExtra):
 		yLabelPos = 0.85	
 
 	latexCMSExtra.DrawLatex(0.19,yLabelPos,"%s"%(cmsExtra))
-	
-	hCanvas.Print("fig/YieldvsLumi_BVeto_%s"%(plot.filename%runRange.label))
+	if bins:
+		hCanvas.Print("fig/YieldvsLumi_Bins_BVeto_%s"%(plot.filename%runRange.label))
+	else:
+		hCanvas.Print("fig/YieldvsLumi_BVeto_%s"%(plot.filename%runRange.label))
 def main():	
 	parser = argparse.ArgumentParser(description='rSFOF from control region.')
 	
@@ -448,6 +478,8 @@ def main():
 						  help="plot high mass dependency")
 	parser.add_argument("-c", "--control", action="store_true", dest="control", default=False,
 						  help="use control region")
+	parser.add_argument("-b", "--bins", action="store_true", dest="bins", default=False,
+						  help="plot in bins instead of cumulative")
 	parser.add_argument("-r", "--runRange", dest="runRange", action="append", default=[],
 						  help="name of run range.")
 	parser.add_argument("-x", "--private", action="store_true", dest="private", default=False,
@@ -490,7 +522,7 @@ def main():
 			
 			selection = getRegion(selectionName)
 			
-			lumiDependency(path,plotName,selection,runRange,cmsExtra)			
+			lumiDependency(path,plotName,selection,runRange,cmsExtra,args.bins)			
 
 				
 main()						

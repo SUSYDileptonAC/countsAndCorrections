@@ -604,7 +604,7 @@ def main():
 			
 
 	path = locations.dataSetPath	
-
+	path = "/home/jan/Trees/sw538v0477"
 
 	cmsExtra = ""
 	if args.private:

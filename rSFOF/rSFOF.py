@@ -204,7 +204,7 @@ def dependencies(path,selection,plots,runRange,isMC,backgrounds,cmsExtra,fit):
 		#~ histMM.Draw("sameE0")
 
 
-		legend.AddEntry(histRSFOF,"R_{SF/OF}","pe")	
+		#~ legend.AddEntry(histRSFOF,"R_{SF/OF}","pe")	
 		#~ legend.AddEntry(histEE,"R_{EE/OF}","p")	
 		#~ legend.AddEntry(histMM,"R_{MM/OF}","p")	
 
@@ -230,13 +230,13 @@ def dependencies(path,selection,plots,runRange,isMC,backgrounds,cmsExtra,fit):
 		latex.DrawLatex(0.95, 0.91, "%s fb^{-1} (8 TeV)"%runRange.printval)
 		
 
-		latexCMS.DrawLatex(0.12,0.76,"CMS")
+		latexCMS.DrawLatex(0.14,0.76,"CMS")
 		if "Simulation" in cmsExtra and "Private Work" in cmsExtra:
 			yLabelPos = 0.635	
 		else:
 			yLabelPos = 0.68	
 
-		latexCMSExtra.DrawLatex(0.12,yLabelPos,"%s"%(cmsExtra))	
+		latexCMSExtra.DrawLatex(0.14,yLabelPos,"%s"%(cmsExtra))	
 
 
 		if fit:
@@ -277,7 +277,7 @@ def getHistograms(path,plot,runRange,isMC,backgrounds,region=""):
 		histoMM = TheStack(processes,runRange.lumi,plot,treesMM,"None",1.0,1.0,1.0).theHistogram
 		histoEM = TheStack(processes,runRange.lumi,plot,treesEM,"None",1.0,1.0,1.0).theHistogram		
 		histoEE.Scale(getattr(triggerEffs,region).effEE.val)
-		histoEE.Scale(getattr(triggerEffs,region).effMM.val)	
+		histoMM.Scale(getattr(triggerEffs,region).effMM.val)	
 		histoEM.Scale(getattr(triggerEffs,region).effEM.val)
 			
 	else:

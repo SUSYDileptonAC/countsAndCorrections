@@ -109,7 +109,7 @@ def getHistograms(path,plot,runRange,isMC,backgrounds,region,EM=False):
 		histoEE = TheStack(processes,runRange.lumi,plot,treesEE,"None",1.0,1.0,1.0).theHistogram		
 		histoMM = TheStack(processes,runRange.lumi,plot,treesMM,"None",1.0,1.0,1.0).theHistogram
 		histoEE.Scale(getattr(triggerEffs,region).effEE.val)
-		histoEE.Scale(getattr(triggerEffs,region).effMM.val)
+		histoMM.Scale(getattr(triggerEffs,region).effMM.val)
 		
 		if EM:
 			histoEM = TheStack(processes,runRange.lumi,plot,treesEM,"None",1.0,1.0,1.0).theHistogram		
@@ -266,11 +266,11 @@ def dependencies(path,selection,plots,runRange,isMC,backgrounds,cmsExtra,fit):
 		latex.DrawLatex(0.95, 0.96, "%s fb^{-1} (8 TeV)"%runRange.printval)
 		
 
-		latexCMS.DrawLatex(0.19,0.89,"CMS")
+		latexCMS.DrawLatex(0.19,0.88,"CMS")
 		if "Simulation" in cmsExtra:
-			yLabelPos = 0.82	
+			yLabelPos = 0.81	
 		else:
-			yLabelPos = 0.85	
+			yLabelPos = 0.84	
 
 		latexCMSExtra.DrawLatex(0.19,yLabelPos,"%s"%(cmsExtra))
 		
@@ -293,11 +293,11 @@ def dependencies(path,selection,plots,runRange,isMC,backgrounds,cmsExtra,fit):
 		latex.DrawLatex(0.95, 0.96, "%s fb^{-1} (8 TeV)"%runRange.printval)
 		
 
-		latexCMS.DrawLatex(0.19,0.89,"CMS")
+		latexCMS.DrawLatex(0.19,0.88,"CMS")
 		if "Simulation" in cmsExtra:
-			yLabelPos = 0.82	
+			yLabelPos = 0.81	
 		else:
-			yLabelPos = 0.85	
+			yLabelPos = 0.84	
 
 		latexCMSExtra.DrawLatex(0.19,yLabelPos,"%s"%(cmsExtra))
 
@@ -540,11 +540,11 @@ def signalRegion(path,selection,plots,runRange,isMC,backgrounds,cmsExtra):
 		latexCMSExtra.SetTextSize(0.045)
 		latexCMSExtra.SetNDC(True)				
 
-		latexCMS.DrawLatex(0.19,0.89,"CMS")
+		latexCMS.DrawLatex(0.19,0.88,"CMS")
 		if "Simulation" in cmsExtra:
-			yLabelPos = 0.82	
+			yLabelPos = 0.81	
 		else:
-			yLabelPos = 0.85	
+			yLabelPos = 0.84	
 
 		latexCMSExtra.DrawLatex(0.19,yLabelPos,"%s"%(cmsExtra))		
 		
