@@ -153,7 +153,7 @@ def makePlot(sfHist,ofHist,selection,plot,runRange,region,cmsExtra,combination,d
 	
 	plotPad = ROOT.TPad("plotPad","plotPad",0,0.3,1,1)
 	ratioPad = ROOT.TPad("ratioPad","ratioPad",0,0.,1,0.3)
-	style = setTDRStyle()		
+	style = setTDRStyle()
 	ROOT.gStyle.SetOptStat(0)
 	plotPad.UseCurrentStyle()
 	ratioPad.UseCurrentStyle()
@@ -172,6 +172,13 @@ def makePlot(sfHist,ofHist,selection,plot,runRange,region,cmsExtra,combination,d
 	
 	plotPad.DrawFrame(plot.firstBin,0,plot.lastBin, yMax,"; %s ; %s" %(plot.xaxis,plot.yaxis))
 	
+	#set overflow bin
+	print sfHist.GetBinContent(sfHist.GetNbinsX()), sfHist.GetBinContent(sfHist.GetNbinsX()+1)
+	sfHist.SetBinContent(sfHist.GetNbinsX(),sfHist.GetBinContent(sfHist.GetNbinsX())+sfHist.GetBinContent(sfHist.GetNbinsX()+1))
+	sfHist.SetBinError(sfHist.GetNbinsX(),(sfHist.GetBinContent(sfHist.GetNbinsX())+sfHist.GetBinContent(sfHist.GetNbinsX()+1))**0.5)
+	ofHist.SetBinContent(ofHist.GetNbinsX(),ofHist.GetBinContent(ofHist.GetNbinsX())+ofHist.GetBinContent(ofHist.GetNbinsX()+1))
+	ofHist.SetBinError(ofHist.GetNbinsX(),(ofHist.GetBinContent(ofHist.GetNbinsX())+ofHist.GetBinContent(ofHist.GetNbinsX()+1))**0.5)
+
 	
 	bkgHist = ofHist.Clone("bkgHist")
 	if dyHist is not None:
@@ -179,6 +186,7 @@ def makePlot(sfHist,ofHist,selection,plot,runRange,region,cmsExtra,combination,d
 		
 	
 	sfHist.SetMarkerStyle(20)
+	sfHist.SetLineColor(ROOT.kBlack)
 	bkgHist.SetLineColor(ROOT.kBlue+3)
 	bkgHist.SetLineWidth(2)
 	
@@ -208,14 +216,15 @@ def makePlot(sfHist,ofHist,selection,plot,runRange,region,cmsExtra,combination,d
 	latex.DrawLatex(0.95, 0.96, "%s fb^{-1} (8 TeV)"%runRange.printval)
 	
 
-	latexCMS.DrawLatex(0.21,0.88,"CMS")
+	latexCMS.DrawLatex(0.19,0.88,"CMS")
 	if "Simulation" in cmsExtra:
 		yLabelPos = 0.81	
 	else:
 		yLabelPos = 0.84	
 
-	latexCMSExtra.DrawLatex(0.21,yLabelPos,"%s"%(cmsExtra))
+	latexCMSExtra.DrawLatex(0.19,yLabelPos,"%s"%(cmsExtra))
 	
+
 
 
 
@@ -258,7 +267,7 @@ def makePlot(sfHist,ofHist,selection,plot,runRange,region,cmsExtra,combination,d
 		leg.AddEntry(legendHistDing,"Central signal region","h")
 	elif region == "forward":
 		leg.AddEntry(legendHistDing,"Forward signal region","h")
-	leg.AddEntry(sfHist,"Data","PL")
+	leg.AddEntry(sfHist,"Data","pe")
 	leg.AddEntry(bkgHist, "Total backgrounds","l")
 	leg.AddEntry(dyHist,"Drell--Yan", "f")
 	leg.AddEntry(errGraph,"Total uncert.", "f")	
@@ -604,7 +613,7 @@ def main():
 			
 
 	path = locations.dataSetPath	
-
+	path = "/home/jan/Trees/sw538v0477"
 
 	cmsExtra = ""
 	if args.private:

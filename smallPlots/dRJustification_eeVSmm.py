@@ -428,6 +428,8 @@ if (__name__ == "__main__"):
 	ROOT.gStyle.SetOptStat(0)
 	
 	eeHist.SetLineColor(ROOT.kRed)
+	eeHist.SetLineWidth(2)
+	eeHist.SetLineStyle(2)
 	#~ eeHist.SetLineColor(ROOT.kRed)
 	fakeHist = ROOT.TH1F()
 	fakeHist.SetLineColor(ROOT.kWhite)

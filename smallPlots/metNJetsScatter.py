@@ -467,7 +467,7 @@ if (__name__ == "__main__"):
 		ROOT.gPad.RedrawAxis()
 		
 		line1 = ROOT.TLine(150,1.5,300,1.5)
-		line2 = ROOT.TLine(100,2.5,100,11.5)
+		line2 = ROOT.TLine(100,2.5,100,8.5)
 		line3 = ROOT.TLine(100,2.5,150,2.5)
 		line4 = ROOT.TLine(150,1.5,150,2.5)
 		line1.SetLineColor(ROOT.kBlue+2)
@@ -503,9 +503,9 @@ if (__name__ == "__main__"):
 		#~ line8.SetLineStyle(2)
 		
 		line9 = ROOT.TLine(0,1.5,50,1.5)
-		line10 = ROOT.TLine(0,1.5,0,11.5)
+		line10 = ROOT.TLine(0,1.5,0,8.5)
 		line11 = ROOT.TLine(0,2.5,50,2.5)
-		line12 = ROOT.TLine(50,1.5,50,11.5)
+		line12 = ROOT.TLine(50,1.5,50,8.5)
 		#~ line9.SetLineColor(ROOT.kRed)
 		#~ line1.SetLineColor(ROOT.kRed)
 		#~ line7.SetLineColor(ROOT.kRed)
@@ -545,25 +545,27 @@ if (__name__ == "__main__"):
 		latex.SetNDC(True)
 		latexCMS = ROOT.TLatex()
 		latexCMS.SetTextFont(61)
-		#latexCMS.SetTextAlign(31)
 		latexCMS.SetTextSize(0.06)
 		latexCMS.SetNDC(True)
 		latexCMSExtra = ROOT.TLatex()
 		latexCMSExtra.SetTextFont(52)
-		#latexCMSExtra.SetTextAlign(31)
-		latexCMSExtra.SetTextSize(0.035)
-		latexCMSExtra.SetNDC(True)		
-		
-		latex.DrawLatex(0.875, 0.955, "19.8 fb^{-1} (8 TeV)")
-		cmsExtra = "Simulation Private Work"
-
-		latexCMS.DrawLatex(0.13,0.955,"CMS")
-		latexCMSExtra.DrawLatex(0.26,0.955,"%s"%(cmsExtra))				
-					
-			#~ else:
-				#~ latexCMS.DrawLatex(0.19,0.89,"CMS")
-				#~ latexCMSExtra.DrawLatex(0.19,0.85,"%s"%(cmsExtra))	
+		latexCMSExtra.SetTextSize(0.045)
+		latexCMSExtra.SetNDC(True)
 		#~ 
+		
+		cmsExtra = "#splitline{Private Work}{Simulation}"
+		
+		latex.DrawLatex(0.9, 0.96, "%s fb^{-1} (8 TeV)"%19.5)
+		
+
+		latexCMS.DrawLatex(0.19,0.88,"CMS")
+		if "Simulation" in cmsExtra:
+			yLabelPos = 0.81	
+		else:
+			yLabelPos = 0.84	
+
+		latexCMSExtra.DrawLatex(0.19,yLabelPos,"%s"%(cmsExtra))	
+	
 		
 		latexCentral = ROOT.TLatex()
 		latexCentral.SetTextFont(42)
