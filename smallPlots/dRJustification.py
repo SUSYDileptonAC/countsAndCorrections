@@ -26,7 +26,7 @@ def readTreeFromFile(path, dileptonCombination):
 	"""
 	from ROOT import TChain
 	result = TChain()
-	result.Add("%s/cutsV23DileptonFinalTrees/%sDileptonTree"%(path, dileptonCombination))
+	result.Add("%s/cutsV24DileptonMiniAODFinalTrees/%sDileptonTree"%(path, dileptonCombination))
 	return result
 def readTreeFromFileV22(path, dileptonCombination):
 	"""
@@ -52,8 +52,8 @@ def getFilePathsAndSampleNames(path):
 	from glob import glob
 	from re import match
 	result = {}
-	for filePath in glob("%s/sw538*.root"%path):
-		sampleName = match(".*sw538v.*\.processed.*\.(.*).root", filePath).groups()[0]
+	for filePath in glob("%s/sw721*.root"%path):
+		sampleName = match(".*sw721v.*\.processed.*\.(.*).root", filePath).groups()[0]
 		#for the python enthusiats: yield sampleName, filePath is more efficient here :)
 		result[sampleName] = filePath
 	return result
@@ -370,20 +370,20 @@ def plotBlockComparison(treeBlockA,treeBlockB,variable,additionalCut,nBins,first
 		hCanvas.Clear()
 if (__name__ == "__main__"):
 	setTDRStyle()
-	path = "/home/jan/Trees/sw538v0477/"
+	path = "/home/jan/Trees/sw721v1000/"
 	from sys import argv
 	import pickle	
 	from ROOT import TCanvas, TPad, TH1F, TH1I, THStack, TLegend, TF1
 	import ratios
 
 	
-	ptCut = "pt1 > 20 && pt2 > 20"#(pt1 > 10 && pt2 > 20 || pt1 > 20 && pt2 > 10)
+	ptCut = "(pt1 > 20 && pt2 > 25 || pt1 > 25 && pt2 > 20)"
 	ptCutLabel = "20"#"20(10)"
 	variable = "p4.M()"
-	cuts = "weight*(chargeProduct < 0 && %s  && abs(eta1) < 2.4 && abs(eta2) < 2.4  && p4.M() > 20 && ((abs(eta1) < 1.4 || abs(eta1) > 1.6) && (abs(eta2) < 1.4 || abs(eta2) > 1.6)))"%(ptCut)
+	cuts = "weight*(chargeProduct < 0 && %s  && abs(eta1) < 2.4 && abs(eta2) < 2.4 && p4.M() > 20 && ((abs(eta1) < 1.4 || abs(eta1) > 1.6) && (abs(eta2) < 1.4 || abs(eta2) > 1.6)))"%(ptCut)
 
 
-	SampleName = "TTJets_MGDecays_madgraph_Summer12"
+	SampleName = "TTJets_MSDecaysCKM_central_Tune4C_13TeV_madgraph_tauola_Phys14DR_PU20BX25_miniAOD"
 
 	
 
@@ -471,7 +471,7 @@ if (__name__ == "__main__"):
 	latexCMSExtra.SetTextSize(0.045)
 	latexCMSExtra.SetNDC(True)		
 	
-	latex.DrawLatex(0.95, 0.96, "(8 TeV)")
+	latex.DrawLatex(0.95, 0.96, "(13 TeV)")
 	cmsExtra = "Simulation Private Work"
 
 	latexCMS.DrawLatex(0.15,0.955,"CMS")
@@ -510,4 +510,4 @@ if (__name__ == "__main__"):
 	line2.Draw("same")
 
 
-	hCanvas.Print("dRJustification.pdf")
+	hCanvas.Print("dRJustification_miniIso_Mll20.pdf")

@@ -26,7 +26,19 @@ def readTreeFromFile(path, dileptonCombination):
 	"""
 	from ROOT import TChain
 	result = TChain()
-	result.Add("%s/cutsV24DileptonMiniAODFinalTrees/%sDileptonTree"%(path, dileptonCombination))
+	result.Add("%s/cutsV25DileptonMiniAODTriggerFinalTrees/%sDileptonTree"%(path, dileptonCombination))
+	return result
+def readTreeFromFileTrigger(path,trigger, dileptonCombination):
+	"""
+	helper functionfrom argparse import ArgumentParser
+	path: path to .root file containing simulated events
+	dileptonCombination: EMu, EMu, or EMu for electron-electron, electron-muon, or muon-muon events
+
+	returns: tree containing events for on sample and dileptonCombination
+	"""
+	from ROOT import TChain
+	result = TChain()
+	result.Add("%s/cutsV25DileptonMiniAODTriggerHLT%sFinalTrees/%sDileptonTree"%(path,trigger, dileptonCombination))	
 	return result
 def readTreeFromFileV22(path, dileptonCombination):
 	"""
@@ -38,7 +50,7 @@ def readTreeFromFileV22(path, dileptonCombination):
 	"""
 	from ROOT import TChain
 	result = TChain()
-	result.Add("%s/cutsV24DileptonMiniAODFinalTrees/%sDileptonTree"%(path, dileptonCombination))
+	result.Add("%s/cutsV22DileptonFinalTrees/%sDileptonTree"%(path, dileptonCombination))
 	return result
 	
 def getFilePathsAndSampleNames(path):
@@ -52,8 +64,8 @@ def getFilePathsAndSampleNames(path):
 	from glob import glob
 	from re import match
 	result = {}
-	for filePath in glob("%s/sw721*.root"%path):
-		sampleName = match(".*sw721v.*\.processed.*\.(.*).root", filePath).groups()[0]
+	for filePath in glob("%s/sw74*.root"%path):
+		sampleName = match(".*sw74.*\.cutsV25DileptonMiniAODTrigger.*\.(.*).root", filePath).groups()[0]
 		#for the python enthusiats: yield sampleName, filePath is more efficient here :)
 		result[sampleName] = filePath
 	return result
@@ -84,6 +96,20 @@ def readTrees(path, dileptonCombination):
 	for sampleName, filePath in getFilePathsAndSampleNames(path).iteritems():
 		
 		result[sampleName] = readTreeFromFile(filePath, dileptonCombination)
+		
+	return result
+def readTreesTrigger(path,trigger, dileptonCombination):
+	"""
+	path: path to directory containing all sample files
+    dileptonCombination: "EMu", "EMu", or pyroot"EMu" for electron-electron, electron-muon, or muon-muon events
+
+	returns: dict of sample names ->  trees containing events (for all samples for one dileptonCombination)
+	"""
+	result = {}
+	print (path)
+	for sampleName, filePath in getFilePathsAndSampleNames(path).iteritems():
+		
+		result[sampleName] = readTreeFromFileTrigger(filePath,trigger, dileptonCombination)
 		
 	return result
 	
@@ -276,238 +302,165 @@ def setTDRStyle():
 	tdrStyle.cd()
 
 
-def plotBlockComparison(treeBlockA,treeBlockB,variable,additionalCut,nBins,firstBin,lastBin,labelX,labelY,suffix,log=False,signal=False):	
 
-
-	hCanvas = TCanvas("hCanvas", "Distribution", 800,800)
-	plotPad = ROOT.TPad("plotPad","plotPad",0,0.3,1,1)
-	ratioPad = ROOT.TPad("ratioPad","ratioPad",0,0.,1,0.3)
-	setTDRStyle()		
-	plotPad.UseCurrentStyle()
-	ratioPad.UseCurrentStyle()
-	plotPad.Draw()	
-	ratioPad.Draw()	
-	plotPad.cd()	
-
-	legend = TLegend(0.7, 0.55, 0.95, 0.95)
-	legend.SetFillStyle(0)
-	legend.SetBorderSize(1)
-	
-
-	
-	
-
-	minMll = 20
-
-	ROOT.gStyle.SetOptStat(0)
-	Cutlabel = ROOT.TLatex()
-	Cutlabel.SetTextAlign(12)
-	Cutlabel.SetTextSize(0.03)
-	Labelin = ROOT.TLatex()
-	Labelin.SetTextAlign(12)
-	Labelin.SetTextSize(0.07)
-	Labelin.SetTextColor(ROOT.kRed+2)
-	Labelout = ROOT.TLatex()
-	Labelout.SetTextAlign(12)
-	Labelout.SetTextSize(0.07)
-	Labelout.SetTextColor(ROOT.kBlack)
-
-
-
-	
-	EMuhistBlockA = createHistoFromTree(treeBlockA,  variable, additionalCut, nBins, firstBin, lastBin, -1)
-
-	EMuhistBlockB = createHistoFromTree(treeBlockB,  variable, additionalCut, nBins, firstBin, lastBin, -1)
-	
-	EMuhistBlockB.Scale(9.2/10.4)
-	print EMuhistBlockA.Integral()
-	print EMuhistBlockB.Integral()
-	EMuhistBlockA.SetMarkerStyle(21)
-	EMuhistBlockB.SetMarkerStyle(22)
-	EMuhistBlockA.SetMarkerColor(ROOT.kGreen+3)
-	EMuhistBlockB.SetMarkerColor(ROOT.kBlack)
-	EMuhistBlockA.SetLineColor(ROOT.kGreen+3)
-	EMuhistBlockB.SetLineColor(ROOT.kBlack)
-	
-	if log: 
-		yMin=0.1
-		yMax = max(EMuhistBlockA.GetBinContent(EMuhistBlockA.GetMaximumBin()),EMuhistBlockB.GetBinContent(EMuhistBlockB.GetMaximumBin()))*10
-		plotPad.SetLogy()
-	else: 
-		yMin=0
-		yMax = max(EMuhistBlockA.GetBinContent(EMuhistBlockA.GetMaximumBin()),EMuhistBlockB.GetBinContent(EMuhistBlockB.GetMaximumBin()))*1.5
-	hCanvas.DrawFrame(firstBin,yMin,lastBin,yMax,"; %s ; %s" %(labelX,labelY))
-
-	EMuhistBlockA.Draw("samep")
-	EMuhistBlockB.Draw("samep")
-	
-	legend.AddEntry(EMuhistBlockA,"First 9.2 fb^{-1}","p")	
-	legend.AddEntry(EMuhistBlockB,"Second 10.4 fb^{-1} scaled","p")
-	#~ 
-	latex = ROOT.TLatex()
-	latex.SetTextSize(0.043)
-	latex.SetTextFont(42)
-	latex.SetNDC(True)
-	latex.DrawLatex(0.13, 0.95, "CMS Preliminary,    #sqrt{s} = 8 TeV,     #scale[0.6]{#int}Ldt = 9.2-10.4 fb^{-1}")
-	#~ 
-		
-	legend.Draw("same")
-	
-	ratioPad.cd()
-
-	ratioGraphs =  ratios.RatioGraph(EMuhistBlockA,EMuhistBlockB, firstBin, lastBin,title="Bl. A / Bl. B",yMin=0.0,yMax=2,ndivisions=10,color=ROOT.kGreen+3,adaptiveBinning=0.25)
-
-	ratioGraphs.draw(ROOT.gPad,True,False,True,chi2Pos=0.8)
-	if signal:
-		name = "OFUnblinding_SignalRegion_%s_%s.pdf"
-	else:
-		name = "OFUnblinding_Inclusive_%s_%s.pdf"
-	if variable == "p4.M()":
-		
-		hCanvas.Print(name%(suffix,"Mll"))
-	else:		
-		hCanvas.Print(name%(suffix,variable))	
-		hCanvas.Clear()
 if (__name__ == "__main__"):
 	setTDRStyle()
-	path = "/home/jan/Trees/sw721v1000/"
+	path = "/home/jan/Trees/sw74XUnprocessed/"
 	from sys import argv
 	import pickle	
 	from ROOT import TCanvas, TPad, TH1F, TH1I, THStack, TLegend, TF1
 	import ratios
 
 	
-	ptCut = "(pt1 > 25 && pt2 > 20 || pt1 > 20 && pt2 > 25)"
+	ptCut = "(pt1 > 20 && pt2 > 30 || pt1 > 30 && pt2 > 20)"
 	ptCutLabel = "20"#"20(10)"
 	variable = "p4.M()"
-	cuts = "weight*(chargeProduct < 0 && %s  && abs(eta1) < 2.4 && abs(eta2) < 2.4   && ((abs(eta1) < 1.4 || abs(eta1) > 1.6) && (abs(eta2) < 1.4 || abs(eta2) > 1.6)))"%(ptCut)
+	cuts = "(chargeProduct < 0 && %s  && abs(eta1) < 2.4 && abs(eta2) < 2.4 && p4.M()>20 && deltaR > 0.3  && ((abs(eta1) < 1.4 || abs(eta1) > 1.6) && (abs(eta2) < 1.4 || abs(eta2) > 1.6)))"%(ptCut)
 
 
-	SampleName = "TTJets_MSDecaysCKM_central_Tune4C_13TeV_madgraph_tauola_Phys14DR_PU20BX25_miniAOD"
+	SampleName = "TTJets_aMCatNLO_FXFX_Spring15_25ns"
 
 	
 
 	eeTrees = readTrees(path, "EE")	
 	mmTrees = readTrees(path, "MuMu")	
 	emTrees = readTrees(path, "EMu")	
-	for name, tree in eeTrees.iteritems():
-		if name == SampleName:
-			eeHist = createHistoFromTree(tree, "deltaR", cuts, 50, 0, 5, nEvents = -1)
-			eeHist.Scale(1./eeHist.GetEntries())
-	for name, tree in mmTrees.iteritems():
-		if name == SampleName:
-			mmHist = createHistoFromTree(tree, "deltaR", cuts, 50, 0, 5	, nEvents = -1)
-			mmHist.Scale(1./mmHist.GetEntries())
-	for name, tree in emTrees.iteritems():
-		if name == SampleName:
-			emHist = createHistoFromTree(tree, "deltaR", cuts, 50, 0, 5	, nEvents = -1)
-			emHist.Scale(1./emHist.GetEntries())
-#~ 
-	#~ eeHist.Add(mmHist.Clone(""))
-	#~ eeHist.Scale(1./eeHist.GetEntries())
-
-	hCanvas = TCanvas("hCanvas", "Distribution", 800,800)
-	plotPad = ROOT.TPad("plotPad","plotPad",0,0.3,1,1)
-	ratioPad = ROOT.TPad("ratioPad","ratioPad",0,0.,1,0.3)
-	setTDRStyle()		
-	plotPad.UseCurrentStyle()
-	ratioPad.UseCurrentStyle()
-	plotPad.Draw()	
-	ratioPad.Draw()	
-	plotPad.cd()	
-
-	legend = TLegend(0.7, 0.55, 0.95, 0.95)
-	legend.SetFillStyle(0)
-	legend.SetBorderSize(0)
+	eeTreesTrigger = readTreesTrigger(path,"DiEle", "EE")	
+	mmTreesTrigger = readTreesTrigger(path,"DiMu", "MuMu")	
+	emTreesTrigger = readTreesTrigger(path,"MuEG", "EMu")
 	
+	variables = {"mll":"p4.M()","leadingPt":"(pt1 > pt2)*pt1 + (pt2 > pt1)*pt2","trailingPt":"(pt1 > pt2)*pt2 + (pt2 > pt1)*pt1"}
+	xLables = {"mll":"m_{ll} [GeV]","leadingPt":"p_{T}^{leading}","trailingPt":"p_{T}^{trailing}"}
 	
-	
-	yMin=0
-	yMax = max(eeHist.GetBinContent(eeHist.GetMaximumBin()),emHist.GetBinContent(mmHist.GetMaximumBin()))*1.5
-	hCanvas.DrawFrame(0,yMin,5,yMax,"; %s ; %s" %("#Delta R(ll)","N_{events} [a.u.]"))
-	ROOT.gStyle.SetOptStat(0)
-	
-	eeHist.SetLineColor(ROOT.kRed)
-	eeHist.SetLineWidth(2)
-	eeHist.SetLineStyle(2)
-	#~ eeHist.SetLineColor(ROOT.kRed)
-	fakeHist = ROOT.TH1F()
-	fakeHist.SetLineColor(ROOT.kWhite)
-	legend.SetHeader("t#bar{t} Simulation")
-	legend.AddEntry(eeHist,"e^{#pm}e^{#mp}","l")
-	legend.AddEntry(emHist,"#mu^{#pm}#mu^{#mp}","l")
-	
-	eeHist.Draw("samehist")
-	mmHist.Draw("samehist")
-	legend.Draw("same")
-	
-	line1 = ROOT.TLine(0.3,0,0.3,yMax)
-	line2 = ROOT.TLine(1.6,0,1.6,yMax)
-	line1.SetLineColor(ROOT.kBlue+3)
-	line2.SetLineColor(ROOT.kBlue+3)
-
-	line1.SetLineWidth(2)
-	line2.SetLineWidth(2)
-	line1.SetLineStyle(2)
-	line2.SetLineStyle(2)
-
-	line1.Draw("same")
-	#~ line2.Draw("same")
-
-	
-	latex = ROOT.TLatex()
-	latex.SetTextFont(42)
-	latex.SetTextAlign(31)
-	latex.SetTextSize(0.04)
-	latex.SetNDC(True)
-	latexCMS = ROOT.TLatex()
-	latexCMS.SetTextFont(61)
-	#latexCMS.SetTextAlign(31)
-	latexCMS.SetTextSize(0.06)
-	latexCMS.SetNDC(True)
-	latexCMSExtra = ROOT.TLatex()
-	latexCMSExtra.SetTextFont(52)
-	#latexCMSExtra.SetTextAlign(31)
-	latexCMSExtra.SetTextSize(0.045)
-	latexCMSExtra.SetNDC(True)		
-	
-	latex.DrawLatex(0.95, 0.96, "(13 TeV)")
-	cmsExtra = "Simulation Private Work"
-
-	latexCMS.DrawLatex(0.15,0.955,"CMS")
-	latexCMSExtra.DrawLatex(0.26,0.955,"%s"%(cmsExtra))				
+	for var in ["mll","leadingPt","trailingPt"]:	
+		for name, tree in eeTrees.iteritems():
+			if name == SampleName:
+				eeHist = createHistoFromTree(tree, variables[var], cuts, 56, 20, 300, nEvents = -1)
+				#~ eeHist.Scale(1./tree.GetEntries())
+		for name, tree in mmTrees.iteritems():
+			if name == SampleName:
+				mmHist = createHistoFromTree(tree, variables[var], cuts, 56, 20, 300, nEvents = -1)
+				#~ mmHist.Scale(1./tree.GetEntries())
+		for name, tree in emTrees.iteritems():
+			if name == SampleName:
+				emHist = createHistoFromTree(tree, variables[var], cuts, 56, 20, 300, nEvents = -1)
 				
-		#~ else:
-			#~ latexCMS.DrawLatex(0.19,0.89,"CMS")
-			#~ latexCMSExtra.DrawLatex(0.19,0.85,"%s"%(cmsExtra))	
-	#~ 
-	
-	latexCentral = ROOT.TLatex()
-	latexCentral.SetTextFont(42)
-	latexCentral.SetTextAlign(31)
-	latexCentral.SetTextSize(0.07)
-	latexCentral.SetNDC(True)	
-	#~ latexCentral.DrawLatex(0.4,0.45,"Central")
-	latexForward = ROOT.TLatex()
-	latexForward.SetTextFont(42)
-	latexForward.SetTextAlign(31)
-	latexForward.SetTextSize(0.07)
-	latexForward.SetNDC(True)	
-	#~ latexForward.DrawLatex(0.88,0.45,"Forward")
-	
-	
-	ratioPad.cd()
+		for name, tree in eeTreesTrigger.iteritems():
+			if name == SampleName:
+				eeHistTrigger = createHistoFromTree(tree, variables[var], cuts, 56, 20, 300, nEvents = -1)
+				#~ eeHist.Scale(1./tree.GetEntries())
+		for name, tree in mmTreesTrigger.iteritems():
+			if name == SampleName:
+				mmHistTrigger = createHistoFromTree(tree, variables[var], cuts, 56, 20, 300, nEvents = -1)
+				#~ mmHist.Scale(1./tree.GetEntries())
+		for name, tree in emTreesTrigger.iteritems():
+			if name == SampleName:
+				emHistTrigger = createHistoFromTree(tree, variables[var], cuts, 56, 20, 300, nEvents = -1)
 
-	ratioGraphs =  ratios.RatioGraph(eeHist,mmHist, 0, 5,title="e^{#pm}e^{#mp} / #mu^{#pm}#mu^{#mp}",yMin=0.0,yMax=2,ndivisions=10,color=ROOT.kRed,adaptiveBinning=0.25)
+		effEE = ROOT.TGraphAsymmErrors(eeHistTrigger,eeHist,"cp")
+		effEM = ROOT.TGraphAsymmErrors(emHistTrigger,emHist,"cp")
+		effMM = ROOT.TGraphAsymmErrors(mmHistTrigger,mmHist,"cp")
 
-	ratioGraphs.draw(ROOT.gPad,True,False,True,chi2Pos=0.8)	
+		effEE.SetMarkerStyle(20)
+		effEM.SetMarkerStyle(21)
+		effMM.SetMarkerStyle(22)
+		effEE.SetMarkerColor(ROOT.kBlack)
+		effEM.SetMarkerColor(ROOT.kBlue)
+		effMM.SetMarkerColor(ROOT.kRed)
+		effEE.SetLineColor(ROOT.kBlack)
+		effEM.SetLineColor(ROOT.kBlue)
+		effMM.SetLineColor(ROOT.kRed)
 
-	line2 = ROOT.TLine(0.3,0,0.3,2)
-	line2.SetLineColor(ROOT.kBlue+3)
-	line2.SetLineWidth(2)
-	line2.SetLineStyle(2)
+		hCanvas = TCanvas("hCanvas", "Distribution", 800,800)
+		plotPad = ROOT.TPad("plotPad","plotPad",0,0,1,1)
+		setTDRStyle()		
+		plotPad.UseCurrentStyle()
+		plotPad.Draw()	
+		
 
-	line2.Draw("same")
+		legend = TLegend(0.7, 0.5, 0.95, 0.75)
+		legend.SetFillStyle(0)
+		legend.SetBorderSize(0)
+		
+		
+		
+		yMin=0
+		yMax = max(eeHist.GetBinContent(eeHist.GetMaximumBin()),emHist.GetBinContent(mmHist.GetMaximumBin()))*1.5
+		hCanvas.DrawFrame(0,0.5,300,1,"; %s ; %s" %(xLables[var],"trigger efficiency"))
+		ROOT.gStyle.SetOptStat(0)
+		
+		eeHist.SetLineColor(ROOT.kRed)
+		eeHist.SetLineStyle(2)
+		eeHist.SetLineWidth(2)
+		#~ eeHist.SetLineColor(ROOT.kRed)
+		fakeHist = ROOT.TH1F()
+		fakeHist.SetLineColor(ROOT.kWhite)
+		#~ legend.SetHeader("t#bar{t} Simulation")
+		legend.AddEntry(effEE,"ee","p")
+		legend.AddEntry(effMM,"#mu#mu","p")
+		legend.AddEntry(effEM,"e#mu","p")
+		
+		
+		effEE.Draw("samepe")
+		effEM.Draw("samepe")
+		effMM.Draw("samepe")
+		legend.Draw("same")
+		line1 = ROOT.TLine(0.3,0,0.3,yMax)
+		line2 = ROOT.TLine(1.6,0,1.6,yMax)
+		line1.SetLineColor(ROOT.kBlue+3)
+		line2.SetLineColor(ROOT.kBlue+3)
+
+		line1.SetLineWidth(2)
+		line2.SetLineWidth(2)
+		line1.SetLineStyle(2)
+		line2.SetLineStyle(2)
+
+		#~ line1.Draw("same")
+		#~ line2.Draw("same")
+
+		
+		latex = ROOT.TLatex()
+		latex.SetTextFont(42)
+		latex.SetTextAlign(31)
+		latex.SetTextSize(0.04)
+		latex.SetNDC(True)
+		latexCMS = ROOT.TLatex()
+		latexCMS.SetTextFont(61)
+		#latexCMS.SetTextAlign(31)
+		latexCMS.SetTextSize(0.06)
+		latexCMS.SetNDC(True)
+		latexCMSExtra = ROOT.TLatex()
+		latexCMSExtra.SetTextFont(52)
+		#latexCMSExtra.SetTextAlign(31)
+		latexCMSExtra.SetTextSize(0.045)
+		latexCMSExtra.SetNDC(True)		
+		
+		latex.DrawLatex(0.95, 0.96, "(13 TeV)")
+		cmsExtra = "Simulation Private Work"
+
+		latexCMS.DrawLatex(0.15,0.955,"CMS")
+		latexCMSExtra.DrawLatex(0.28,0.955,"%s"%(cmsExtra))				
+					
+			#~ else:
+				#~ latexCMS.DrawLatex(0.19,0.89,"CMS")
+				#~ latexCMSExtra.DrawLatex(0.19,0.85,"%s"%(cmsExtra))	
+		#~ 
+		
+		latexCentral = ROOT.TLatex()
+		latexCentral.SetTextFont(42)
+		latexCentral.SetTextAlign(31)
+		latexCentral.SetTextSize(0.07)
+		latexCentral.SetNDC(True)	
+		#~ latexCentral.DrawLatex(0.4,0.45,"Central")
+		latexForward = ROOT.TLatex()
+		latexForward.SetTextFont(42)
+		latexForward.SetTextAlign(31)
+		latexForward.SetTextSize(0.07)
+		latexForward.SetNDC(True)	
+		#~ latexForward.DrawLatex(0.88,0.45,"Forward")
+		
+		
 
 
-	hCanvas.Print("dRJustification_eeVSmm.pdf")
+
+		hCanvas.Print("triggerEffs_%s.pdf"%var)

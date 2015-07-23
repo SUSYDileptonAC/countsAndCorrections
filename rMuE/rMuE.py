@@ -22,7 +22,7 @@ ROOT.PyConfig.IgnoreCommandLineOptions = True
 from ROOT import TCanvas, TEfficiency, TPad, TH1F, TH1I, THStack, TLegend, TMath, TGraphAsymmErrors, TF1, gStyle
 ROOT.gROOT.SetBatch(True)
 
-from defs import getRegion, getPlot, getRunRange, Backgrounds, theCuts
+from defs import getRegion, getPlot, getRunRange, Backgrounds
 
 from setTDRStyle import setTDRStyle
 from helpers import readTrees, getDataHist, TheStack, totalNumberOfGeneratedEvents, Process
@@ -90,62 +90,31 @@ def rMuEFromSFOF(eeHist,mumuHist,emuHist,corr,corrErr):
 		
 	return result, resultErr
 
-def getHistograms(path,source,modifier,plot,runRange,isMC,backgrounds,region,iso,EM=False):
+def getHistograms(path,plot,runRange,isMC,backgrounds,region,EM=False):
 
 
-	treesEE = readTrees(path,"EE",source = source,modifier= modifier)
-	treesEM = readTrees(path,"EMu",source = source,modifier= modifier)
-	treesMM = readTrees(path,"MuMu",source = source,modifier= modifier)
+	treesEE = readTrees(path,"EE")
+	treesEM = readTrees(path,"EMu")
+	treesMM = readTrees(path,"MuMu")
 		
+	
+	
 	if isMC:
 		
-		eventCounts = totalNumberOfGeneratedEvents(path,source,modifier)	
+		eventCounts = totalNumberOfGeneratedEvents(path)	
 		processes = []
 		for background in backgrounds:
 			processes.append(Process(getattr(Backgrounds,background),eventCounts))
-			
-	
-		if "not_isolated" in iso:
-			flavor_independent_cuts = plot.cuts
-			prompt_cuts = "(%s) && (abs(motherPdgId1) == 11 || abs(motherPdgId1) == 15 || motherPdgId1 == 23 || abs(motherPdgId1) == 24) && (abs(motherPdgId2) == 11 || abs(motherPdgId2) == 15 || motherPdgId2 == 23 || abs(motherPdgId2) == 24)"%plot.cuts
-			nonIsoCutsEE = "(%s) && d01 < 0.02 && d02 < 0.02 && dZ1 < 0.1 && dZ2 < 0.1 && abs(deltaEtaSuperClusterTrackAtVtx1) < 0.007 && abs(deltaEtaSuperClusterTrackAtVtx2) < 0.007 && abs(deltaPhiSuperClusterTrackAtVtx1) < 0.07 && abs(deltaPhiSuperClusterTrackAtVtx2) < 0.07 && sigmaIetaIeta1 < 0.01 && sigmaIetaIeta2 < 0.01 && hadronicOverEm1 < 0.12 && hadronicOverEm2 < 0.12 && eOverP1 < 0.05 && eOverP2 < 0.05 && missingHits1 < 2 && missingHits2 < 2"%prompt_cuts
-			nonIsoCutsEMu = "(%s) && d01 < 0.02 && d02 < 0.02 && dZ1 < 0.1 && dZ2 < 0.1 && abs(deltaEtaSuperClusterTrackAtVtx1) < 0.007 && abs(deltaPhiSuperClusterTrackAtVtx1) < 0.07 && sigmaIetaIeta1 < 0.01 && hadronicOverEm1 < 0.12 && eOverP1 < 0.05 && missingHits1 < 2 && globalMuon2 == 1 && trackerMuon2 == 1 && pfMuon2 == 1 && trackChi22 < 10 && numberOfValidMuonHits2 > 0 && numberOfMatchedStations2 > 1 && numberOfValidPixelHits2 > 0 && trackerLayersWithMeasurement2 > 5"%prompt_cuts
-			nonIsoCutsMuMu = "(%s) && d01 < 0.02 && d02 < 0.02 && dZ1 < 0.1 && dZ2 < 0.1 && globalMuon1 == 1  && globalMuon2 == 1 && trackerMuon1 == 1 && trackerMuon2 == 1 && pfMuon1 == 1 && pfMuon2 == 1 && trackChi21 < 10 && trackChi22 < 10 && numberOfValidMuonHits1 > 0 && numberOfValidMuonHits2 > 0 && numberOfMatchedStations1 > 1 && numberOfMatchedStations2 > 1 && numberOfValidPixelHits1 > 0 && numberOfValidPixelHits2 > 0 && trackerLayersWithMeasurement1 > 5 && trackerLayersWithMeasurement2 > 5"%prompt_cuts
 		
+		histoEE = TheStack(processes,runRange.lumi,plot,treesEE,"None",1.0,1.0,1.0).theHistogram		
+		histoMM = TheStack(processes,runRange.lumi,plot,treesMM,"None",1.0,1.0,1.0).theHistogram
+		#~ histoEE.Scale(getattr(triggerEffs,region).effEE.val)
+		#~ histoMM.Scale(getattr(triggerEffs,region).effMM.val)
 		
-			plot.cuts = nonIsoCutsEE
-			histoEE = TheStack(processes,runRange.lumi,plot,treesEE,"None",1.0,1.0,1.0).theHistogram
-			
-			plot.cuts = nonIsoCutsMuMu		
-			histoMM = TheStack(processes,runRange.lumi,plot,treesMM,"None",1.0,1.0,1.0).theHistogram
-			
-			histoEE.Scale(getattr(triggerEffs,region).effEE.val)
-			histoMM.Scale(getattr(triggerEffs,region).effMM.val)
-			
-			if EM:
-				plot.cuts = nonIsoCutsEMu
-				histoEM = TheStack(processes,runRange.lumi,plot,treesEM,"None",1.0,1.0,1.0).theHistogram		
-				histoEM.Scale(getattr(triggerEffs,region).effEM.val)
-				
-			plot.cuts = flavor_independent_cuts
-
-	
-		else:
-			
-			eventCounts = totalNumberOfGeneratedEvents(path,source)	
-			processes = []
-			for background in backgrounds:
-				processes.append(Process(getattr(Backgrounds,background),eventCounts))
-			
-			histoEE = TheStack(processes,runRange.lumi,plot,treesEE,"None",1.0,1.0,1.0).theHistogram		
-			histoMM = TheStack(processes,runRange.lumi,plot,treesMM,"None",1.0,1.0,1.0).theHistogram
-			histoEE.Scale(getattr(triggerEffs,region).effEE.val)
-			histoMM.Scale(getattr(triggerEffs,region).effMM.val)
-			
-			if EM:
-				histoEM = TheStack(processes,runRange.lumi,plot,treesEM,"None",1.0,1.0,1.0).theHistogram		
-				histoEM.Scale(getattr(triggerEffs,region).effEM.val)
-			
+		if EM:
+			histoEM = TheStack(processes,runRange.lumi,plot,treesEM,"None",1.0,1.0,1.0).theHistogram		
+			#~ histoEM.Scale(getattr(triggerEffs,region).effEM.val)
+		
 	else:
 		histoEE = getDataHist(plot,treesEE)
 		histoMM = getDataHist(plot,treesMM)
@@ -157,14 +126,11 @@ def getHistograms(path,source,modifier,plot,runRange,isMC,backgrounds,region,iso
 	else:
 		return histoEE , histoMM
 
-def centralValues(source,modifier,path,selection,runRange,isMC,backgrounds,ptCut,iso):
+def centralValues(path,selection,runRange,isMC,backgrounds):
 
 	plot = getPlot("mllPlot")
 	plot.addRegion(selection)
 	#~ plot.cleanCuts()
-	if ptCut != "pt2020":
-		pt_Cut = getattr(theCuts.ptCuts,ptCut)
-		plot.cuts = plot.cuts.replace("pt1 > 20 && pt2 > 20",pt_Cut.cut)
 	plot.cuts = plot.cuts % runRange.runCut		
 
 
@@ -179,15 +145,14 @@ def centralValues(source,modifier,path,selection,runRange,isMC,backgrounds,ptCut
 		relSyst = systematics.rMuE.forward.val
 		region = "forward"
 	
-	histEE, histMM = getHistograms(path,source,modifier,plot,runRange,isMC, backgrounds,region,iso)
+	histEE, histMM = getHistograms(path,plot,runRange,isMC, backgrounds,region)
 	
 	nEE = histEE.Integral()
 	nMM = histMM.Integral()
 	
 	rMuE= pow(nMM/nEE,0.5)
 
-	#~ rMuEStatErr = pow( pow(nMM**0.5/nEE,2) + pow(nEE**0.5*nMM/(nEE**2),2), 0.5)
-	rMuEStatErr = 0.5*rMuE*pow( 1./nMM + 1./nEE, 0.5)
+	rMuEStatErr = 0.5*rMuE*(1./nMM + 1./nEE)**0.5
 	rMuESystErr= rMuE*relSyst
 	
 
@@ -201,21 +166,15 @@ def centralValues(source,modifier,path,selection,runRange,isMC,backgrounds,ptCut
 	return result
 	
 	
-def dependencies(source,modifier,path,selection,plots,runRange,isMC,backgrounds,cmsExtra,fit,ptCut,iso):
+def dependencies(path,selection,plots,runRange,isMC,backgrounds,cmsExtra,fit):
 	
-	#~ backgrounds = ["TTJets_SpinCorrelations"]
-	backgrounds = ["TTJets"]
+
+	backgroundsTT = ["TTJets"]
 	
 	for name in plots:
 		plot = getPlot(name)
 		plot.addRegion(selection)
-		plot.cleanCuts()
-		if ptCut != "pt2020":
-			pt_Cut = getattr(theCuts.ptCuts,ptCut)
-			plot.cuts = plot.cuts.replace("pt1 > 20 && pt2 > 20",pt_Cut.cut)
-			pt_label = pt_Cut.label
-		else:
-			pt_label = "p_{T} > 20 GeV"		
+		plot.cleanCuts()	
 		plot.cuts = plot.cuts % runRange.runCut	
 
 		if not "Forward" in selection.name:
@@ -227,21 +186,12 @@ def dependencies(source,modifier,path,selection,plots,runRange,isMC,backgrounds,
 		else:	
 			relSyst = systematics.rMuE.forward.val
 			region = "forward"
-			
-		if "MiniIsoEffAreaIso" in source:
-			iso_label = "mini iso cone, eff. area corrected"
-		elif "MiniIsoDeltaBetaIso" in source:
-			iso_label = "mini iso cone, #Delta#beta corrected"
-		elif "MiniIsoPFWeights" in source:
-			iso_label = "mini iso cone, PF weights"
-		elif "EffAreaIso" in source:
-			iso_label = "R=0.3 cone, eff. area corrected"
-		elif "DeltaBetaIso" in source:
-			iso_label = "R=0.3 cone, #Delta#beta corrected"
 
-
-		#~ histEE, histMM = getHistograms(path,plot,runRange,False, backgrounds,region)	
-		histEEMC, histMMMC = getHistograms(path,source,modifier,plot,runRange,True, backgrounds,region,iso)	
+		if isMC:
+			histEE, histMM = getHistograms(path,plot,runRange,True, backgrounds,region)	
+		else:
+			histEE, histMM = getHistograms(path,plot,runRange,False, backgrounds,region)	
+		histEEMC, histMMMC = getHistograms(path,plot,runRange,True, backgroundsTT,region)	
 			
 		
 		hCanvas = TCanvas("hCanvas", "Distribution", 800,800)
@@ -256,14 +206,9 @@ def dependencies(source,modifier,path,selection,plots,runRange,isMC,backgrounds,
 			
 		latex = ROOT.TLatex()
 		latex.SetTextFont(42)
-		latex.SetTextAlign(11)
+		latex.SetTextAlign(31)
 		latex.SetTextSize(0.04)
 		latex.SetNDC(True)
-		latexLumi = ROOT.TLatex()
-		latexLumi.SetTextFont(42)
-		latexLumi.SetTextAlign(31)
-		latexLumi.SetTextSize(0.04)
-		latexLumi.SetNDC(True)
 		latexCMS = ROOT.TLatex()
 		latexCMS.SetTextFont(61)
 		latexCMS.SetTextSize(0.06)
@@ -281,79 +226,60 @@ def dependencies(source,modifier,path,selection,plots,runRange,isMC,backgrounds,
 
 
 
-		#~ rMuE = histMM.Clone("rMuE")
-		#~ rMuE.Divide(histEE)
+		rMuE = histMM.Clone("rMuE")
+		rMuE.Divide(histEE)
 		rMuEMC = histMMMC.Clone("rMuEMC")
 		rMuEMC.Divide(histEEMC)
 		
-		#~ for i in range(1, rMuE.GetNbinsX()+1):
-		for i in range(1, rMuEMC.GetNbinsX()+1):
-			#~ rMuE.SetBinContent(i, pow(rMuE.GetBinContent(i),0.5))
+		for i in range(1, rMuE.GetNbinsX()+1):
+			rMuE.SetBinContent(i, pow(rMuE.GetBinContent(i),0.5))
 			rMuEMC.SetBinContent(i, pow(rMuEMC.GetBinContent(i),0.5))
-			#~ if rMuE.GetBinContent(i) > 0:
-				#~ rMuE.SetBinError(i, pow( pow(histMM.GetBinContent(i)**0.5/histEE.GetBinContent(i),2) + pow(histEE.GetBinContent(i)**0.5*histMM.GetBinContent(i)/(histEE.GetBinContent(i)**2),2), 0.5))
+			if rMuE.GetBinContent(i) > 0:
+				rMuE.SetBinError(i, pow( pow(histMM.GetBinContent(i)**0.5/histEE.GetBinContent(i),2) + pow(histEE.GetBinContent(i)**0.5*histMM.GetBinContent(i)/(histEE.GetBinContent(i)**2),2), 0.5))
 			if rMuEMC.GetBinContent(i) > 0:
-				#~ rMuEMC.SetBinError(i, pow( pow(histMMMC.GetBinError(i)/histEEMC.GetBinContent(i),2) + pow(histEEMC.GetBinError(i)*histMMMC.GetBinContent(i)/(histEEMC.GetBinContent(i)**2),2), 0.5))
-				#~ rMuEMC.SetBinError(i, 0.5*rMuEMC.GetBinContent(i)*pow( pow(histEEMC.GetBinError(i)/histEEMC.GetBinContent(i),2) + pow(histMMMC.GetBinError(i)/histMMMC.GetBinContent(i),2), 0.5))
-				rMuEMC.SetBinError(i, 0.5*rMuEMC.GetBinContent(i)*pow( 1./histEEMC.GetBinContent(i) + 1./histMMMC.GetBinContent(i), 0.5))
+				rMuEMC.SetBinError(i, pow( pow(histMMMC.GetBinError(i)/histEEMC.GetBinContent(i),2) + pow(histEEMC.GetBinError(i)*histMMMC.GetBinContent(i)/(histEEMC.GetBinContent(i)**2),2), 0.5))
 
 		rMuEMC.SetMarkerStyle(21)
 		rMuEMC.SetLineColor(ROOT.kGreen-2) 
 		rMuEMC.SetMarkerColor(ROOT.kGreen-2) 
 		
 
-		#~ rMuE.SetMarkerStyle(20)
-		#~ rMuE.SetLineColor(ROOT.kBlack) 
-		#~ rMuE.SetMarkerColor(ROOT.kBlack) 
+		rMuE.SetMarkerStyle(20)
+		rMuE.SetLineColor(ROOT.kBlack) 
+		rMuE.SetMarkerColor(ROOT.kBlack) 
 
 
 
-		plotPad.DrawFrame(plot.firstBin,1,plot.lastBin,histMMMC.GetBinContent(histMMMC.GetMaximumBin())*10,"; %s; N_{Events}" %plot.xaxis)
-		#~ plotPad.DrawFrame(plot.firstBin,1,plot.lastBin,histMM.GetBinContent(histMM.GetMaximumBin())*10,"; %s; N_{Events}" %plot.xaxis)
+		plotPad.DrawFrame(plot.firstBin,1,plot.lastBin,histMM.GetBinContent(histMM.GetMaximumBin())*10,"; %s; N_{Events}" %plot.xaxis)
 		
 		legend = ROOT.TLegend(0.65,0.7,0.9,0.9)
 		legend.SetFillStyle(0)
 		legend.SetBorderSize(0)	
-		#~ legend.AddEntry(histMM,"#mu#mu events","p")
-		#~ legend.AddEntry(histEE,"ee events","p")
-		legend.AddEntry(histMMMC,"#mu#mu events","p")
-		legend.AddEntry(histEEMC,"ee events","p")
-		#~ histMM.SetMarkerColor(ROOT.kRed)
-		#~ histMM.SetLineColor(ROOT.kRed)
-		#~ histMM.SetMarkerStyle(20)
-		#~ histEE.SetMarkerStyle(21)
-		#~ histMM.Draw("samepe")
-		#~ histEE.Draw("samepe")
-		histMMMC.SetMarkerColor(ROOT.kRed)
-		histMMMC.SetLineColor(ROOT.kRed)
-		histMMMC.SetMarkerStyle(20)
-		histEEMC.SetMarkerStyle(21)
-		histMMMC.Draw("samepe")
-		histEEMC.Draw("samepe")
+		legend.AddEntry(histMM,"#mu#mu events","p")
+		legend.AddEntry(histEE,"ee events","p")
+		histMM.SetMarkerColor(ROOT.kRed)
+		histMM.SetLineColor(ROOT.kRed)
+		histMM.SetMarkerStyle(20)
+		histEE.SetMarkerStyle(21)
+		histMM.Draw("samepe")
+		histEE.Draw("samepe")
 		legend.Draw("same")
 		ROOT.gPad.SetLogy(1)
 		
-		#~ latex.DrawLatex(0.95, 0.96, "%s fb^{-1} (8 TeV)"%runRange.printval)
-		latexLumi.DrawLatex(0.95, 0.96, "(13 TeV)")
+		latex.DrawLatex(0.95, 0.96, "%s fb^{-1} (13 TeV)"%runRange.printval)
 		
-		if iso:
-			latex.DrawLatex(0.25, 0.3, "not isolated")
-		latex.DrawLatex(0.25, 0.2, pt_label)
-		latex.DrawLatex(0.25, 0.25, selection.latex)
-		latex.DrawLatex(0.35, 0.65, iso_label)
-		
-#~ 
-		latexCMS.DrawLatex(0.19,0.89,"CMS")
+
+		latexCMS.DrawLatex(0.19,0.88,"CMS")
 		if "Simulation" in cmsExtra:
-			yLabelPos = 0.82	
+			yLabelPos = 0.81	
 		else:
-			yLabelPos = 0.85	
+			yLabelPos = 0.84	
 
 		latexCMSExtra.DrawLatex(0.19,yLabelPos,"%s"%(cmsExtra))
 		
 		
 		
-		hCanvas.Print("fig/rMuE_%s_%s_%s_%s_%s_%s_RawInputs.pdf"%(selection.name,source,runRange.label,plot.variablePlotName,plot.additionalName,ptCut))	
+		hCanvas.Print("fig/rMuE_%s_%s_%s_%s_RawInputs.pdf"%(selection.name,runRange.label,plot.variablePlotName,plot.additionalName))	
 		
 		hCanvas.Clear()
 		ROOT.gPad.SetLogy(0)
@@ -364,33 +290,26 @@ def dependencies(source,modifier,path,selection,plots,runRange,isMC,backgrounds,
 		
 		plotPad.Draw()	
 		plotPad.cd()	
-		plotPad.DrawFrame(plot.firstBin,0.7,plot.lastBin,1.6,"; %s; r_{#mue}" %plot.xaxis)
+		plotPad.DrawFrame(plot.firstBin,0.8,plot.lastBin,1.7,"; %s; r_{#mue}" %plot.xaxis)
 		gStyle.SetErrorX(0.5)
 
-		#~ latex.DrawLatex(0.95, 0.96, "%s fb^{-1} (8 TeV)"%runRange.printval)
-		latexLumi.DrawLatex(0.95, 0.96, "(13 TeV)")
-		
-		if iso:
-			latex.DrawLatex(0.25, 0.3, "not isolated")
-		latex.DrawLatex(0.25, 0.2, pt_label)
-		latex.DrawLatex(0.25, 0.25, selection.latex)
-		latex.DrawLatex(0.35, 0.65, iso_label)
+		latex.DrawLatex(0.95, 0.96, "%s fb^{-1} (13 TeV)"%runRange.printval)
 		
 
-		latexCMS.DrawLatex(0.19,0.89,"CMS")
+		latexCMS.DrawLatex(0.19,0.88,"CMS")
 		if "Simulation" in cmsExtra:
-			yLabelPos = 0.82	
+			yLabelPos = 0.81	
 		else:
-			yLabelPos = 0.85	
+			yLabelPos = 0.84	
 
 		latexCMSExtra.DrawLatex(0.19,yLabelPos,"%s"%(cmsExtra))
 
 		
 
-		#~ if os.path.isfile("shelves/rMuE_%s_%s_%s_%s.pkl"%(selection.name,source,runRange.label,ptCut)):
-			#~ centralVals = pickle.load(open("shelves/rMuE_%s_%s_%s.pkl"%(selection.name,source,runRange.label,ptCut),"rb"))
-		#~ else:
-		centralVals = centralValues(source,modifier,path,selection,runRange,isMC,backgrounds,ptCut,iso)
+		if os.path.isfile("shelves/rMuE_%s_%s.pkl"%(selection.name,runRange.label)):
+			centralVals = pickle.load(open("shelves/rMuE_%s_%s.pkl"%(selection.name,runRange.label),"rb"))
+		else:
+			centralVals = centralValues(path,selection,runRange,isMC,backgrounds)
 		
 		x= array("f",[plot.firstBin, plot.lastBin]) 
 		y= array("f", [centralVals["rMuE"],centralVals["rMuE"]]) 
@@ -411,15 +330,15 @@ def dependencies(source,modifier,path,selection,plots,runRange,isMC,backgrounds,
 		
 		rMuEMC.Draw("hist E1P SAME")
 			
-		leg = ROOT.TLegend(0.55,0.7,0.925,0.95)
+		leg = ROOT.TLegend(0.6,0.7,0.85,0.95)
 		if not isMC:
 			rMuE.Draw("hist E1P SAME")			
 			leg.AddEntry(rMuE, "Data", "p")
-		if "DiLeptonTrigger" in source:
-			leg.AddEntry(rMuEMC,"t#bar{t} MC, Dilepton Trigger","p")
-		elif "Reweighted" in source:
-			leg.AddEntry(rMuEMC,"t#bar{t} MC, Reweighted","p")
+			leg.AddEntry(rMuEMC,"t#bar{t} MC","p")
+			
 		else:
+			rMuE.Draw("hist E1P SAME")			
+			leg.AddEntry(rMuE, "all MC", "p")
 			leg.AddEntry(rMuEMC,"t#bar{t} MC","p")
 		if not isMC: 
 			leg.AddEntry(rmueLine, "r_{#mu e} central value", "l")
@@ -428,7 +347,6 @@ def dependencies(source,modifier,path,selection,plots,runRange,isMC,backgrounds,
 		leg.AddEntry(ge,"syst. unc. of r_{#mu e}","f")
 
 		leg.SetBorderSize(0)
-		leg.SetFillStyle(0)
 		leg.SetLineWidth(2)
 		leg.SetTextAlign(22)
 		
@@ -485,197 +403,10 @@ def dependencies(source,modifier,path,selection,plots,runRange,isMC,backgrounds,
 				
 
 
-		hCanvas.Print("fig/rMuE_%s_%s_%s_%s_%s_%s.pdf"%(selection.name,source,runRange.label,plot.variablePlotName,plot.additionalName,ptCut))	
-
-
-def dependenciesPU(source,path,selection,plots,runRange,isMC,backgrounds,cmsExtra,fit,ptCut,iso):
-		
-	backgrounds = ["TTJets","TTJets_PU4BX50","TTJets_PU30BX50"]
-	
-	for name in plots:
-		plot = getPlot(name)
-		plot.addRegion(selection)
-		plot.cleanCuts()
-		if ptCut != "pt2020":
-			pt_Cut = getattr(theCuts.ptCuts,ptCut)
-			plot.cuts = plot.cuts.replace("pt1 > 20 && pt2 > 20",pt_Cut.cut)
-			pt_label = pt_Cut.label
-		else:
-			pt_label = "p_{T} > 20 GeV"	
-		plot.cuts = plot.cuts % runRange.runCut	
-
-		if not "Forward" in selection.name:
-			relSyst = systematics.rMuE.central.val
-			if "Central" in selection.name:
-				region = "central"
-			else:
-				region = "inclusive"
-		else:	
-			relSyst = systematics.rMuE.forward.val
-			region = "forward"
-
-
-		histos = {}
-		
-		for background in backgrounds:
-			BG = []
-			BG.append(background)
-			histos["histEEMC_%s"%(background)],histos["histMMMC_%s"%(background)] = getHistograms(path,source,plot,runRange,True, BG,region,iso)
-				
-			
-		
-		hCanvas = TCanvas("hCanvas", "Distribution", 800,800)
-		
-		plotPad = ROOT.TPad("plotPad","plotPad",0,0,1,1)
-		setTDRStyle()
-		plotPad.UseCurrentStyle()
-		
-		plotPad.Draw()	
-		plotPad.cd()	
-				
-			
-		latex = ROOT.TLatex()
-		latex.SetTextFont(42)
-		latex.SetTextAlign(11)
-		latex.SetTextSize(0.04)
-		latex.SetNDC(True)
-		latexLumi = ROOT.TLatex()
-		latexLumi.SetTextFont(42)
-		latexLumi.SetTextAlign(31)
-		latexLumi.SetTextSize(0.04)
-		latexLumi.SetNDC(True)
-		latexCMS = ROOT.TLatex()
-		latexCMS.SetTextFont(61)
-		latexCMS.SetTextSize(0.06)
-		latexCMS.SetNDC(True)
-		latexCMSExtra = ROOT.TLatex()
-		latexCMSExtra.SetTextFont(52)
-		latexCMSExtra.SetTextSize(0.045)
-		latexCMSExtra.SetNDC(True)		
-
-		#~ intlumi = ROOT.TLatex()
-		#~ intlumi.SetTextAlign(12)
-		#~ intlumi.SetTextSize(0.03)
-		#~ intlumi.SetNDC(True)					
-		
-
-
-		for background in backgrounds:
-			BG_sample = getattr(Backgrounds,background)
-			histos["rMuEMC_%s"%(background)] = histos["histMMMC_%s"%(background)].Clone("rMuEMC_%s"%(background))
-			histos["rMuEMC_%s"%(background)].Divide(histos["histEEMC_%s"%(background)])
-			histos["rMuEMC_%s"%(background)].SetLineColor(BG_sample.linecolor)
-			histos["rMuEMC_%s"%(background)].SetMarkerColor(BG_sample.linecolor)
-			histos["rMuEMC_%s"%(background)].SetMarkerStyle(21)
-
-		
-			for i in range(1, histos["rMuEMC_%s"%(background)].GetNbinsX()+1):
-				histos["rMuEMC_%s"%(background)].SetBinContent(i, pow(histos["rMuEMC_%s"%(background)].GetBinContent(i),0.5))
-				if histos["rMuEMC_%s"%(background)].GetBinContent(i) > 0:
-					histos["rMuEMC_%s"%(background)].SetBinError(i, 0.5*histos["rMuEMC_%s"%(background)].GetBinError(i)*pow( 1./histos["histEEMC_%s"%(background)].GetBinContent(i) + 1./histos["histMMMC_%s"%(background)].GetBinContent(i), 0.5))
-		
-		
-
-		hCanvas.Clear()
-		ROOT.gPad.SetLogy(0)
-
-		plotPad = ROOT.TPad("plotPad","plotPad",0,0,1,1)
-		setTDRStyle()
-		plotPad.UseCurrentStyle()
-		
-		plotPad.Draw()	
-		plotPad.cd()	
-		plotPad.DrawFrame(plot.firstBin,0.7,plot.lastBin,1.6,"; %s; r_{#mue}" %plot.xaxis)
-		gStyle.SetErrorX(0.5)
-
-		latexLumi.DrawLatex(0.95, 0.96, "(13 TeV)")
-		
-		latex.DrawLatex(0.25, 0.2, pt_label)
-		latex.DrawLatex(0.25, 0.25, selection.latex)
-		
-
-		latexCMS.DrawLatex(0.19,0.89,"CMS")
-		if "Simulation" in cmsExtra:
-			yLabelPos = 0.82	
-		else:
-			yLabelPos = 0.85	
-
-		latexCMSExtra.DrawLatex(0.19,yLabelPos,"%s"%(cmsExtra))
-
-		
-#~ 
-		#~ if os.path.isfile("shelves/rMuE_%s_%s_%s_%s.pkl"%(selection.name,source,runRange.label,ptCut)):
-			#~ centralVals = pickle.load(open("shelves/rMuE_%s_%s_%s.pkl"%(selection.name,source,runRange.label,ptCut),"rb"))
-		#~ else:
-			#~ centralVals = centralValues(source,path,selection,runRange,isMC,backgrounds,ptCut)
-
-		
-		#~ rmueLine= ROOT.TF1("rmueline","%f"%centralVals["rMuE"],plot.firstBin,plot.lastBin)
-		#~ rmueLine.SetLineColor(ROOT.kOrange+3)
-		#~ rmueLine.SetLineWidth(3)
-		#~ rmueLine.SetLineStyle(2)
-		#~ rmueLine.Draw("SAME")
-
-		
-		leg = ROOT.TLegend(0.6,0.7,0.95,0.95)
-		for background in backgrounds:
-			BG_sample = getattr(Backgrounds,background)
-			histos["rMuEMC_%s"%(background)].Draw("hist E1P SAME")
-			if "DileptonTrigger" in source:
-				leg.AddEntry(histos["rMuEMC_%s"%(background)],BG_sample.label+" Dilepton Trigger","p")
-			else:
-				leg.AddEntry(histos["rMuEMC_%s"%(background)],BG_sample.label,"p")
-		
-		#~ leg.AddEntry(rmueLine, "r_{#mu e} central value on MC", "l") 
-
-		leg.SetFillStyle(0)
-		leg.SetBorderSize(0)
-		leg.SetLineWidth(2)
-		leg.SetTextAlign(22)
-		
-	
-
-		# Pfeile
-		
-		if "eta" in plot.variable:
-			yMin = 0.8
-			yMax = 1.6
-			lineU1 = ROOT.TLine(1.4, yMin, 1.4, yMax-0.2)
-			lineU1.SetLineColor(ROOT.kBlue-3)
-			lineU1.SetLineWidth(2)
-			lineU1.Draw("")
-			lineU2 = ROOT.TLine(1.6, yMin, 1.6, yMax-0.2)
-			lineU2.SetLineColor(ROOT.kBlue-3)
-			lineU2.SetLineWidth(2)
-			lineU2.Draw("")
-			arrow1=ROOT.TArrow(1.55,1.3,1.6,1.3,0.01,"<|")
-			arrow1.SetFillColor(ROOT.kBlue-3)
-			arrow1.SetLineColor(ROOT.kBlue-3)
-			arrow1.SetLineWidth(3)
-			arrow1.Draw("")
-			arrow2=ROOT.TArrow(1.4,1.3,1.45,1.3,0.01,"|>")
-			arrow2.SetFillColor(ROOT.kBlue-3)
-			arrow2.SetLineColor(ROOT.kBlue-3)
-			arrow2.SetLineWidth(3)
-			arrow2.Draw("")
-
-			lineE = ROOT.TLine(2.4, yMin, 2.4, yMax-0.2) #3.5 -> 1.7
-			lineE.SetLineColor(ROOT.kRed-3)
-			lineE.SetLineWidth(2)
-			lineE.Draw("")
-
-		hCanvas.RedrawAxis()
-		leg.Draw("SAME")
-		ROOT.gPad.RedrawAxis()
-		hCanvas.Update()	
-		
-				
-
-
-		hCanvas.Print("fig/rMuE_PUStudy_%s_%s_%s_%s_%s_%s.pdf"%(selection.name,source,runRange.label,plot.variablePlotName,plot.additionalName,ptCut))	
+		hCanvas.Print("fig/rMuE_%s_%s_%s_%s.pdf"%(selection.name,runRange.label,plot.variablePlotName,plot.additionalName))	
 	
 	
-def signalRegion(path,selection,plots,runRange,isMC,backgrounds,cmsExtra,iso):
+def signalRegion(path,selection,plots,runRange,isMC,backgrounds,cmsExtra):
 	plots = ["mllPlotRMuESignal"]
 	for name in plots:
 		plot = getPlot(name)
@@ -696,7 +427,7 @@ def signalRegion(path,selection,plots,runRange,isMC,backgrounds,cmsExtra,iso):
 			region = "forward"
 
 		
-		histEE, histMM, histEM = getHistograms(path,plot,runRange,isMC, backgrounds,region,iso,EM=True)	
+		histEE, histMM, histEM = getHistograms(path,plot,runRange,isMC, backgrounds,region,EM=True)	
 
 		rMuEMeasured = rMuEMeasure(histEE,histMM)	
 		rMuE, rMuEUncert = rMuEFromSFOF(histEE,histMM,histEM,corr,corrErr)
@@ -725,7 +456,7 @@ def signalRegion(path,selection,plots,runRange,isMC,backgrounds,cmsExtra,iso):
 		if os.path.isfile("shelves/rMuE_%s_%s.pkl"%(centralName,runRange.label)):
 			centralVals = pickle.load(open("shelves/rMuE_%s_%s.pkl"%(centralName,runRange.label),"rb"))
 		else:
-			centralVals = centralValues(path,getRegion(centralName),runRange,False,backgrounds,iso)
+			centralVals = centralValues(path,getRegion(centralName),runRange,False,backgrounds)
 		
 		x= array("f",[plot.firstBin, plot.lastBin]) 
 		y= array("f", [centralVals["rMuE"],centralVals["rMuE"]]) 
@@ -817,11 +548,11 @@ def signalRegion(path,selection,plots,runRange,isMC,backgrounds,cmsExtra,iso):
 		latexCMSExtra.SetTextSize(0.045)
 		latexCMSExtra.SetNDC(True)				
 
-		latexCMS.DrawLatex(0.19,0.89,"CMS")
+		latexCMS.DrawLatex(0.19,0.88,"CMS")
 		if "Simulation" in cmsExtra:
-			yLabelPos = 0.82	
+			yLabelPos = 0.81	
 		else:
-			yLabelPos = 0.85	
+			yLabelPos = 0.84	
 
 		latexCMSExtra.DrawLatex(0.19,yLabelPos,"%s"%(cmsExtra))		
 		
@@ -845,28 +576,14 @@ def main():
 						  help="selection which to apply.")
 	parser.add_argument("-p", "--plot", dest="plots", action="append", default=[],
 						  help="select dependencies to study, default is all.")
-	parser.add_argument("-P", "--pileUp", dest="pileUp", action="store_true", default=False,
-						  help="make pile up studies.")
-	parser.add_argument("-i", "--nonIsolated", dest="nonIsolated", action="store_true", default=False,
-						  help="use base trees without isolation requirement.")
 	parser.add_argument("-r", "--runRange", dest="runRange", action="append", default=[],
 						  help="name of run range.")
 	parser.add_argument("-c", "--centralValues", action="store_true", dest="central", default=False,
 						  help="calculate effinciecy central values")
-	parser.add_argument("-C", "--ptCut",action="store", dest="ptCut", default="pt2515",
-						  help="modify the pt cuts")
 	parser.add_argument("-b", "--backgrounds", dest="backgrounds", action="append", default=[],
 						  help="backgrounds to plot.")
 	parser.add_argument("-d", "--dependencies", action="store_true", dest="dependencies", default= False,
-						  help="make dependency plots")
-	parser.add_argument("-l", "--dilepton", action="store_true", dest="dilepton", default=False,
-						  help="use dilepton triggers as baseline.")
-	parser.add_argument("-e", "--effectiveArea", action="store_true", dest="effectiveArea", default=False,
-						  help="use effective area PU corrections.")	
-	parser.add_argument("-D", "--deltaBeta", action="store_true", dest="deltaBeta", default=False,
-						  help="use delta beta PU corrections.")	
-	parser.add_argument("-R", "--constantConeSize", action="store_true", dest="constantConeSize", default=False,
-						  help="use constant cone of R=0.3 for iso.")	
+						  help="make dependency plots")	
 	parser.add_argument("-z", "--signalRegion", action="store_true", dest="signalRegion", default= False,
 						  help="make rMuE in signal region plot")	
 	parser.add_argument("-f", "--fit", action="store_true", dest="fit", default= False,
@@ -896,44 +613,11 @@ def main():
 			args.selection.append(regionsToUse.rMuE.inclusive.name)
 			
 	if len(args.runRange) == 0:
-		args.runRange.append(runRanges.name)
+		args.runRange.append(runRanges.name)		
+
+	path = locations.dataSetPath	
+
 	
-	if args.dilepton:
-		source = "DiLeptonTrigger"
-		modifier = "DiLeptonTrigger"
-	else:
-		source = ""		
-		modifier = ""		
-
-	if args.nonIsolated:
-		if args.dilepton:
-			path = locations.baseTreesTriggerDataSetPath
-			iso = "not_isolated_DiLeptonTrigger"
-			source = "baseTreesDiLeptonTrigger"
-		else:
-			path = locations.baseTreesDataSetPath	
-			iso = "not_isolated"
-			source = "baseTrees"	
-	else:	
-		path = locations.dataSetPath
-		iso = ""
-		
-	if args.constantConeSize:
-		if args.effectiveArea:
-			source = "EffAreaIso%s"%source
-		elif args.deltaBeta:
-			source = "DeltaBetaIso%s"%source
-		else:
-			print "Constant cone size (option -R) can only be used in combination with effective area (-e) or delta beta (-D) pileup corrections."
-			print "Using default miniIso cone with PF weights instead"
-	else:
-		if args.effectiveArea:
-			source = "MiniIsoEffAreaIso%s"%source
-		elif args.deltaBeta:
-			source = "MiniIsoDeltaBetaIso%s"%source
-		else:
-			source = "MiniIsoPFWeights%s"%source
-
 
 	cmsExtra = ""
 	if args.private:
@@ -944,7 +628,6 @@ def main():
 		cmsExtra = "Simulation"	
 	else:
 		cmsExtra = "Preliminary"
-
 	for runRangeName in args.runRange:
 		runRange = getRunRange(runRangeName)
 	
@@ -953,30 +636,25 @@ def main():
 			selection = getRegion(selectionName)
 
 			if args.central:
-				centralVal = centralValues(source,modifier,path,selection,runRange,args.mc,args.backgrounds,args.ptCut,iso)
+				centralVal = centralValues(path,selection,runRange,args.mc,args.backgrounds)
 				if args.mc:
-					if args.nonIsolated:
-						outFilePkl = open("shelves/rMuE_%s_%s_%s_%s_%s_MC.pkl"%(selection.name,source,runRange.label,args.ptCut,iso),"w")
-					else:
-						outFilePkl = open("shelves/rMuE_%s_%s_%s_%s_MC.pkl"%(selection.name,source,runRange.label,args.ptCut),"w")
+					outFilePkl = open("shelves/rMuE_%s_%s_MC.pkl"%(selection.name,runRange.label),"w")
 				else:
-					outFilePkl = open("shelves/rMuE_%s_%s_%s_%s.pkl"%(selection.name,source,runRange.label,args.ptCut),"w")
+					outFilePkl = open("shelves/rMuE_%s_%s.pkl"%(selection.name,runRange.label),"w")
 				pickle.dump(centralVal, outFilePkl)
 				outFilePkl.close()
 				
 			if args.dependencies:
-				 dependencies(source,modifier,path,selection,args.plots,runRange,args.mc,args.backgrounds,cmsExtra,args.fit,args.ptCut,iso)		
-			if args.pileUp:
-				 dependenciesPU(source,path,selection,args.plots,runRange,args.mc,args.backgrounds,cmsExtra,args.fit,args.ptCut,iso)		
+				 dependencies(path,selection,args.plots,runRange,args.mc,args.backgrounds,cmsExtra,args.fit)		
 			if args.signalRegion:
-				 signalRegion(source,path,selection,args.plots,runRange,args.mc,args.backgrounds,cmsExtra,args.ptCut,iso)	
+				 signalRegion(path,selection,args.plots,runRange,args.mc,args.backgrounds,cmsExtra)	
 				 
 			if args.write:
 				import subprocess
 				if args.mc:
-					bashCommand = "cp shelves/rMuE_%s_%s_%s_%s_MC.pkl %s/shelves"%(selection.name,source,runRange.label,args.ptCut,pathes.basePath)		
+					bashCommand = "cp shelves/rMuE_%s_%s_MC.pkl %s/shelves"%(selection.name,runRange.label,pathes.basePath)		
 				else:	
-					bashCommand = "cp shelves//rMuE_%s_%s_%s_%s.pkl %s/shelves"%(selection.name,source,runRange.label,args.ptCut,pathes.basePath)
+					bashCommand = "cp shelves//rMuE_%s_%s.pkl %s/shelves"%(selection.name,runRange.label,pathes.basePath)
 				process = subprocess.Popen(bashCommand.split())				 	
 
 main()

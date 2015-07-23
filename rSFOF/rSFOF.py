@@ -210,7 +210,7 @@ def dependencies(source,modifier,path,selection,plots,runRange,isMC,nonNormalize
 		#~ histMM.Draw("sameE0")
 
 
-		legend.AddEntry(histRSFOF,"R_{SF/OF}","pe")	
+		#~ legend.AddEntry(histRSFOF,"R_{SF/OF}","pe")	
 		#~ legend.AddEntry(histEE,"R_{EE/OF}","p")	
 		#~ legend.AddEntry(histMM,"R_{MM/OF}","p")	
 
@@ -226,7 +226,7 @@ def dependencies(source,modifier,path,selection,plots,runRange,isMC,nonNormalize
 		latexLumi = ROOT.TLatex()
 		latexLumi.SetTextFont(42)
 		latexLumi.SetTextAlign(31)
-		latexLumi.SetTextSize(0.04)
+		latexLumi.SetTextSize(0.1)
 		latexLumi.SetNDC(True)
 		latexCMS = ROOT.TLatex()
 		latexCMS.SetTextFont(61)
@@ -238,11 +238,11 @@ def dependencies(source,modifier,path,selection,plots,runRange,isMC,nonNormalize
 		#latexCMSExtra.SetTextAlign(31)
 		latexCMSExtra.SetTextSize(0.1)
 		latexCMSExtra.SetNDC(True)	
-		#~ latex.DrawLatex(0.95, 0.91, "%s fb^{-1} (8 TeV)"%runRange.printval)
-		latexLumi.DrawLatex(0.95, 0.96, "(13 TeV)")
+		latexLumi.DrawLatex(0.95, 0.91, "%s fb^{-1} (13 TeV)"%runRange.printval)
+		#~ latexLumi.DrawLatex(0.95, 0.96, "(13 TeV)")
 		
-		latex.DrawLatex(0.25, 0.2, pt_label)
-		latex.DrawLatex(0.25, 0.25, selection.latex)
+		#~ latex.DrawLatex(0.25, 0.2, pt_label)
+		#~ latex.DrawLatex(0.25, 0.25, selection.latex)
 		
 
 		latexCMS.DrawLatex(0.12,0.76,"CMS")
@@ -267,9 +267,9 @@ def dependencies(source,modifier,path,selection,plots,runRange,isMC,nonNormalize
 
 		
 		if isMC:
-			hCanvas.Print("fig/rSFOF_%s_%s_%s_%s_%s_%s_MC.pdf"%(selection.name,source,runRange.label,plot.variablePlotName,plot.additionalName,ptCut))	
+			hCanvas.Print("fig/rSFOF_%s_%s_%s_%s_MC.pdf"%(selection.name,runRange.label,plot.variablePlotName,plot.additionalName))	
 		else:
-			hCanvas.Print("fig/rSFOF_%s_%s_%s_%s_%s_%s.pdf"%(selection.name,source,runRange.label,plot.variablePlotName,plot.additionalName,ptCut))	
+			hCanvas.Print("fig/rSFOF_%s_%s_%s_%s.pdf"%(selection.name,runRange.label,plot.variablePlotName,plot.additionalName))	
 
 
 
@@ -283,7 +283,7 @@ def getHistograms(path,source,modifier,plot,runRange,isMC,nonNormalized,backgrou
 	
 	
 	if isMC:
-		
+		print path, source, modifier
 		eventCounts = totalNumberOfGeneratedEvents(path,source,modifier)	
 		processes = []
 		for background in backgrounds:
@@ -296,9 +296,9 @@ def getHistograms(path,source,modifier,plot,runRange,isMC,nonNormalized,backgrou
 		histoMM = TheStack(processes,runRange.lumi,plot,treesMM,"None",1.0,1.0,1.0).theHistogram
 		histoEM = TheStack(processes,runRange.lumi,plot,treesEM,"None",1.0,1.0,1.0).theHistogram
 						
-		histoEE.Scale(getattr(triggerEffs,region).effEE.val)
-		histoEE.Scale(getattr(triggerEffs,region).effMM.val)	
-		histoEM.Scale(getattr(triggerEffs,region).effEM.val)
+		#~ histoEE.Scale(getattr(triggerEffs,region).effEE.val)
+		#~ histoEE.Scale(getattr(triggerEffs,region).effMM.val)	
+		#~ histoEM.Scale(getattr(triggerEffs,region).effEM.val)
 			
 	else:
 		histoEE = getDataHist(plot,treesEE)
@@ -311,15 +311,13 @@ def getHistograms(path,source,modifier,plot,runRange,isMC,nonNormalized,backgrou
 
 	
 
-def centralValues(source,modifier,path,selection,runRange,isMC,nonNormalized,backgrounds,cmsExtra,ptCut):
+def centralValues(source,modifier,path,selection,runRange,isMC,nonNormalized,backgrounds,cmsExtra):
 
 
 	plot = getPlot("mllPlotROutIn")
 	plot.addRegion(selection)
 	plot.cleanCuts()
-	if ptCut != "pt2020":
-		pt_Cut = getattr(theCuts.ptCuts,ptCut)
-		plot.cuts = plot.cuts.replace("pt1 > 20 && pt2 > 20",pt_Cut.cut)
+
 	plot.cuts = plot.cuts % runRange.runCut		
 
 	plotSignal = getPlot("mllPlot")
@@ -336,9 +334,6 @@ def centralValues(source,modifier,path,selection,runRange,isMC,nonNormalized,bac
 		label = "inclusive"
 
 	plotSignal.cleanCuts()
-	if ptCut != "pt2020":
-		pt_Cut = getattr(theCuts.ptCuts,ptCut)
-		plotSignal.cuts = plotSignal.cuts.replace("pt1 > 20 && pt2 > 20",pt_Cut.cut)
 	plotSignal.cuts = plotSignal.cuts % runRange.runCut	
 
 
@@ -643,21 +638,21 @@ def main():
 		source = ""		
 		modifier = ""	
 		
-	if args.constantConeSize:
-		if args.effectiveArea:
-			source = "EffAreaIso%s"%source
-		elif args.deltaBeta:
-			source = "DeltaBetaIso%s"%source
-		else:
-			print "Constant cone size (option -R) can only be used in combination with effective area (-e) or delta beta (-D) pileup corrections."
-			print "Using default miniIso cone with PF weights instead"
-	else:
-		if args.effectiveArea:
-			source = "MiniIsoEffAreaIso%s"%source
-		elif args.deltaBeta:
-			source = "MiniIsoDeltaBetaIso%s"%source
-		else:
-			source = "MiniIsoPFWeights%s"%source	
+	#~ if args.constantConeSize:
+		#~ if args.effectiveArea:
+			#~ source = "EffAreaIso%s"%source
+		#~ elif args.deltaBeta:
+			#~ source = "DeltaBetaIso%s"%source
+		#~ else:
+			#~ print "Constant cone size (option -R) can only be used in combination with effective area (-e) or delta beta (-D) pileup corrections."
+			#~ print "Using default miniIso cone with PF weights instead"
+	#~ else:
+		#~ if args.effectiveArea:
+			#~ source = "MiniIsoEffAreaIso%s"%source
+		#~ elif args.deltaBeta:
+			#~ source = "MiniIsoDeltaBetaIso%s"%source
+		#~ else:
+			#~ source = "MiniIsoPFWeights%s"%source	
 
 
 	cmsExtra = ""
@@ -679,11 +674,11 @@ def main():
 
 			if args.central:
 				
-				centralVal = centralValues(source,modifier,path,selection,runRange,args.mc,args.nonNormalized,args.backgrounds,cmsExtra,args.ptCut)
+				centralVal = centralValues(source,modifier,path,selection,runRange,args.mc,args.nonNormalized,args.backgrounds,cmsExtra)
 				if args.mc:
-					outFilePkl = open("shelves/rSFOF_%s_%s_%s_%s_MC.pkl"%(selection.name,source,runRange.label,args.ptCut),"w")
+					outFilePkl = open("shelves/rSFOF_%s_%s_MC.pkl"%(selection.name,runRange.label),"w")
 				else:
-					outFilePkl = open("shelves/rSFOF_%s_%s_%s_%s.pkl"%(selection.name,source,runRange.label,args.ptCut),"w")
+					outFilePkl = open("shelves/rSFOF_%s_%s.pkl"%(selection.name,runRange.label),"w")
 				pickle.dump(centralVal, outFilePkl)
 				outFilePkl.close()
 				
