@@ -232,12 +232,17 @@ def dependencies(path,selection,plots,runRange,isMC,backgrounds,cmsExtra,fit):
 		rMuEMC.Divide(histEEMC)
 		
 		for i in range(1, rMuE.GetNbinsX()+1):
-			rMuE.SetBinContent(i, pow(rMuE.GetBinContent(i),0.5))
-			rMuEMC.SetBinContent(i, pow(rMuEMC.GetBinContent(i),0.5))
 			if rMuE.GetBinContent(i) > 0:
-				rMuE.SetBinError(i, pow( pow(histMM.GetBinContent(i)**0.5/histEE.GetBinContent(i),2) + pow(histEE.GetBinContent(i)**0.5*histMM.GetBinContent(i)/(histEE.GetBinContent(i)**2),2), 0.5))
+				rMuE.SetBinContent(i, pow(rMuE.GetBinContent(i),0.5))
 			if rMuEMC.GetBinContent(i) > 0:
-				rMuEMC.SetBinError(i, pow( pow(histMMMC.GetBinError(i)/histEEMC.GetBinContent(i),2) + pow(histEEMC.GetBinError(i)*histMMMC.GetBinContent(i)/(histEEMC.GetBinContent(i)**2),2), 0.5))
+				rMuEMC.SetBinContent(i, pow(rMuEMC.GetBinContent(i),0.5))
+			if rMuE.GetBinContent(i) > 0:
+				#~ rMuE.SetBinError(i, 0.5*rMuE.GetBinContent(i)*pow(1./abs(histMM.GetBinContent(i)) + 1./abs(histEE.GetBinContent(i)), 0.5))
+				rMuE.SetBinError(i, 0.5*pow( histMM.GetBinError(i)**2/(abs(histEE.GetBinContent(i))*abs(histMM.GetBinContent(i))) + histEE.GetBinError(i)**2*abs(histMM.GetBinContent(i))/abs(histEE.GetBinContent(i)**3), 0.5))
+			if rMuEMC.GetBinContent(i) > 0:
+				#~ rMuEMC.SetBinError(i, 0.5*rMuEMC.GetBinContent(i)*pow(1./abs(histMMMC.GetBinContent(i)) + 1./abs(histEEMC.GetBinContent(i)), 0.5))
+				#~ rMuEMC.SetBinError(i, pow( pow(histMMMC.GetBinError(i)/histEEMC.GetBinContent(i),2) + pow(histEEMC.GetBinError(i)*histMMMC.GetBinContent(i)/(histEEMC.GetBinContent(i)**2),2), 0.5))
+				rMuEMC.SetBinError(i, 0.5*pow( histMMMC.GetBinError(i)**2/(abs(histEEMC.GetBinContent(i))*abs(histMMMC.GetBinContent(i))) + histEEMC.GetBinError(i)**2*abs(histMMMC.GetBinContent(i))/abs(histEEMC.GetBinContent(i)**3), 0.5))
 
 		rMuEMC.SetMarkerStyle(21)
 		rMuEMC.SetLineColor(ROOT.kGreen-2) 
@@ -290,7 +295,7 @@ def dependencies(path,selection,plots,runRange,isMC,backgrounds,cmsExtra,fit):
 		
 		plotPad.Draw()	
 		plotPad.cd()	
-		plotPad.DrawFrame(plot.firstBin,0.8,plot.lastBin,1.7,"; %s; r_{#mue}" %plot.xaxis)
+		plotPad.DrawFrame(plot.firstBin,0.,plot.lastBin,2.5,"; %s; r_{#mue}" %plot.xaxis)
 		gStyle.SetErrorX(0.5)
 
 		latex.DrawLatex(0.95, 0.96, "%s fb^{-1} (13 TeV)"%runRange.printval)

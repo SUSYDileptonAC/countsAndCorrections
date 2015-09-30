@@ -283,7 +283,7 @@ def getHistograms(path,source,modifier,plot,runRange,isMC,nonNormalized,backgrou
 	
 	
 	if isMC:
-		print path, source, modifier
+		#~ print path, source, modifier
 		eventCounts = totalNumberOfGeneratedEvents(path,source,modifier)	
 		processes = []
 		for background in backgrounds:
@@ -430,21 +430,36 @@ def centralValues(source,modifier,path,selection,runRange,isMC,nonNormalized,bac
 	rsfofSignal = float(sfSignal)/float(ofSignal)	
 	rsfofErrSignal = rsfofSignal*(sfErrSignal**2/sfSignal**2+ofErrSignal**2/ofSignal**2)**0.5
 	rsfofLowMassSignal = float(sfLowMassSignal)/float(ofLowMassSignal)
-	rsfofLowMassErrSignal = rsfofLowMassSignal*(sfLowMassErrSignal**2/sfLowMassSignal**2+ofLowMassErrSignal**2/ofLowMassSignal**2)**0.5
+	if sfLowMassSignal > 0 and ofLowMassSignal > 0:
+		rsfofLowMassErrSignal = rsfofLowMassSignal*(sfLowMassErrSignal**2/sfLowMassSignal**2+ofLowMassErrSignal**2/ofLowMassSignal**2)**0.5
+	else:
+		rsfofLowMassErrSignal = 0
 	rsfofHighMassSignal = float(sfHighMassSignal)/float(ofHighMassSignal)
 	rsfofHighMassErrSignal = rsfofHighMassSignal*(sfHighMassErrSignal**2/sfHighMassSignal**2+ofHighMassErrSignal**2/ofHighMassSignal**2)**0.5
 	
 	rEEOF = float(ee)/float(of)
-	rEEOFErr = rEEOF * (eeErr**2/ee**2 + ofErr**2/of**2)**0.5
+	if ee > 0 and of > 0:
+		rEEOFErr = rEEOF * (eeErr**2/ee**2 + ofErr**2/of**2)**0.5
+	else:
+		rEEOFErr = 0
 	rEEOFLowMass = float(eeLowMass)/float(ofLowMass)
-	rEEOFLowMassErr = rEEOFLowMass * (eeLowMassErr**2/eeLowMass**2 + ofLowMassErr**2/ofLowMass**2)**0.5
+	if eeLowMass > 0 and ofLowMass > 0:
+		rEEOFLowMassErr = rEEOFLowMass * (eeLowMassErr**2/eeLowMass**2 + ofLowMassErr**2/ofLowMass**2)**0.5
+	else:
+		rEEOFLowMassErr = 0
 	rEEOFHighMass = float(eeHighMass)/float(ofHighMass)
-	rEEOFHighMassErr = rEEOFHighMass * (eeHighMassErr**2/eeHighMass**2 + ofHighMassErr**2/ofHighMass**2)**0.5
+	if eeHighMass > 0 and ofHighMass > 0:
+		rEEOFHighMassErr = rEEOFHighMass * (eeHighMassErr**2/eeHighMass**2 + ofHighMassErr**2/ofHighMass**2)**0.5
+	else:
+		rEEOFHighMassErr = 0
 	
 	rEEOFSignal = float(eeSignal)/float(ofSignal)
 	rEEOFErrSignal = rEEOFSignal * (eeErrSignal**2/eeSignal**2 + ofErrSignal**2/ofSignal**2)**0.5
 	rEEOFLowMassSignal = float(eeLowMassSignal)/float(ofLowMassSignal)
-	rEEOFLowMassErrSignal = rEEOFLowMassSignal * (eeLowMassErrSignal**2/eeLowMassSignal**2 + ofLowMassErrSignal**2/ofLowMassSignal**2)**0.5
+	if eeLowMassSignal > 0 and ofLowMassSignal > 0:
+		rEEOFLowMassErrSignal = rEEOFLowMassSignal * (eeLowMassErrSignal**2/eeLowMassSignal**2 + ofLowMassErrSignal**2/ofLowMassSignal**2)**0.5
+	else:
+		rEEOFLowMassErrSignal = 0
 	rEEOFHighMassSignal = float(eeHighMassSignal)/float(ofHighMassSignal)
 	rEEOFHighMassErrSignal = rEEOFHighMassSignal * (eeHighMassErrSignal**2/eeHighMassSignal**2 + ofHighMassErrSignal**2/ofHighMassSignal**2)**0.5
 	
@@ -458,28 +473,55 @@ def centralValues(source,modifier,path,selection,runRange,isMC,nonNormalized,bac
 	rMMOFSignal = float(mmSignal)/float(ofSignal)
 	rMMOFErrSignal = rMMOFSignal * (mmErrSignal**2/mmSignal**2 + ofErrSignal**2/ofSignal**2)**0.5
 	rMMOFLowMassSignal = float(mmLowMassSignal)/float(ofLowMassSignal)
-	rMMOFLowMassErrSignal = rMMOFLowMassSignal * (mmLowMassErrSignal**2/mmLowMassSignal**2 + ofLowMassErrSignal**2/ofLowMassSignal**2)**0.5
+	if mmLowMassSignal > 0 and ofLowMassSignal > 0:
+		rMMOFLowMassErrSignal = rMMOFLowMassSignal * (mmLowMassErrSignal**2/mmLowMassSignal**2 + ofLowMassErrSignal**2/ofLowMassSignal**2)**0.5
+	else:
+		rMMOFLowMassErrSignal = 0
 	rMMOFHighMassSignal = float(mmHighMassSignal)/float(ofHighMassSignal)
 	rMMOFHighMassErrSignal = rMMOFHighMassSignal * (mmHighMassErrSignal**2/mmHighMassSignal**2 + ofHighMassErrSignal**2/ofHighMassSignal**2)**0.5
 	
 	transferFaktor = rsfofSignal/rsfof
 	transferFaktorErr = transferFaktor*((rsfofErr/rsfof)**2+(rsfofErrSignal/rsfofSignal)**2)**0.5
-	transferFaktorEE = rEEOFSignal/rEEOF
-	transferFaktorEEErr = transferFaktorEE*((rEEOFErr/rEEOF)**2+(rEEOFErrSignal/rEEOFSignal)**2)**0.5
+	if rEEOF > 0:
+		transferFaktorEE = rEEOFSignal/rEEOF
+	else:
+		transferFaktorEE = 0
+	if rEEOF > 0 and rEEOFSignal > 0:
+		transferFaktorEEErr = transferFaktorEE*((rEEOFErr/rEEOF)**2+(rEEOFErrSignal/rEEOFSignal)**2)**0.5
+	else:
+		transferFaktorEEErr = 0
 	transferFaktorMM = rMMOFSignal/rMMOF
 	transferFaktorMMErr = transferFaktorMM*((rMMOFErr/rMMOF)**2+(rMMOFErrSignal/rMMOFSignal)**2)**0.5
 	
 	transferFaktorLowMass = rsfofLowMassSignal/rsfofLowMass
-	transferFaktorLowMassErr = transferFaktorLowMass*((rsfofLowMassErr/rsfofLowMass)**2+(rsfofLowMassErrSignal/rsfofLowMassSignal)**2)**0.5
-	transferFaktorEELowMass = rEEOFLowMassSignal/rEEOFLowMass
-	transferFaktorEELowMassErr = transferFaktorEELowMass*((rEEOFLowMassErr/rEEOFLowMass)**2+(rEEOFLowMassErrSignal/rEEOFLowMassSignal)**2)**0.5
+	if rsfofLowMass > 0 and rsfofLowMassSignal > 0:
+		transferFaktorLowMassErr = transferFaktorLowMass*((rsfofLowMassErr/rsfofLowMass)**2+(rsfofLowMassErrSignal/rsfofLowMassSignal)**2)**0.5
+	else:
+		transferFaktorLowMassErr = 0
+	if rEEOFLowMass > 0:
+		transferFaktorEELowMass = rEEOFLowMassSignal/rEEOFLowMass
+	else:
+		transferFaktorEELowMass = 0
+	if rEEOFLowMass > 0 and rEEOFLowMassSignal > 0:
+		transferFaktorEELowMassErr = transferFaktorEELowMass*((rEEOFLowMassErr/rEEOFLowMass)**2+(rEEOFLowMassErrSignal/rEEOFLowMassSignal)**2)**0.5
+	else:
+		transferFaktorEELowMassErr = 0
 	transferFaktorMMLowMass = rMMOFLowMassSignal/rMMOFLowMass
-	transferFaktorMMLowMassErr = transferFaktorMMLowMass*((rMMOFLowMassErr/rMMOFLowMass)**2+(rMMOFLowMassErrSignal/rMMOFLowMassSignal)**2)**0.5
+	if rMMOFLowMass > 0 and rMMOFLowMassSignal > 0:
+		transferFaktorMMLowMassErr = transferFaktorMMLowMass*((rMMOFLowMassErr/rMMOFLowMass)**2+(rMMOFLowMassErrSignal/rMMOFLowMassSignal)**2)**0.5
+	else:
+		transferFaktorMMLowMassErr = 0
 	
 	transferFaktorHighMass = rsfofHighMassSignal/rsfofHighMass
 	transferFaktorHighMassErr = transferFaktorHighMass*((rsfofHighMassErr/rsfofHighMass)**2+(rsfofHighMassErrSignal/rsfofHighMassSignal)**2)**0.5
-	transferFaktorEEHighMass = rEEOFHighMassSignal/rEEOFHighMass
-	transferFaktorEEHighMassErr = transferFaktorEEHighMass*((rEEOFHighMassErr/rEEOFHighMass)**2+(rEEOFHighMassErrSignal/rEEOFHighMassSignal)**2)**0.5
+	if rEEOFHighMass > 0:
+		transferFaktorEEHighMass = rEEOFHighMassSignal/rEEOFHighMass
+	else:
+		transferFaktorEEHighMass = 0
+	if rEEOFHighMass > 0 and rEEOFHighMassSignal > 0:
+		transferFaktorEEHighMassErr = transferFaktorEEHighMass*((rEEOFHighMassErr/rEEOFHighMass)**2+(rEEOFHighMassErrSignal/rEEOFHighMassSignal)**2)**0.5
+	else:
+		transferFaktorEEHighMassErr = 0
 	transferFaktorMMHighMass = rMMOFHighMassSignal/rMMOFHighMass
 	transferFaktorMMHighMassErr = transferFaktorMMHighMass*((rMMOFHighMassErr/rMMOFHighMass)**2+(rMMOFHighMassErrSignal/rMMOFHighMassSignal)**2)**0.5
 	
@@ -524,17 +566,26 @@ def centralValues(source,modifier,path,selection,runRange,isMC,nonNormalized,bac
 	result["rMMOFErrHighMass"] =  result["rMMOFHighMass"]*((mmHighMassErr**2)**0.5**2/sfHighMass**2+ofHighMassErr**2/ofHighMass**2)**0.5
 	
 	result["rSFOFLowMassSignal"] = sfLowMassSignal / ofLowMassSignal
-	result["rSFOFErrLowMassSignal"] = result["rSFOFLowMassSignal"]*(sfLowMassErrSignal**2/sfLowMassSignal**2+ofLowMassErrSignal**2/ofLowMassSignal**2)**0.5
+	if sfLowMassSignal > 0 and ofLowMassSignal > 0:
+		result["rSFOFErrLowMassSignal"] = result["rSFOFLowMassSignal"]*(sfLowMassErrSignal**2/sfLowMassSignal**2+ofLowMassErrSignal**2/ofLowMassSignal**2)**0.5
+	else:
+		result["rSFOFErrLowMassSignal"] = 0
 	result["rEEOFLowMassSignal"] = eeLowMassSignal / ofLowMassSignal
-	result["rEEOFErrLowMassSignal"] =  result["rEEOFLowMassSignal"]*((eeLowMassErrSignal**2)**0.5**2/sfLowMassSignal**2+ofLowMassErrSignal**2/ofLowMassSignal**2)**0.5
+	if eeLowMassSignal > 0 and ofLowMassSignal > 0:
+		result["rEEOFErrLowMassSignal"] =  result["rEEOFLowMassSignal"]*(eeLowMassErrSignal**2/eeLowMassSignal**2+ofLowMassErrSignal**2/ofLowMassSignal**2)**0.5
+	else:
+		result["rEEOFErrLowMassSignal"] = 0
 	result["rMMOFLowMassSignal"] = mmLowMassSignal / ofLowMassSignal
-	result["rMMOFErrLowMassSignal"] =  result["rMMOFLowMassSignal"]*((mmLowMassErrSignal**2)**0.5**2/sfLowMassSignal**2+ofLowMassErrSignal**2/ofLowMassSignal**2)**0.5
+	if mmLowMassSignal > 0 and ofLowMassSignal > 0:
+		result["rMMOFErrLowMassSignal"] =  result["rMMOFLowMassSignal"]*(mmLowMassErrSignal**2/mmLowMassSignal**2+ofLowMassErrSignal**2/ofLowMassSignal**2)**0.5
+	else:
+		result["rMMOFErrLowMassSignal"] = 0
 	result["rSFOFHighMassSignal"] = sfHighMassSignal / ofHighMassSignal
 	result["rSFOFErrHighMassSignal"] = result["rSFOFHighMassSignal"]*(sfHighMassErrSignal**2/sfHighMassSignal**2+ofHighMassErrSignal**2/ofHighMassSignal**2)**0.5
 	result["rEEOFHighMassSignal"] = eeHighMassSignal / ofHighMassSignal
-	result["rEEOFErrHighMassSignal"] =  result["rEEOFHighMassSignal"]*((eeHighMassErrSignal**2)**0.5**2/sfHighMassSignal**2+ofHighMassErrSignal**2/ofHighMassSignal**2)**0.5
+	result["rEEOFErrHighMassSignal"] =  result["rEEOFHighMassSignal"]*(eeHighMassErrSignal**2/eeHighMassSignal**2+ofHighMassErrSignal**2/ofHighMassSignal**2)**0.5
 	result["rMMOFHighMassSignal"] = mmHighMassSignal / ofHighMassSignal
-	result["rMMOFErrHighMassSignal"] =  result["rMMOFHighMassSignal"]*((mmHighMassErrSignal**2)**0.5**2/sfHighMassSignal**2+ofHighMassErrSignal**2/ofHighMassSignal**2)**0.5
+	result["rMMOFErrHighMassSignal"] =  result["rMMOFHighMassSignal"]*(mmHighMassErrSignal**2/mmHighMassSignal**2+ofHighMassErrSignal**2/ofHighMassSignal**2)**0.5
 	
 	result["rSFOF"] = rsfof
 	result["rSFOFErr"] = rsfofErr

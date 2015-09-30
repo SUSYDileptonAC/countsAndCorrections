@@ -325,9 +325,9 @@ def dependencies(path,selection,plots,runRange,mc,backgrounds,cmsExtra):
 				plotPad.Draw()	
 				plotPad.cd()
 				if region == "B":				
-					plotPad.DrawFrame(plot.firstBin,0.05,plot.lastBin,0.2,"; %s ; %s" %(plot.xaxis,"fraction of events without b-tag"))		
+					plotPad.DrawFrame(plot.firstBin,0.05,plot.lastBin,0.2,"; %s ; %s" %(plot.xaxis,"fraction of events with at least one b-tag"))		
 				elif region == "NoB":				
-					plotPad.DrawFrame(plot.firstBin,0.8,plot.lastBin,1,"; %s ; %s" %(plot.xaxis,"fraction of events with at least one b-tag"))		
+					plotPad.DrawFrame(plot.firstBin,0.8,plot.lastBin,1,"; %s ; %s" %(plot.xaxis,"fraction of events without b-tag"))		
 				else:				
 					plotPad.DrawFrame(plot.firstBin,0.0,plot.lastBin,0.15,"; %s ; %s" %(plot.xaxis,"R_{out/in}"))		
 				

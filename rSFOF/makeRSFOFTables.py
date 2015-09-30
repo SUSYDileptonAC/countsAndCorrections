@@ -3,7 +3,7 @@
 
 
 def saveTable(table, name):
-	tabFile = open("tab/table_%s.tex"%name, "w")
+	tabFile = open("tab/table_%s_Run2015C.tex"%name, "w")
 	tabFile.write(table)
 	tabFile.close()
 
@@ -25,12 +25,12 @@ def main():
 	from sys import argv
 	#~ allPkls = loadPickles("shelves/*.pkl")
 
-	dataPkls = loadPickles("shelves/rSFOF_Data_ReReco_Inclusive.pkl")
-	dataBarrelPkls = loadPickles("shelves/rSFOF_Data_ReReco_Barrel.pkl")
-	dataEndcapPkls = loadPickles("shelves/rSFOF_Data_ReReco_Endcap.pkl")
-	mcPkls = loadPickles("shelves/rSFOF_MC_ReReco_Inclusive.pkl")
-	mcBarrelPkls = loadPickles("shelves/rSFOF_MC_ReReco_Barrel.pkl")
-	mcEndcapPkls = loadPickles("shelves/rSFOF_MC_ReReco_Endcap.pkl")
+	dataPkls = loadPickles("shelves/rSFOF_Control_Run2015C.pkl")
+	dataBarrelPkls = loadPickles("shelves/rSFOF_ControlCentral_Run2015C.pkl")
+	dataEndcapPkls = loadPickles("shelves/rSFOF_ControlForward_Run2015C.pkl")
+	mcPkls = loadPickles("shelves/rSFOF_Control_RunIITest_MC.pkl")
+	mcBarrelPkls = loadPickles("shelves/rSFOF_ControlCentral_RunIITest_MC.pkl")
+	mcEndcapPkls = loadPickles("shelves/rSFOF_ControlForward_RunIITest_MC.pkl")
 
 	#~ print dataPkls
 	
@@ -62,13 +62,8 @@ def main():
 
 	tableMC =""
 	tableData =""
-	name = "default"
-	run = "Run92"
 
 	tableData += lineTemplateData%(dataPkls["SF"],dataPkls["OF"],dataPkls["rSFOF"],dataPkls["rSFOFErr"])	
-
-
-	run = "Simulation"
 
 	tableMC += lineTemplate%(mcPkls["SF"],mcPkls["OF"],mcPkls["rSFOF"],mcPkls["rSFOFErr"],mcPkls["transfer"],mcPkls["transferErr"])	
 
@@ -106,12 +101,8 @@ def main():
 
 	tableMC =""
 	tableData =""
-	name = "default"
-	run = "Run92"
 
 	tableData += lineTemplateData%(dataBarrelPkls["SF"],dataBarrelPkls["OF"],dataBarrelPkls["rSFOF"],dataBarrelPkls["rSFOFErr"],dataEndcapPkls["SF"],dataEndcapPkls["OF"],dataEndcapPkls["rSFOF"],dataEndcapPkls["rSFOFErr"])	
-
-	run = "Simulation"
 
 	tableMC += lineTemplate%(mcBarrelPkls["SF"],mcBarrelPkls["OF"],mcBarrelPkls["rSFOF"],mcBarrelPkls["rSFOFErr"],mcBarrelPkls["transfer"],mcBarrelPkls["transferErr"],mcEndcapPkls["SF"],mcEndcapPkls["OF"],mcEndcapPkls["rSFOF"],mcEndcapPkls["rSFOFErr"],mcEndcapPkls["transfer"],mcEndcapPkls["transferErr"])	
 
@@ -147,13 +138,9 @@ def main():
 
 	tableMC =""
 	tableData =""
-	name = "default"
-	run = "Run92"
 
 	tableData += lineTemplateData%(dataPkls["EE"],dataPkls["OF"],dataPkls["rEEOF"],dataPkls["rEEOFErr"])	
 
-
-	run = "Simulation"
 
 	tableMC += lineTemplate%(mcPkls["EE"],mcPkls["OF"],mcPkls["rEEOF"],mcPkls["rEEOFErr"],mcPkls["transferEE"],mcPkls["transferEEErr"])	
 
@@ -191,12 +178,8 @@ def main():
 
 	tableMC =""
 	tableData =""
-	name = "default"
-	run = "Run92"
 
 	tableData += lineTemplateData%(dataBarrelPkls["EE"],dataBarrelPkls["OF"],dataBarrelPkls["rEEOF"],dataBarrelPkls["rEEOFErr"],dataEndcapPkls["EE"],dataEndcapPkls["OF"],dataEndcapPkls["rEEOF"],dataEndcapPkls["rEEOFErr"])	
-
-	run = "Simulation"
 
 	tableMC += lineTemplate%(mcBarrelPkls["EE"],mcBarrelPkls["OF"],mcBarrelPkls["rEEOF"],mcBarrelPkls["rEEOFErr"],mcBarrelPkls["transferEE"],mcBarrelPkls["transferEEErr"],mcEndcapPkls["EE"],mcEndcapPkls["OF"],mcEndcapPkls["rEEOF"],mcEndcapPkls["rEEOFErr"],mcEndcapPkls["transferEE"],mcEndcapPkls["transferEEErr"])	
 
@@ -231,13 +214,9 @@ def main():
 
 	tableMC =""
 	tableData =""
-	name = "default"
-	run = "Run92"
 
 	tableData += lineTemplateData%(dataPkls["MM"],dataPkls["OF"],dataPkls["rMMOF"],dataPkls["rMMOFErr"])	
 
-
-	run = "Simulation"
 
 	tableMC += lineTemplate%(mcPkls["MM"],mcPkls["OF"],mcPkls["rMMOF"],mcPkls["rMMOFErr"],mcPkls["transferMM"],mcPkls["transferMMErr"])	
 
@@ -275,12 +254,9 @@ def main():
 
 	tableMC =""
 	tableData =""
-	name = "default"
-	run = "Run92"
 
 	tableData += lineTemplateData%(dataBarrelPkls["MM"],dataBarrelPkls["OF"],dataBarrelPkls["rMMOF"],dataBarrelPkls["rMMOFErr"],dataEndcapPkls["MM"],dataEndcapPkls["OF"],dataEndcapPkls["rMMOF"],dataEndcapPkls["rMMOFErr"])	
 
-	run = "Simulation"
 
 	tableMC += lineTemplate%(mcBarrelPkls["MM"],mcBarrelPkls["OF"],mcBarrelPkls["rMMOF"],mcBarrelPkls["rMMOFErr"],mcBarrelPkls["transferMM"],mcBarrelPkls["transferMMErr"],mcEndcapPkls["MM"],mcEndcapPkls["OF"],mcEndcapPkls["rMMOF"],mcEndcapPkls["rMMOFErr"],mcEndcapPkls["transferMM"],mcEndcapPkls["transferMMErr"])	
 
