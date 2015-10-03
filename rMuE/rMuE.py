@@ -169,7 +169,7 @@ def centralValues(path,selection,runRange,isMC,backgrounds):
 def dependencies(path,selection,plots,runRange,isMC,backgrounds,cmsExtra,fit):
 	
 
-	backgroundsTT = ["TTJets"]
+	backgroundsTT = ["TT_Powheg"]
 	
 	for name in plots:
 		plot = getPlot(name)
@@ -315,7 +315,7 @@ def dependencies(path,selection,plots,runRange,isMC,backgrounds,cmsExtra,fit):
 			centralVals = pickle.load(open("shelves/rMuE_%s_%s.pkl"%(selection.name,runRange.label),"rb"))
 		else:
 			centralVals = centralValues(path,selection,runRange,isMC,backgrounds)
-		
+
 		x= array("f",[plot.firstBin, plot.lastBin]) 
 		y= array("f", [centralVals["rMuE"],centralVals["rMuE"]]) 
 		ex= array("f", [0.,0.])
@@ -620,7 +620,7 @@ def main():
 	if len(args.runRange) == 0:
 		args.runRange.append(runRanges.name)		
 
-	path = locations.dataSetPath	
+	path = locations.dataSetPathTrigger	
 
 	
 

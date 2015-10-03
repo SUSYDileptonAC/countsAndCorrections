@@ -680,7 +680,7 @@ def main():
 		args.runRange.append(runRanges.name)	
 			
 
-	path = locations.dataSetPath
+	path = locations.dataSetPathTrigger
 	
 	if args.dilepton:
 		source = "DiLeptonTrigger"
