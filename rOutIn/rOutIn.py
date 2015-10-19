@@ -126,11 +126,11 @@ def plotMllSpectra(SFhist,EMuhist,runRange,selection,suffix,cmsExtra,additionalL
 
 	Labelin = ROOT.TLatex()
 	Labelin.SetTextAlign(12)
-	Labelin.SetTextSize(0.07)
+	Labelin.SetTextSize(0.04)
 	Labelin.SetTextColor(ROOT.kRed+2)
 	Labelout = ROOT.TLatex()
 	Labelout.SetTextAlign(12)
-	Labelout.SetTextSize(0.07)
+	Labelout.SetTextSize(0.04)
 	Labelout.SetTextColor(ROOT.kBlack)	
 	
 	
@@ -152,7 +152,7 @@ def plotMllSpectra(SFhist,EMuhist,runRange,selection,suffix,cmsExtra,additionalL
 	latexCMSExtra.SetTextSize(0.03)
 	latexCMSExtra.SetNDC(True) 
 		
-	latex.DrawLatex(0.95, 0.96, "%s fb^{-1} (8 TeV)"%runRange.printval)
+	latex.DrawLatex(0.95, 0.96, "%s fb^{-1} (13 TeV)"%runRange.printval)
 	
 
 	latexCMS.DrawLatex(0.21,0.88,"CMS")
@@ -203,10 +203,14 @@ def plotMllSpectra(SFhist,EMuhist,runRange,selection,suffix,cmsExtra,additionalL
 	line3.Draw("same")
 	line4.Draw("same")
 	line5.Draw("same")
-	Labelin.DrawLatex(81.35,SFhist.GetBinContent(SFhist.GetMaximumBin())/18,"In")
-	Labelout.DrawLatex(27.25,SFhist.GetBinContent(SFhist.GetMaximumBin())/18,"Out")
-	Labelout.DrawLatex(150.25,SFhist.GetBinContent(SFhist.GetMaximumBin())/18,"Out")
-	latex.DrawLatex(0.95, 0.96, "%s fb^{-1} (8 TeV)"%runRange.printval)
+	Labelin.SetTextAngle(90)
+	Labelin.DrawLatex(89.35,SFhist.GetBinContent(SFhist.GetMaximumBin())/18,"on Z")
+	Labelout.SetTextAngle(90)
+	Labelout.DrawLatex(47.25,SFhist.GetBinContent(SFhist.GetMaximumBin())/18,"low mass")
+	Labelout.DrawLatex(75.25,SFhist.GetBinContent(SFhist.GetMaximumBin())/18,"below Z")
+	Labelout.DrawLatex(109.25,SFhist.GetBinContent(SFhist.GetMaximumBin())/18,"above Z")
+	Labelout.DrawLatex(150.25,SFhist.GetBinContent(SFhist.GetMaximumBin())/18,"high mass")
+	latex.DrawLatex(0.95, 0.96, "%s fb^{-1} (13 TeV)"%runRange.printval)
 	
 
 	latexCMS.DrawLatex(0.19,0.88,"CMS")
@@ -252,8 +256,8 @@ def dependencies(path,selection,plots,runRange,mc,backgrounds,cmsExtra):
 			bins = [plot.firstBin+(plot.lastBin-plot.firstBin)/plot.nBins*i for i in range(plot.nBins+1)]
 		else:
 			bins = plot.binning
-		rOutIn = {"LowMass":{"EE":[],"MM":[],"SF":[]},"HighMass":{"EE":[],"MM":[],"SF":[]},"B":{"EE":[],"MM":[],"SF":[]},"NoB":{"EE":[],"MM":[],"SF":[]}}
-		rOutInErr = {"LowMass":{"EE":[],"MM":[],"SF":[]},"HighMass":{"EE":[],"MM":[],"SF":[]},"B":{"EE":[],"MM":[],"SF":[]},"NoB":{"EE":[],"MM":[],"SF":[]}}
+		rOutIn = {"LowMass":{"EE":[],"MM":[],"SF":[]},"HighMass":{"EE":[],"MM":[],"SF":[]},"BelowZ":{"EE":[],"MM":[],"SF":[]},"AboveZ":{"EE":[],"MM":[],"SF":[]}}
+		rOutInErr = {"LowMass":{"EE":[],"MM":[],"SF":[]},"HighMass":{"EE":[],"MM":[],"SF":[]},"BelowZ":{"EE":[],"MM":[],"SF":[]},"AboveZ":{"EE":[],"MM":[],"SF":[]}}
 
 
 		binningErrs	= []
@@ -288,13 +292,9 @@ def dependencies(path,selection,plots,runRange,mc,backgrounds,cmsExtra):
 			additionalLabel = "%s_%.2f_%.2f"%(plot.variable,bins[i],bins[i+1])
 			centralVal = centralValues(path,selection,runRange,mc,backgrounds,cmsExtra,additionalLabel)
 			for combination in ["EE","MM","SF"]:
-				for region in ["LowMass","HighMass","B","NoB"]:
-					if "B" in region:
-						rOutIn[region][combination].append(centralVal["bFactor%s%s"%(region,combination)])
-						rOutInErr[region][combination].append(centralVal["bFactor%sErr%s"%(region,combination)])
-					else:
-						rOutIn[region][combination].append(centralVal["rOutIn%s%s"%(region,combination)])
-						rOutInErr[region][combination].append(centralVal["rOutIn%sErr%s"%(region,combination)])
+				for region in ["LowMass","HighMass","BelowZ","AboveZ"]:
+					rOutIn[region][combination].append(centralVal["rOutIn%s%s"%(region,combination)])
+					rOutInErr[region][combination].append(centralVal["rOutIn%sErr%s"%(region,combination)])
 
 
 			
@@ -312,7 +312,7 @@ def dependencies(path,selection,plots,runRange,mc,backgrounds,cmsExtra):
 		
 		for combination in ["EE","MM","SF"]:
 			relSystSave = relSyst
-			for region in ["LowMass","HighMass","B","NoB"]:
+			for region in ["LowMass","HighMass","BelowZ","AboveZ"]:
 				relSyst = relSystSave	
 				hCanvas = TCanvas("hCanvas", "Distribution", 800,800)
 
@@ -324,23 +324,13 @@ def dependencies(path,selection,plots,runRange,mc,backgrounds,cmsExtra):
 				plotPad.UseCurrentStyle()
 				plotPad.Draw()	
 				plotPad.cd()
-				if region == "B":				
-					plotPad.DrawFrame(plot.firstBin,0.05,plot.lastBin,0.2,"; %s ; %s" %(plot.xaxis,"fraction of events with at least one b-tag"))		
-				elif region == "NoB":				
-					plotPad.DrawFrame(plot.firstBin,0.8,plot.lastBin,1,"; %s ; %s" %(plot.xaxis,"fraction of events without b-tag"))		
-				else:				
-					plotPad.DrawFrame(plot.firstBin,0.0,plot.lastBin,0.15,"; %s ; %s" %(plot.xaxis,"R_{out/in}"))		
+		
+				plotPad.DrawFrame(plot.firstBin,0.0,plot.lastBin,0.15,"; %s ; %s" %(plot.xaxis,"R_{out/in}"))		
 				
 				
 				bandX = array("f",[plot.firstBin,plot.lastBin])
-				if "B" in region:
-					relSyst = 0.
-					bandY = array("f",[centralVals["bFactor%s%s"%(region,combination)],centralVals["bFactor%s%s"%(region,combination)]])
-					bandYErr = array("f",[centralVals["bFactor%s%s"%(region,combination)]*relSyst,centralVals["bFactor%s%s"%(region,combination)]*relSyst])
-					relSyst = relSystSave
-				else:	
-					bandY = array("f",[centralVals["rOutIn%s%s"%(region,combination)],centralVals["rOutIn%s%s"%(region,combination)]])
-					bandYErr = array("f",[centralVals["rOutIn%s%s"%(region,combination)]*relSyst,centralVals["rOutIn%s%s"%(region,combination)]*relSyst])
+				bandY = array("f",[centralVals["rOutIn%s%s"%(region,combination)],centralVals["rOutIn%s%s"%(region,combination)]])
+				bandYErr = array("f",[centralVals["rOutIn%s%s"%(region,combination)]*relSyst,centralVals["rOutIn%s%s"%(region,combination)]*relSyst])
 				bandXErr = array("f",[0,0])
 				
 				
@@ -349,10 +339,7 @@ def dependencies(path,selection,plots,runRange,mc,backgrounds,cmsExtra):
 				errorband.GetXaxis().SetRangeUser(-5,105)
 				errorband.Draw("3same")
 				errorband.SetFillColor(ROOT.kOrange-9)
-				if "B" in region:
-					rOutInLine = ROOT.TLine(plot.firstBin,centralVals["bFactor%s%s"%(region,combination)],plot.lastBin,centralVals["bFactor%s%s"%(region,combination)])
-				else:
-					rOutInLine = ROOT.TLine(plot.firstBin,centralVals["rOutIn%s%s"%(region,combination)],plot.lastBin,centralVals["rOutIn%s%s"%(region,combination)])
+				rOutInLine = ROOT.TLine(plot.firstBin,centralVals["rOutIn%s%s"%(region,combination)],plot.lastBin,centralVals["rOutIn%s%s"%(region,combination)])
 				rOutInLine.SetLineStyle(ROOT.kDashed)
 				rOutInLine.SetLineWidth(2)
 				rOutInLine.Draw("same")
@@ -367,27 +354,13 @@ def dependencies(path,selection,plots,runRange,mc,backgrounds,cmsExtra):
 				graph = ROOT.TGraphErrors(len(binning),binning,rOutInVals,binningErrs,rOutInValsErrs)
 				graph.Draw("Psame0")
 				legend.Clear()
-				if region == "B":	
-					if mc:
-						legend.AddEntry(graph,"b-tagged fraction MC","p")
-					else:
-						legend.AddEntry(graph,"b-tagged fraction Data","p")
-					legend.AddEntry(rOutInLine, "Mean b-tagged fraction = %.3f"%centralVals["bFactor%s%s"%(region,combination)],"l")
-					legend.AddEntry(errorband, "Mean b-tagged fraction #pm %d %%"%(relSyst*100),"f")
-				elif region == "NoB":	
-					if mc:
-						legend.AddEntry(graph,"non b-tagged fraction MC","p")
-					else:
-						legend.AddEntry(graph,"non b-tagged fraction Data","p")
-					legend.AddEntry(rOutInLine, "Mean non b-tagged fraction = %.3f"%centralVals["bFactor%s%s"%(region,combination)],"l")
-					legend.AddEntry(errorband, "Mean non b-tagged fraction #pm %d %%"%(relSyst*100),"f")
+
+				if mc:
+					legend.AddEntry(graph,"r_{out,in} MC","p")
 				else:
-					if mc:
-						legend.AddEntry(graph,"r_{out,in} MC","p")
-					else:
-						legend.AddEntry(graph,"r_{out,in} Data","p")
-					legend.AddEntry(rOutInLine, "Mean r_{out,in} = %.3f"%centralVals["rOutIn%s%s"%(region,combination)],"l")
-					legend.AddEntry(errorband, "Mean r_{out,in} #pm %d %%"%(relSyst*100),"f")
+					legend.AddEntry(graph,"r_{out,in} Data","p")
+				legend.AddEntry(rOutInLine, "Mean r_{out,in} = %.3f"%centralVals["rOutIn%s%s"%(region,combination)],"l")
+				legend.AddEntry(errorband, "Mean r_{out,in} #pm %d %%"%(relSyst*100),"f")
 				legend.Draw("same")
 
 
@@ -405,7 +378,7 @@ def dependencies(path,selection,plots,runRange,mc,backgrounds,cmsExtra):
 				latexCMSExtra.SetTextSize(0.03)
 				latexCMSExtra.SetNDC(True) 
 					
-				latex.DrawLatex(0.95, 0.96, "%s fb^{-1} (8 TeV)"%runRange.printval)
+				latex.DrawLatex(0.95, 0.96, "%s fb^{-1} (13 TeV)"%runRange.printval)
 				
 
 				latexCMS.DrawLatex(0.19,0.89,"CMS")
@@ -442,19 +415,9 @@ def centralValues(path,selection,runRange,isMC,backgrounds,cmsExtra,additionalLa
 		region = "forward"
 
 	histEE, histMM, histEM = getHistograms(path,plot,runRange,isMC,backgrounds)
-	tmpCuts = plot.cuts
-	plot.cuts = plot.cuts+"*(nBJets == 0)"
-	histEENoB, histMMNoB, histEMNoB = getHistograms(path,plot,runRange,isMC,backgrounds)
-	plot.cuts = tmpCuts
-	plot.cuts = plot.cuts+"*(nBJets >= 1)"
-	histEEB, histMMB, histEMB = getHistograms(path,plot,runRange,isMC,backgrounds)
-	plot.cuts = tmpCuts
 	histSF = histEE.Clone("histSF")
 	histSF.Add(histMM.Clone())
-	histSFNoB = histEENoB.Clone("histSFNoB")
-	histSFNoB.Add(histMMNoB.Clone())
-	histSFB = histEEB.Clone("histSFB")
-	histSFB.Add(histMMB.Clone())
+
 	result = {}
 	lowMassLow = mllBins.lowMass.low
 	lowMassHigh = mllBins.lowMass.high
@@ -462,20 +425,17 @@ def centralValues(path,selection,runRange,isMC,backgrounds,cmsExtra,additionalLa
 	peakHigh = mllBins.onZ.high
 	highMassLow = mllBins.highMass.low
 	highMassHigh = mllBins.highMass.high
+	belowZLow = mllBins.belowZ.low
+	belowZHigh = mllBins.belowZ.high
+	aboveZLow = mllBins.aboveZ.low
+	aboveZHigh = mllBins.aboveZ.high
 
 		
 	result["peakEE"] = histEE.Integral(histEE.FindBin(peakLow+0.01),histEE.FindBin(peakHigh-0.01))
 	result["peakMM"] = histMM.Integral(histMM.FindBin(peakLow+0.01),histMM.FindBin(peakHigh-0.01))
 	result["peakSF"] = result["peakEE"] + result["peakMM"]
 	result["peakOF"] = histEM.Integral(histEM.FindBin(peakLow+0.01),histEM.FindBin(peakHigh-0.01))
-	result["peakBEE"] = histEEB.Integral(histEEB.FindBin(peakLow+0.01),histEEB.FindBin(peakHigh-0.01))
-	result["peakBMM"] = histMMB.Integral(histMMB.FindBin(peakLow+0.01),histMMB.FindBin(peakHigh-0.01))
-	result["peakBSF"] = result["peakBEE"] + result["peakBMM"]
-	result["peakBOF"] = histEMB.Integral(histEMB.FindBin(peakLow+0.01),histEMB.FindBin(peakHigh-0.01))
-	result["peakNoBEE"] = histEENoB.Integral(histEENoB.FindBin(peakLow+0.01),histEENoB.FindBin(peakHigh-0.01))
-	result["peakNoBMM"] = histMMNoB.Integral(histMMNoB.FindBin(peakLow+0.01),histMMNoB.FindBin(peakHigh-0.01))
-	result["peakNoBSF"] = result["peakNoBEE"] + result["peakNoBMM"]
-	result["peakNoBOF"] = histEMNoB.Integral(histEMNoB.FindBin(peakLow+0.01),histEMNoB.FindBin(peakHigh-0.01))
+
 	result["lowMassEE"] = histEE.Integral(histEE.FindBin(lowMassLow+0.01),histEE.FindBin(lowMassHigh-0.01))
 	result["lowMassMM"] = histMM.Integral(histMM.FindBin(lowMassLow+0.01),histMM.FindBin(lowMassHigh-0.01))
 	result["lowMassSF"] = result["lowMassEE"] + result["lowMassMM"]
@@ -484,6 +444,15 @@ def centralValues(path,selection,runRange,isMC,backgrounds,cmsExtra,additionalLa
 	result["highMassMM"] = histMM.Integral(histMM.FindBin(highMassLow+0.01),histMM.FindBin(highMassHigh))
 	result["highMassSF"] = result["highMassEE"] + result["highMassMM"]
 	result["highMassOF"] = histEM.Integral(histEM.FindBin(highMassLow+0.01),histEM.FindBin(highMassHigh))
+	
+	result["belowZEE"] = histEE.Integral(histEE.FindBin(belowZLow+0.01),histEE.FindBin(belowZHigh-0.01))
+	result["belowZMM"] = histMM.Integral(histMM.FindBin(belowZLow+0.01),histMM.FindBin(belowZHigh-0.01))
+	result["belowZSF"] = result["belowZEE"] + result["belowZMM"]
+	result["belowZOF"] = histEM.Integral(histEM.FindBin(belowZLow),histEM.FindBin(belowZHigh-0.01))
+	result["aboveZEE"] = histEE.Integral(histEE.FindBin(aboveZLow+0.01),histEE.FindBin(aboveZHigh))
+	result["aboveZMM"] = histMM.Integral(histMM.FindBin(aboveZLow+0.01),histMM.FindBin(aboveZHigh))
+	result["aboveZSF"] = result["aboveZEE"] + result["aboveZMM"]
+	result["aboveZOF"] = histEM.Integral(histEM.FindBin(aboveZLow+0.01),histEM.FindBin(aboveZHigh))
 
 	for combination in ["EE","MM","SF"]:
 		corr = getattr(corrections,"r%sOF"%combination).central.val
@@ -493,24 +462,30 @@ def centralValues(path,selection,runRange,isMC,backgrounds,cmsExtra,additionalLa
 			corrErr = getattr(corrections,"r%sOF"%combination).central.errMC
 		peak = result["peak%s"%combination] - result["peakOF"]*corr			
 		peakErr = sqrt(result["peak%s"%combination] + (sqrt(result["peakOF"])*corr)**2 + (sqrt(result["peakOF"])*corr*corrErr)**2)
-		peakB = result["peakB%s"%combination] - result["peakBOF"]*corr			
-		peakErrB = sqrt(result["peakB%s"%combination] + (sqrt(result["peakBOF"])*corr)**2 + (sqrt(result["peakBOF"])*corr*corrErr)**2)
-		peakNoB = result["peakNoB%s"%combination] - result["peakNoBOF"]*corr			
-		peakErrNoB = sqrt(result["peakNoB%s"%combination] + (sqrt(result["peakNoBOF"])*corr)**2 + (sqrt(result["peakNoBOF"])*corr*corrErr)**2)
+
 		lowMass = result["lowMass%s"%combination] - result["lowMassOF"]*corr			
 		lowMassErr = sqrt(result["lowMass%s"%combination] + (sqrt(result["lowMassOF"])*corr)**2 + (sqrt(result["lowMassOF"])*corr*corrErr)**2)
 		highMass = result["highMass%s"%combination] - result["highMassOF"]*corr			
-		highMassErr = sqrt(result["highMass%s"%combination] + (sqrt(result["highMassOF"])*corr)**2 + (sqrt(result["highMassOF"])*corr*corrErr)**2)			
+		highMassErr = sqrt(result["highMass%s"%combination] + (sqrt(result["highMassOF"])*corr)**2 + (sqrt(result["highMassOF"])*corr*corrErr)**2)	
+				
+		belowZ = result["belowZ%s"%combination] - result["belowZOF"]*corr			
+		belowZErr = sqrt(result["belowZ%s"%combination] + (sqrt(result["belowZOF"])*corr)**2 + (sqrt(result["belowZOF"])*corr*corrErr)**2)
+		aboveZ = result["aboveZ%s"%combination] - result["aboveZOF"]*corr			
+		aboveZErr = sqrt(result["aboveZ%s"%combination] + (sqrt(result["aboveZOF"])*corr)**2 + (sqrt(result["aboveZOF"])*corr*corrErr)**2)	
+				
 		result["correctedPeak%s"%combination] = peak
 		result["peakError%s"%combination] = peakErr
-		result["correctedPeakNoB%s"%combination] = peakNoB
-		result["peakErrorNoB%s"%combination] = peakErrNoB
-		result["correctedPeakB%s"%combination] = peakB
-		result["peakErrorB%s"%combination] = peakErrB
+
 		result["correctedLowMass%s"%combination] = lowMass
 		result["lowMassError%s"%combination] = lowMassErr
 		result["correctedHighMass%s"%combination] = highMass
 		result["highMassError%s"%combination] = highMassErr
+
+		result["correctedBelowZ%s"%combination] = belowZ
+		result["belowZError%s"%combination] = belowZErr
+		result["correctedAboveZ%s"%combination] = aboveZ
+		result["aboveZError%s"%combination] = aboveZErr
+		
 		result["correction"] = 	corr
 		result["correctionErr"] = 	corrErr
 	
@@ -520,11 +495,14 @@ def centralValues(path,selection,runRange,isMC,backgrounds,cmsExtra,additionalLa
 		rOutInHighMassSystErr = rOutInHighMass*systematics.rOutIn.central.val
 		rOutInLowMassErr = sqrt((lowMassErr/peak)**2 + (lowMass*peakErr/peak**2)**2)
 		rOutInHighMassErr = sqrt((highMassErr/peak)**2 + (highMass*peakErr/peak**2)**2)
+	
+		rOutInBelowZ =   belowZ / peak
+		rOutInAboveZ = aboveZ / peak
+		rOutInBelowZSystErr = rOutInBelowZ*systematics.rOutIn.central.val
+		rOutInAboveZSystErr = rOutInAboveZ*systematics.rOutIn.central.val
+		rOutInBelowZErr = sqrt((belowZErr/peak)**2 + (belowZ*peakErr/peak**2)**2)
+		rOutInAboveZErr = sqrt((aboveZErr/peak)**2 + (aboveZ*peakErr/peak**2)**2)
 
-		bFactorNoB = peakNoB / peak 
-		bFactorErrNoB = sqrt((peakErrNoB/peak)**2 + (peakNoB*peakErr/peak**2)**2) 
-		bFactorB = peakB / peak 
-		bFactorErrB = sqrt((peakErrB/peak)**2 + (peakB*peakErr/peak**2)**2) 
 
 		result["rOutInLowMass%s"%combination] = rOutInLowMass
 		result["rOutInLowMassErr%s"%combination] = rOutInLowMassErr
@@ -532,10 +510,14 @@ def centralValues(path,selection,runRange,isMC,backgrounds,cmsExtra,additionalLa
 		result["rOutInHighMass%s"%combination] = rOutInHighMass
 		result["rOutInHighMassErr%s"%combination] = rOutInHighMassErr
 		result["rOutInHighMassSyst%s"%combination] = rOutInHighMassSystErr
-		result["bFactorNoB%s"%combination] = bFactorNoB
-		result["bFactorNoBErr%s"%combination] = bFactorErrNoB
-		result["bFactorB%s"%combination] = bFactorB
-		result["bFactorBErr%s"%combination] = bFactorErrB
+
+		result["rOutInBelowZ%s"%combination] = rOutInBelowZ
+		result["rOutInBelowZErr%s"%combination] = rOutInBelowZErr
+		result["rOutInBelowZSyst%s"%combination] = rOutInBelowZSystErr
+		result["rOutInAboveZ%s"%combination] = rOutInAboveZ
+		result["rOutInAboveZErr%s"%combination] = rOutInAboveZErr
+		result["rOutInAboveZSyst%s"%combination] = rOutInAboveZSystErr
+
 		
 		saveLabel = additionalLabel
 		tmpLabel = additionalLabel
@@ -552,30 +534,6 @@ def centralValues(path,selection,runRange,isMC,backgrounds,cmsExtra,additionalLa
 		else:	
 			plotMllSpectra(histSF.Clone(),histEMToPlot,runRange,selection,combination,cmsExtra,additionalLabel)
 			
-		
-		additionalLabel = tmpLabel + "_BTags"
-
-		histEMToPlot = histEMB.Clone()
-		histEMToPlot.Scale(corr)
-		
-		if combination == "EE":
-			plotMllSpectra(histEEB.Clone(),histEMToPlot,runRange,selection,combination,cmsExtra,additionalLabel)
-		elif combination == "MM":	
-			plotMllSpectra(histMMB.Clone(),histEMToPlot,runRange,selection,combination,cmsExtra,additionalLabel)
-		else:	
-			plotMllSpectra(histSFB.Clone(),histEMToPlot,runRange,selection,combination,cmsExtra,additionalLabel)
-			
-		additionalLabel = tmpLabel + "_NoBTags"
-
-		histEMToPlot = histEMNoB.Clone()
-		histEMToPlot.Scale(corr)
-		
-		if combination == "EE":
-			plotMllSpectra(histEENoB.Clone(),histEMToPlot,runRange,selection,combination,cmsExtra,additionalLabel)
-		elif combination == "MM":	
-			plotMllSpectra(histMMNoB.Clone(),histEMToPlot,runRange,selection,combination,cmsExtra,additionalLabel)
-		else:	
-			plotMllSpectra(histSFNoB.Clone(),histEMToPlot,runRange,selection,combination,cmsExtra,additionalLabel)
 
 		additionalLabel = saveLabel
 		

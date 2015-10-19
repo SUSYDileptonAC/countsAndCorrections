@@ -15,6 +15,9 @@ from array import array
 import argparse	
 
 
+plotNames = {"default":"mllPlot","geOneBTags":"mllPlotGeOneBTags","geTwoBTags":"mllPlotGeTwoBTags"}
+
+
 import ROOT
 ROOT.PyConfig.IgnoreCommandLineOptions = True
 from ROOT import TCanvas, TEfficiency, TPad, TH1F, TH1I, THStack, TLegend, TMath, TGraphErrors, TF1, gStyle, TGraphAsymmErrors
@@ -56,16 +59,16 @@ def getHistograms(path,plot,runRange,isMC,backgrounds):
 	
 	return histoEE , histoMM, histoEM
 
-def getErrHist(plot,combination,region,ofHist,dyHist,rSFOFErr):
+def getErrHist(plot,combination,bSelection,region,ofHist,dyHist,rSFOFErr):
 	
 	if combination == "SF":
-		localZPred = zPredictions.SF
+		localZPred = getattr(zPredictions,bSelection).SF
 		localROutIn = rOutIn
 	elif combination == "EE":
-		localZPred = zPredictions.EE
+		localZPred = getattr(zPredictions,bSelection).EE
 		localROutIn = rOutInEE
 	elif combination == "MM":
-		localZPred = zPredictions.MM
+		localZPred = getattr(zPredictions,bSelection).MM
 		localROutIn = rOutInMM
 	
 	hist = TH1F("errHist","errHist",plot.nBins,plot.firstBin,plot.lastBin)
@@ -119,8 +122,11 @@ def getErrHist(plot,combination,region,ofHist,dyHist,rSFOFErr):
 			graph.SetPointError(i,((plot.firstBin-plot.lastBin)/plot.nBins)*0.5,((plot.firstBin-plot.lastBin)/plot.nBins)*0.5,(hist.GetBinError(i)**2 + dyHist.GetBinContent(i) + ofHist.GetBinContent(i))**0.5,(hist.GetBinError(i)**2 + dyHist.GetBinContent(i) + ofHist.GetBinContent(i))**0.5)			
 		for i in range(1,hist.GetNbinsX()+1):
 			histUp.SetBinContent(i,dyHist.GetBinContent(i) + ofHist.GetBinContent(i) + hist.GetBinError(i))
-			histDown.SetBinContent(i,dyHist.GetBinContent(i) + ofHist.GetBinContent(i) - hist.GetBinError(i))			
-			hist.SetBinError(i,hist.GetBinError(i) / (dyHist.GetBinContent(i) + ofHist.GetBinContent(i)))
+			histDown.SetBinContent(i,dyHist.GetBinContent(i) + ofHist.GetBinContent(i) - hist.GetBinError(i))
+			if dyHist.GetBinContent(i) + ofHist.GetBinContent(i) > 0:			
+				hist.SetBinError(i,hist.GetBinError(i) / (dyHist.GetBinContent(i) + ofHist.GetBinContent(i)))
+			else:
+				hist.SetBinError(i,1.2)
 	else:
 		for i in range(0,hist.GetNbinsX()+1):
 			graph.SetPoint(i,plot.firstBin - ((plot.lastBin-plot.firstBin)/plot.nBins)*0.5 +(i)*((plot.lastBin-plot.firstBin)/plot.nBins),ofHist.GetBinContent(i))
@@ -145,7 +151,7 @@ def getLines(yMin,yMax, xPos = [70.,81., 101]):
 	return result
 
 	
-def makePlot(sfHist,ofHist,selection,plot,runRange,region,cmsExtra,combination,dyHist=None):
+def makePlot(sfHist,ofHist,selection,plot,runRange,region,cmsExtra,combination,bSelection,dyHist=None):
 
 	colors = createMyColors()	
 
@@ -213,7 +219,7 @@ def makePlot(sfHist,ofHist,selection,plot,runRange,region,cmsExtra,combination,d
 	latexCMSExtra.SetTextSize(0.03)
 	latexCMSExtra.SetNDC(True) 
 		
-	latex.DrawLatex(0.95, 0.96, "%s fb^{-1} (8 TeV)"%runRange.printval)
+	latex.DrawLatex(0.95, 0.96, "%s fb^{-1} (13 TeV)"%runRange.printval)
 	
 
 	latexCMS.DrawLatex(0.19,0.88,"CMS")
@@ -237,7 +243,7 @@ def makePlot(sfHist,ofHist,selection,plot,runRange,region,cmsExtra,combination,d
 	elif combination == "MM":
 		rSFOFErr = getattr(rMMOF,region).err
 	
-	errGraph, histUp, histDown = getErrHist(plot,combination,region,ofHist,dyHist,rSFOFErr)
+	errGraph, histUp, histDown = getErrHist(plot,combination,bSelection,region,ofHist,dyHist,rSFOFErr)
 	errGraph.SetFillColor(myColors["MyBlue"])
 	errGraph.SetFillStyle(3001)
 	#~ errGraph.SetLineColor(myColors["MyDarkBlue"])
@@ -303,7 +309,7 @@ def makePlot(sfHist,ofHist,selection,plot,runRange,region,cmsExtra,combination,d
 	ratioPad.RedrawAxis()
 
 	
-	hCanvas.Print("fig/mllResult_%s_%s_%s.pdf"%(selection.name,runRange.label,combination))	
+	hCanvas.Print("fig/mllResult_%s_%s_%s_%s.pdf"%(selection.name,runRange.label,bSelection,combination))	
 	
 	
 		
@@ -311,69 +317,71 @@ def makePlot(sfHist,ofHist,selection,plot,runRange,region,cmsExtra,combination,d
 
 def makeResultPlot(path,selection,runRange,cmsExtra):
 	
-	plot = getPlot("mllPlot")
-	plot.addRegion(selection)
-	plot.cleanCuts()
-	plot.cuts = plot.cuts % runRange.runCut			
+	for bSelection in ["default","geOneBTags","geTwoBTags"]:
+	
+		plot = getPlot(plotNames[bSelection])
+		plot.addRegion(selection)
+		plot.cleanCuts()
+		plot.cuts = plot.cuts % runRange.runCut			
 
-	plotDY = getPlot("mllPlot")
-	
-	if "Forward" in selection.name:
-		plotDY.addRegion(getRegion("DrellYanControlForward"))
-		region = "forward"
-	elif "Central" in selection.name:
-		plotDY.addRegion(getRegion("DrellYanControlCentral"))
-		region = "central"
-	else:		
-		plotDY.addRegion(getRegion("DrellYanControl"))
-		region = "inclusive"
-	plotDY.cleanCuts()
-	plotDY.cuts = plotDY.cuts % runRange.runCut		
+		plotDY = getPlot(plotNames[bSelection])
+		
+		if "Forward" in selection.name:
+			plotDY.addRegion(getRegion("DrellYanControlForward"))
+			region = "forward"
+		elif "Central" in selection.name:
+			plotDY.addRegion(getRegion("DrellYanControlCentral"))
+			region = "central"
+		else:		
+			plotDY.addRegion(getRegion("DrellYanControl"))
+			region = "inclusive"
+		plotDY.cleanCuts()
+		plotDY.cuts = plotDY.cuts % runRange.runCut		
 
-	plotDYScale = getPlot("mllPlotROutIn")
-	
-	if "Forward" in selection.name:
-		plotDYScale.addRegion(getRegion("DrellYanControlForward"))
-	elif "Central" in selection.name:
-		plotDYScale.addRegion(getRegion("DrellYanControlCentral"))
-	else:		
-		plotDYScale.addRegion(getRegion("DrellYanControl"))
-	plotDYScale.cleanCuts()
-	plotDYScale.cuts = plotDYScale.cuts % runRange.runCut		
-	
-	
-	histEE, histMM, histEM = getHistograms(path,plot,runRange,False,[])
-	histSF = histEE.Clone("histSF")
-	histSF.Add(histMM.Clone())
+		plotDYScale = getPlot("mllPlotROutIn")
+		
+		if "Forward" in selection.name:
+			plotDYScale.addRegion(getRegion("DrellYanControlForward"))
+		elif "Central" in selection.name:
+			plotDYScale.addRegion(getRegion("DrellYanControlCentral"))
+		else:		
+			plotDYScale.addRegion(getRegion("DrellYanControl"))
+		plotDYScale.cleanCuts()
+		plotDYScale.cuts = plotDYScale.cuts % runRange.runCut		
+		
+		
+		histEE, histMM, histEM = getHistograms(path,plot,runRange,False,[])
+		histSF = histEE.Clone("histSF")
+		histSF.Add(histMM.Clone())
 
-	histEEDY, histMMDY, histEMDY = getHistograms(path,plotDY,runRange,False,[])
-	histSFDY = histEEDY.Clone("histSFDY")
-	histSFDY.Add(histMMDY.Clone())	
+		histEEDY, histMMDY, histEMDY = getHistograms(path,plotDY,runRange,False,[])
+		histSFDY = histEEDY.Clone("histSFDY")
+		histSFDY.Add(histMMDY.Clone())	
 
-	histEEDYScale, histMMDYScale, histEMDYScale = getHistograms(path,plotDY,runRange,False,[])
-	histSFDYScale = histEEDYScale.Clone("histSFDYScale")
-	histSFDYScale.Add(histMMDYScale.Clone())	
-	
-	
-	histOFSF = histEM.Clone("histOFSF")
-	histOFEE = histEM.Clone("histOFEE")
-	histOFMM = histEM.Clone("histOFMM")
-	histOFSF.Scale(getattr(rSFOF,region).val)
-	histOFEE.Scale(getattr(rEEOF,region).val)
-	histOFMM.Scale(getattr(rMMOF,region).val)
+		histEEDYScale, histMMDYScale, histEMDYScale = getHistograms(path,plotDY,runRange,False,[])
+		histSFDYScale = histEEDYScale.Clone("histSFDYScale")
+		histSFDYScale.Add(histMMDYScale.Clone())	
+		
+		
+		histOFSF = histEM.Clone("histOFSF")
+		histOFEE = histEM.Clone("histOFEE")
+		histOFMM = histEM.Clone("histOFMM")
+		histOFSF.Scale(getattr(rSFOF,region).val)
+		histOFEE.Scale(getattr(rEEOF,region).val)
+		histOFMM.Scale(getattr(rMMOF,region).val)
 
-	if region == "inclusive":
-		histSFDY.Scale((zPredictions.SF.central.val + zPredictions.SF.forward.val) / histSFDYScale.Integral(histSFDYScale.FindBin(81),histSFDYScale.FindBin(101)))
-		histEEDY.Scale((zPredictions.EE.central.val + zPredictions.EE.forward.val) / histEEDYScale.Integral(histEEDYScale.FindBin(81),histEEDYScale.FindBin(101)))
-		histMMDY.Scale((zPredictions.MM.central.val + zPredictions.MM.forward.val) / histMMDYScale.Integral(histMMDYScale.FindBin(81),histMMDYScale.FindBin(101)))
-	else:
-		histSFDY.Scale(getattr(zPredictions.SF,region).val / histSFDYScale.Integral(histSFDYScale.FindBin(81),histSFDYScale.FindBin(101)))
-		histEEDY.Scale(getattr(zPredictions.EE,region).val / histEEDYScale.Integral(histEEDYScale.FindBin(81),histEEDYScale.FindBin(101)))
-		histMMDY.Scale(getattr(zPredictions.MM,region).val / histMMDYScale.Integral(histMMDYScale.FindBin(81),histMMDYScale.FindBin(101)))
-	
-	makePlot(histSF,histOFSF,selection,plot,runRange,region,cmsExtra,"SF",histSFDY)
-	makePlot(histEE,histOFEE,selection,plot,runRange,region,cmsExtra,"EE",histEEDY)
-	makePlot(histMM,histOFMM,selection,plot,runRange,region,cmsExtra,"MM",histMMDY)
+		if region == "inclusive":
+			histSFDY.Scale((getattr(zPredictions,bSelection).SF.central.val + getattr(zPredictions,bSelection).SF.forward.val) / histSFDYScale.Integral(histSFDYScale.FindBin(81),histSFDYScale.FindBin(101)))
+			histEEDY.Scale((getattr(zPredictions,bSelection).EE.central.val + getattr(zPredictions,bSelection).EE.forward.val) / histEEDYScale.Integral(histEEDYScale.FindBin(81),histEEDYScale.FindBin(101)))
+			histMMDY.Scale((getattr(zPredictions,bSelection).MM.central.val + getattr(zPredictions,bSelection).MM.forward.val) / histMMDYScale.Integral(histMMDYScale.FindBin(81),histMMDYScale.FindBin(101)))
+		else:
+			histSFDY.Scale(getattr(getattr(zPredictions,bSelection).SF,region).val / histSFDYScale.Integral(histSFDYScale.FindBin(81),histSFDYScale.FindBin(101)))
+			histEEDY.Scale(getattr(getattr(zPredictions,bSelection).EE,region).val / histEEDYScale.Integral(histEEDYScale.FindBin(81),histEEDYScale.FindBin(101)))
+			histMMDY.Scale(getattr(getattr(zPredictions,bSelection).MM,region).val / histMMDYScale.Integral(histMMDYScale.FindBin(81),histMMDYScale.FindBin(101)))
+		
+		makePlot(histSF,histOFSF,selection,plot,runRange,region,cmsExtra,"SF",bSelection,histSFDY)
+		makePlot(histEE,histOFEE,selection,plot,runRange,region,cmsExtra,"EE",bSelection,histEEDY)
+		makePlot(histMM,histOFMM,selection,plot,runRange,region,cmsExtra,"MM",bSelection,histMMDY)
 
 
 def makeDependencyPlot(path,selection,plots,useMC,backgrounds,runRange,cmsExtra):
@@ -486,7 +494,7 @@ def makeDependencyPlot(path,selection,plots,useMC,backgrounds,runRange,cmsExtra)
 				latexCMSExtra.SetTextSize(0.03)
 				latexCMSExtra.SetNDC(True) 
 					
-				latex.DrawLatex(0.95, 0.96, "%s fb^{-1} (8 TeV)"%runRange.printval)
+				latex.DrawLatex(0.95, 0.96, "%s fb^{-1} (13 TeV)"%runRange.printval)
 				
 
 				latexCMS.DrawLatex(0.21,0.88,"CMS")
@@ -531,7 +539,7 @@ def makeDependencyPlot(path,selection,plots,useMC,backgrounds,runRange,cmsExtra)
 					leg.AddEntry(legendHistDing,"Central signal region","h")
 				elif region == "forward":
 					leg.AddEntry(legendHistDing,"Forward signal region","h")
-				leg.AddEntry(sfHist,"Data","PL")
+				leg.AddEntry(sfHist,"Data","PE")
 				leg.AddEntry(bkgHist, "Flav. Sym. backgrounds","l")
 				leg.AddEntry(errGraph,"Background uncert.", "f")	
 				
@@ -612,9 +620,8 @@ def main():
 		args.runRange.append(runRanges.name)	
 			
 
-	path = locations.dataSetPath	
-	path = "/home/jan/Trees/sw538v0477"
-
+	path = locations.dataSetPathTrigger	
+	
 	cmsExtra = ""
 	if args.private:
 		cmsExtra = "Private Work"

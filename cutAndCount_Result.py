@@ -139,7 +139,7 @@ def cutAndCountForRegion(path,selection,plots,runRange,isMC,backgrounds,preselec
 
 		counts = {}
 		eventLists = {}
-		massRanges = ["default","edgeMass","zMass","highMass"]
+		massRanges = ["default","edgeMass","zMass","highMass","belowZ","aboveZ"]
 		counts["default"] = {}
 		eventLists["default"] = {}
 		for mllCut in massRanges:

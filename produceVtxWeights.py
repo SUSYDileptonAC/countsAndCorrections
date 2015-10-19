@@ -109,38 +109,54 @@ def main():
 
 	weights = []
 	weightSum = 0
-	for selectionName in selections:
-			
-		selection = getRegion(selectionName)
-
-		plot = getPlot("nVtxPlotWeights")
-		plot.addRegion(selection)
-		plot.cleanCuts()
-		plot.cuts = plot.cuts % runRange.runCut	
-
-		histEEMC, histMMMC, histEMMC = getHistograms(path,plot,runRange,True,[],"")
-		histEE, histMM, histEM = getHistograms(path,plot,runRange,False,[],"")
-		
-		histEE.Add(histMM)
-		histEEMC.Add(histMMMC)
-		print histEE.GetEntries(), histEEMC.GetEntries()
-		histEE.Scale(1./histEE.GetEntries())
-		histEEMC.Scale(1./histEEMC.Integral())
-
-		for i in range(0,histEE.GetNbinsX()+1):
-			if histEEMC.GetBinContent(i) > 0:
-				histo.SetBinContent(i,float(histEE.GetBinContent(i)))
-				weights.append(float(histEE.GetBinContent(i))/histEEMC.GetBinContent(i))
-				weightSum += (float(histEE.GetBinContent(i))/histEEMC.GetBinContent(i))
-			else:
-				histo.SetBinContent(i,float(histEE.GetBinContent(i)))
-				weights.append(1)
-				weightSum += 1
-			
-		print weights
-		print weightSum
+	#~ for selectionName in selections:
+			#~ 
+		#~ selection = getRegion(selectionName)
+#~ 
+		#~ plot = getPlot("nVtxPlotWeights")
+		#~ plot.addRegion(selection)
+		#~ plot.cleanCuts()
+		#~ plot.cuts = plot.cuts % runRange.runCut	
+#~ 
+		#~ histEEMC, histMMMC, histEMMC = getHistograms(path,plot,runRange,True,[],"")
+		#~ histEE, histMM, histEM = getHistograms(path,plot,runRange,False,[],"")
+		#~ 
+		#~ histEE.Add(histMM)
+		#~ histEEMC.Add(histMMMC)
+		#~ print histEE.GetEntries(), histEEMC.GetEntries()
+		#~ histEE.Scale(1./histEE.GetEntries())
+		#~ histEEMC.Scale(1./histEEMC.Integral())
+#~ 
+		#~ for i in range(0,histEE.GetNbinsX()+1):
+			#~ if histEEMC.GetBinContent(i) > 0:
+				#~ histo.SetBinContent(i,float(histEE.GetBinContent(i)))
+				#~ weights.append(float(histEE.GetBinContent(i))/histEEMC.GetBinContent(i))
+				#~ weightSum += (float(histEE.GetBinContent(i))/histEEMC.GetBinContent(i))
+			#~ else:
+				#~ histo.SetBinContent(i,float(histEE.GetBinContent(i)))
+				#~ weights.append(1)
+				#~ weightSum += 1
+			#~ 
+		#~ print weights
+		#~ print weightSum
 		
 	f.Write()
 	f.Close()
-			 
+	
+	
+	#from Vince
+	
+	f = ROOT.TFile("nvtx_ratio.root")
+	f.cd()
+	
+	histo = ROOT.TH1F()
+	histo = f.Get("h_vet_ratio")
+	print type(histo)
+	
+	vinceWeights = []
+
+	for i in range(0,histo.GetNbinsX()+1):
+		vinceWeights.append(histo.GetBinContent(i))
+
+	print vinceWeights		 
 main()

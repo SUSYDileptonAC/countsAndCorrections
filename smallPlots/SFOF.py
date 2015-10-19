@@ -466,18 +466,15 @@ if (__name__ == "__main__"):
 	plotPad.DrawFrame(20,yMin,300,yMax,"; %s ; %s" %("m_{ll}","N_{events} / 5 GeV"))
 	ROOT.gStyle.SetOptStat(0)
 	
-	#~ histoSF.SetLineColor(ROOT.kBlue+1)
 	histoSF.SetFillColor(ROOT.kBlue+1)
-	#~ histoSF.SetLineStyle(2)
-	#~ histoSF.SetLineWidth(2)
-	histoEM.SetFillStyle(3002)
-	histoEM.SetFillColor(ROOT.kBlack)
-	#~ eeHist.SetLineColor(ROOT.kRed)
+	histoEM.SetLineColor(ROOT.kBlack)
+	histoEM.SetLineWidth(3)
+	histoSF.SetLineColor(ROOT.kBlue+1)
 	fakeHist = ROOT.TH1F()
 	fakeHist.SetLineColor(ROOT.kWhite)
 	legend.SetHeader("t#bar{t} Simulation")
 	legend.AddEntry(histoSF,"SF","f")
-	legend.AddEntry(histoEM,"OF","f")
+	legend.AddEntry(histoEM,"OF","l")
 	
 	histoEM.Scale(1.034)
 	
@@ -509,10 +506,10 @@ if (__name__ == "__main__"):
 	intlumi.SetTextSize(0.03)
 	intlumi.SetNDC(True)			
 	
-	latex.DrawLatex(0.95, 0.96, "(8 TeV)")
+	#~ latex.DrawLatex(0.95, 0.96, "(8 TeV)")
 	cmsExtra = "#splitline{Simulation}{Private Work}"
 
-	latex.DrawLatex(0.95, 0.96, "%s fb^{-1} (8 TeV)"%runRange.printval)
+	latex.DrawLatex(0.95, 0.96, "%s fb^{-1} (13 TeV)"%runRange.printval)
 	
 
 	latexCMS.DrawLatex(0.19,0.88,"CMS")
@@ -553,12 +550,12 @@ if (__name__ == "__main__"):
 
 	ratioGraphs.draw(ROOT.gPad,True,False,True,chi2Pos=0.8)	
 	ge.Draw("SAME 3")
-
-	#~ line2 = ROOT.TLine(0.3,0,0.3,2)
-	#~ line2.SetLineColor(ROOT.kBlue+3)
-	#~ line2.SetLineWidth(2)
-	#~ line2.SetLineStyle(2)
 #~ 
+	line2 = ROOT.TLine(0.3,0,0.3,2)
+	line2.SetLineColor(ROOT.kBlue+3)
+	line2.SetLineWidth(2)
+	line2.SetLineStyle(2)
+
 	#~ line2.Draw("same")
 
 
