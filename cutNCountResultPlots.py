@@ -15,7 +15,7 @@ from array import array
 import argparse	
 
 
-plotNames = {"default":"mllPlot","geOneBTags":"mllPlotGeOneBTags","geTwoBTags":"mllPlotGeTwoBTags"}
+plotNames = {"default":"mllPlot","noBTags":"mllPlotNoBTags","geOneBTags":"mllPlotGeOneBTags","geTwoBTags":"mllPlotGeTwoBTags"}
 
 
 import ROOT
@@ -170,7 +170,7 @@ def makePlot(sfHist,ofHist,selection,plot,runRange,region,cmsExtra,combination,b
 	yMax = sfHist.GetBinContent(sfHist.GetMaximumBin())
 	
 	if plot.yMax == 0:
-		yMax = yMax*1.35
+		yMax = yMax*2.35 
 						
 	else: 
 		yMax = plot.yMax
@@ -317,7 +317,7 @@ def makePlot(sfHist,ofHist,selection,plot,runRange,region,cmsExtra,combination,b
 
 def makeResultPlot(path,selection,runRange,cmsExtra):
 	
-	for bSelection in ["default","geOneBTags","geTwoBTags"]:
+	for bSelection in ["default","noBTags","geOneBTags","geTwoBTags"]:
 	
 		plot = getPlot(plotNames[bSelection])
 		plot.addRegion(selection)

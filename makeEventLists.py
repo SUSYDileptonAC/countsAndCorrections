@@ -17,11 +17,12 @@ def main():
 	for regionName in allPkls:		
 		for subcut, nSub in allPkls[regionName].iteritems():
 			for massRegion, eventLists in nSub.iteritems():
-				name = "eventList_%s_%s_%s_%s.txt"%(regionName,subcut,massRegion,"MuMu")
-				saveEventList(eventLists["MuMu"],name)
-				name = "eventList_%s_%s_%s_%s.txt"%(regionName,subcut,massRegion,"EE")
+				selectionName = regionName.split("eventLists_")[1].split(".pkl")[0]
+				name = "eventList_%s_%s_%s_%s.txt"%(selectionName,subcut,massRegion,"MM")
+				saveEventList(eventLists["MM"],name)
+				name = "eventList_%s_%s_%s_%s.txt"%(selectionName,subcut,massRegion,"EE")
 				saveEventList(eventLists["EE"],name)
-				name = "eventList_%s_%s_%s_%s.txt"%(regionName,subcut,massRegion,"EMu")
-				saveEventList(eventLists["EMu"],name)
+				name = "eventList_%s_%s_%s_%s.txt"%(selectionName,subcut,massRegion,"EM")
+				saveEventList(eventLists["EM"],name)
 
 main()

@@ -112,7 +112,9 @@ def getCounts(trees, cut, isMC, backgrounds,plot,runRange,path):
 	
 
 
-def cutAndCountForRegion(path,selection,plots,runRange,isMC,backgrounds,preselection):
+def cutAndCountForRegion(path,selection,plots,runRange,isMC,backgrounds,preselection,samesign):
+	
+	#~ path = "/home/jan/Trees/sw7412v2000Trigger/"
 	
 	if not isMC:
 		trees = getDataTrees(path)
@@ -136,6 +138,8 @@ def cutAndCountForRegion(path,selection,plots,runRange,isMC,backgrounds,preselec
 		plot.cleanCuts()
 		plot.cuts = plot.cuts % runRange.runCut	
 
+		if samesign:
+			plot.cuts = plot.cuts.replace("chargeProduct < 0","chargeProduct > 0")
 
 		counts = {}
 		eventLists = {}
@@ -200,6 +204,8 @@ def main():
 						  help="backgrounds to plot.")	
 	parser.add_argument("-w", "--write", action="store_true", dest="write", default=False,
 						  help="write results to central repository")	
+	parser.add_argument("-S", "--samesign", action="store_true", dest="samesign", default=False,
+						  help="use same-sign leptons")	
 					
 	args = parser.parse_args()
 
@@ -217,7 +223,7 @@ def main():
 		args.runRange.append(runRanges.name)	
 
 
-	path = locations.dataSetPath	
+	path = locations.dataSetPathTrigger
 
 	preselection = "nJets >= 2 && deltaR > 0.3"
 	
@@ -230,7 +236,11 @@ def main():
 		for selectionName in args.selection:
 			
 			selection = getRegion(selectionName)
-
+			
+			if args.samesign:
+				selection.name += "_samesign"
+			
+			
 			if args.write:
 
 				import subprocess
@@ -239,7 +249,7 @@ def main():
 				process = subprocess.Popen(bashCommand.split())		
 			
 			else:
-				counts, eventLists = cutAndCountForRegion(path,selection,args.plots,runRange,args.mc,args.backgrounds,preselection)
+				counts, eventLists = cutAndCountForRegion(path,selection,args.plots,runRange,args.mc,args.backgrounds,preselection,args.samesign)
 				outFile = open("shelves/cutAndCount_%s_%s.pkl"%(selection.name,runRange.label),"w")
 				pickle.dump(counts, outFile)
 				outFile.close()

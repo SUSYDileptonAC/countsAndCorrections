@@ -27,7 +27,8 @@ def loadPickles(path):
 	result = {}
 	for pklPath in glob(path):
 		pklFile = open(pklPath, "r")
-		result.update(pickle.load(pklFile))
+		#~ result.update(pickle.load(pklFile))
+		result[pklPath] = pickle.load(pklFile)
 	return result
 
 

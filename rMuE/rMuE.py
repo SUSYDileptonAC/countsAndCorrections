@@ -239,10 +239,12 @@ def dependencies(path,selection,plots,runRange,isMC,backgrounds,cmsExtra,fit):
 			if rMuE.GetBinContent(i) > 0:
 				#~ rMuE.SetBinError(i, 0.5*rMuE.GetBinContent(i)*pow(1./abs(histMM.GetBinContent(i)) + 1./abs(histEE.GetBinContent(i)), 0.5))
 				rMuE.SetBinError(i, 0.5*pow( histMM.GetBinError(i)**2/(abs(histEE.GetBinContent(i))*abs(histMM.GetBinContent(i))) + histEE.GetBinError(i)**2*abs(histMM.GetBinContent(i))/abs(histEE.GetBinContent(i)**3), 0.5))
+				#~ rMuE.SetBinError(i, 0.5*rMuE.GetBinError(i))
 			if rMuEMC.GetBinContent(i) > 0:
 				#~ rMuEMC.SetBinError(i, 0.5*rMuEMC.GetBinContent(i)*pow(1./abs(histMMMC.GetBinContent(i)) + 1./abs(histEEMC.GetBinContent(i)), 0.5))
 				#~ rMuEMC.SetBinError(i, pow( pow(histMMMC.GetBinError(i)/histEEMC.GetBinContent(i),2) + pow(histEEMC.GetBinError(i)*histMMMC.GetBinContent(i)/(histEEMC.GetBinContent(i)**2),2), 0.5))
 				rMuEMC.SetBinError(i, 0.5*pow( histMMMC.GetBinError(i)**2/(abs(histEEMC.GetBinContent(i))*abs(histMMMC.GetBinContent(i))) + histEEMC.GetBinError(i)**2*abs(histMMMC.GetBinContent(i))/abs(histEEMC.GetBinContent(i)**3), 0.5))
+				#~ rMuEMC.SetBinError(i, 0.5*rMuEMC.GetBinError(i))
 
 		rMuEMC.SetMarkerStyle(21)
 		rMuEMC.SetLineColor(ROOT.kGreen-2) 
@@ -409,6 +411,153 @@ def dependencies(path,selection,plots,runRange,isMC,backgrounds,cmsExtra,fit):
 
 
 		hCanvas.Print("fig/rMuE_%s_%s_%s_%s.pdf"%(selection.name,runRange.label,plot.variablePlotName,plot.additionalName))	
+	
+
+		for i in range(1, rMuE.GetNbinsX()+1):
+			if rMuE.GetBinContent(i) > 0:
+				rMuE.SetBinError(i, 0.5*(1. - (1./rMuE.GetBinContent(i)**2))*rMuE.GetBinError(i))
+			if rMuEMC.GetBinContent(i) > 0:
+				rMuEMC.SetBinError(i, 0.5*(1. - (1./rMuEMC.GetBinContent(i)**2))*rMuEMC.GetBinError(i))			
+			if rMuE.GetBinContent(i) > 0:
+				rMuE.SetBinContent(i, 0.5*(rMuE.GetBinContent(i)+ 1./rMuE.GetBinContent(i)))
+			if rMuEMC.GetBinContent(i) > 0:
+				rMuEMC.SetBinContent(i, 0.5*(rMuEMC.GetBinContent(i)+ 1./rMuEMC.GetBinContent(i)))
+
+
+		rMuEMC.SetMarkerStyle(21)
+		rMuEMC.SetLineColor(ROOT.kGreen-2) 
+		rMuEMC.SetMarkerColor(ROOT.kGreen-2) 
+		
+
+		rMuE.SetMarkerStyle(20)
+		rMuE.SetLineColor(ROOT.kBlack) 
+		rMuE.SetMarkerColor(ROOT.kBlack) 
+
+		
+		hCanvas.Clear()
+		ROOT.gPad.SetLogy(0)
+
+		plotPad = ROOT.TPad("plotPad","plotPad",0,0,1,1)
+		setTDRStyle()
+		plotPad.UseCurrentStyle()
+		
+		plotPad.Draw()	
+		plotPad.cd()	
+		plotPad.DrawFrame(plot.firstBin,0.95,plot.lastBin,1.2,"; %s; 0.5(r_{#mue} + 1/r_{#mue})" %plot.xaxis)
+		gStyle.SetErrorX(0.5)
+
+		latex.DrawLatex(0.95, 0.96, "%s fb^{-1} (13 TeV)"%runRange.printval)
+		
+
+		latexCMS.DrawLatex(0.19,0.88,"CMS")
+		if "Simulation" in cmsExtra:
+			yLabelPos = 0.81	
+		else:
+			yLabelPos = 0.84	
+
+		latexCMSExtra.DrawLatex(0.19,yLabelPos,"%s"%(cmsExtra))
+
+		
+
+		if os.path.isfile("shelves/rMuE_%s_%s.pkl"%(selection.name,runRange.label)):
+			centralVals = pickle.load(open("shelves/rMuE_%s_%s.pkl"%(selection.name,runRange.label),"rb"))
+		else:
+			centralVals = centralValues(path,selection,runRange,isMC,backgrounds)
+
+
+		x= array("f",[plot.firstBin, plot.lastBin]) 
+		y= array("f", [0.5*(centralVals["rMuE"]+1./centralVals["rMuE"]),0.5*(centralVals["rMuE"]+1./centralVals["rMuE"])]) 
+		ex= array("f", [0.,0.])
+		ey= array("f", [0.5*(1. - (1./(centralVals["rMuE"]**2)))*centralVals["rMuESystErr"],0.5*(1. - (1./(centralVals["rMuE"]**2)))*centralVals["rMuESystErr"]])
+		ge= ROOT.TGraphErrors(2, x, y, ex, ey)
+		ge.SetFillColor(ROOT.kOrange-9)
+		ge.SetFillStyle(1001)
+		ge.SetLineColor(ROOT.kWhite)
+		ge.Draw("SAME 3")
+		
+		rmueLine= ROOT.TF1("rmueline","%f"%(0.5*(centralVals["rMuE"]+1./centralVals["rMuE"])),plot.firstBin,plot.lastBin)
+		rmueLine.SetLineColor(ROOT.kOrange+3)
+		rmueLine.SetLineWidth(3)
+		rmueLine.SetLineStyle(2)
+		rmueLine.Draw("SAME")
+		
+		
+		rMuEMC.Draw("hist E1P SAME")
+			
+		leg = ROOT.TLegend(0.6,0.7,0.85,0.95)
+		if not isMC:
+			rMuE.Draw("hist E1P SAME")			
+			leg.AddEntry(rMuE, "Data", "p")
+			leg.AddEntry(rMuEMC,"t#bar{t} MC","p")
+			
+		else:
+			rMuE.Draw("hist E1P SAME")			
+			leg.AddEntry(rMuE, "all MC", "p")
+			leg.AddEntry(rMuEMC,"t#bar{t} MC","p")
+		if not isMC: 
+			leg.AddEntry(rmueLine, "central value", "l")
+		else:
+			leg.AddEntry(rmueLine, "central value on MC", "l") 
+		leg.AddEntry(ge,"syst. unc. of r_{#mu e}","f")
+
+		leg.SetBorderSize(0)
+		leg.SetLineWidth(2)
+		leg.SetTextAlign(22)
+		
+	
+		if fit:
+			fit = TF1("dataFit","pol1",0,300)
+			fit.SetLineColor(ROOT.kGreen+3)
+			fitMC = TF1("mcFit","pol1",0,300)
+			fitMC.SetLineColor(ROOT.kBlue+3)
+			rMuE.Fit("dataFit")
+			rMuEMC.Fit("mcFit")			
+			
+			latex = ROOT.TLatex()
+			latex.SetTextSize(0.035)	
+			latex.SetNDC()	
+			latex.DrawLatex(0.2, 0.25, "Fit on data: %.2f #pm %.2f %.5f #pm %.5f * m_{ll}"%(fit.GetParameter(0),fit.GetParError(0),fit.GetParameter(1),fit.GetParError(1)))
+			latex.DrawLatex(0.2, 0.20, "Fit on MC:   %.2f #pm %.2f %.5f #pm %.5f * m_{ll}"%(fitMC.GetParameter(0),fitMC.GetParError(0),fitMC.GetParameter(1),fitMC.GetParError(1)))			
+	
+		
+		# Pfeile
+		
+		if "eta" in plot.variable:
+			yMin = 0.8
+			yMax = 1.6
+			lineU1 = ROOT.TLine(1.4, yMin, 1.4, yMax-0.2)
+			lineU1.SetLineColor(ROOT.kBlue-3)
+			lineU1.SetLineWidth(2)
+			lineU1.Draw("")
+			lineU2 = ROOT.TLine(1.6, yMin, 1.6, yMax-0.2)
+			lineU2.SetLineColor(ROOT.kBlue-3)
+			lineU2.SetLineWidth(2)
+			lineU2.Draw("")
+			arrow1=ROOT.TArrow(1.55,1.3,1.6,1.3,0.01,"<|")
+			arrow1.SetFillColor(ROOT.kBlue-3)
+			arrow1.SetLineColor(ROOT.kBlue-3)
+			arrow1.SetLineWidth(3)
+			arrow1.Draw("")
+			arrow2=ROOT.TArrow(1.4,1.3,1.45,1.3,0.01,"|>")
+			arrow2.SetFillColor(ROOT.kBlue-3)
+			arrow2.SetLineColor(ROOT.kBlue-3)
+			arrow2.SetLineWidth(3)
+			arrow2.Draw("")
+
+			lineE = ROOT.TLine(2.4, yMin, 2.4, yMax-0.2) #3.5 -> 1.7
+			lineE.SetLineColor(ROOT.kRed-3)
+			lineE.SetLineWidth(2)
+			lineE.Draw("")
+
+		hCanvas.RedrawAxis()
+		leg.Draw("SAME")
+		ROOT.gPad.RedrawAxis()
+		hCanvas.Update()	
+		
+				
+
+
+		hCanvas.Print("fig/rSFOFFromRMuE_%s_%s_%s_%s.pdf"%(selection.name,runRange.label,plot.variablePlotName,plot.additionalName))	
 	
 	
 def signalRegion(path,selection,plots,runRange,isMC,backgrounds,cmsExtra):
