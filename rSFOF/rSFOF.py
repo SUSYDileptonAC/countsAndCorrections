@@ -353,12 +353,15 @@ def centralValues(source,modifier,path,selection,runRange,isMC,nonNormalized,bac
 	peakHigh = mllBins.onZ.high
 	highMassLow = mllBins.highMass.low
 	highMassHigh = mllBins.highMass.high
+	
+	highMassRSFOFLow = mllBins.highMassRSFOF.low
+	highMassRSFOFHigh = mllBins.highMassRSFOF.high
 		
 
 	eeLowMassErr = ROOT.Double()
 	eeLowMass = histEE.IntegralAndError(histEE.FindBin(lowMassLow+0.01),histEE.FindBin(lowMassHigh-0.01),eeLowMassErr)
 	eeHighMassErr = ROOT.Double()
-	eeHighMass = histEE.IntegralAndError(histEE.FindBin(highMassLow+0.01),histEE.FindBin(highMassHigh-0.01),eeHighMassErr)
+	eeHighMass = histEE.IntegralAndError(histEE.FindBin(highMassRSFOFLow+0.01),histEE.FindBin(highMassRSFOFHigh-0.01),eeHighMassErr)
 	
 	ee = eeLowMass + eeHighMass
 	eeErr = (eeLowMassErr**2 + eeHighMassErr**2)**0.5
@@ -366,7 +369,7 @@ def centralValues(source,modifier,path,selection,runRange,isMC,nonNormalized,bac
 	mmLowMassErr = ROOT.Double()
 	mmLowMass = histMM.IntegralAndError(histMM.FindBin(lowMassLow+0.01),histMM.FindBin(lowMassHigh-0.01),mmLowMassErr)
 	mmHighMassErr = ROOT.Double()
-	mmHighMass = histMM.IntegralAndError(histMM.FindBin(highMassLow+0.01),histMM.FindBin(highMassHigh-0.01),mmHighMassErr)
+	mmHighMass = histMM.IntegralAndError(histMM.FindBin(highMassRSFOFLow+0.01),histMM.FindBin(highMassRSFOFHigh-0.01),mmHighMassErr)
 	
 	mm = mmLowMass + mmHighMass
 	mmErr = (mmLowMassErr**2 + mmHighMassErr**2)**0.5
@@ -374,7 +377,7 @@ def centralValues(source,modifier,path,selection,runRange,isMC,nonNormalized,bac
 	ofLowMassErr = ROOT.Double()
 	ofLowMass = histEM.IntegralAndError(histEM.FindBin(lowMassLow+0.01),histEM.FindBin(lowMassHigh-0.01),ofLowMassErr)
 	ofHighMassErr = ROOT.Double()
-	ofHighMass = histEM.IntegralAndError(histEM.FindBin(highMassLow+0.01),histEM.FindBin(highMassHigh-0.01),ofHighMassErr)
+	ofHighMass = histEM.IntegralAndError(histEM.FindBin(highMassRSFOFLow+0.01),histEM.FindBin(highMassRSFOFHigh-0.01),ofHighMassErr)
 	
 	of = ofLowMass + ofHighMass
 	ofErr = (ofLowMassErr**2 + ofHighMassErr**2)**0.5
@@ -390,7 +393,7 @@ def centralValues(source,modifier,path,selection,runRange,isMC,nonNormalized,bac
 	eeLowMassErrSignal = ROOT.Double()
 	eeLowMassSignal = histEESignal.IntegralAndError(histEESignal.FindBin(lowMassLow+0.01),histEESignal.FindBin(lowMassHigh-0.01),eeLowMassErrSignal)
 	eeHighMassErrSignal = ROOT.Double()
-	eeHighMassSignal = histEESignal.IntegralAndError(histEESignal.FindBin(highMassLow+0.01),histEESignal.FindBin(highMassHigh-0.01),eeHighMassErrSignal)
+	eeHighMassSignal = histEESignal.IntegralAndError(histEESignal.FindBin(highMassRSFOFLow+0.01),histEESignal.FindBin(highMassRSFOFHigh-0.01),eeHighMassErrSignal)
 	
 	eeSignal = eeLowMassSignal + eeHighMassSignal
 	eeErrSignal = (eeLowMassErrSignal**2 + eeHighMassErrSignal**2)**0.5
@@ -398,7 +401,7 @@ def centralValues(source,modifier,path,selection,runRange,isMC,nonNormalized,bac
 	mmLowMassErrSignal = ROOT.Double()
 	mmLowMassSignal = histMMSignal.IntegralAndError(histMMSignal.FindBin(lowMassLow+0.01),histMMSignal.FindBin(lowMassHigh-0.01),mmLowMassErrSignal)
 	mmHighMassErrSignal = ROOT.Double()
-	mmHighMassSignal = histMMSignal.IntegralAndError(histMMSignal.FindBin(highMassLow+0.01),histMMSignal.FindBin(highMassHigh-0.01),mmHighMassErrSignal)
+	mmHighMassSignal = histMMSignal.IntegralAndError(histMMSignal.FindBin(highMassRSFOFLow+0.01),histMMSignal.FindBin(highMassRSFOFHigh-0.01),mmHighMassErrSignal)
 	
 	mmSignal = mmLowMassSignal + mmHighMassSignal
 	mmErrSignal = (mmLowMassErrSignal**2 + mmHighMassErrSignal**2)**0.5
@@ -406,7 +409,7 @@ def centralValues(source,modifier,path,selection,runRange,isMC,nonNormalized,bac
 	ofLowMassErrSignal = ROOT.Double()
 	ofLowMassSignal = histEMSignal.IntegralAndError(histEMSignal.FindBin(lowMassLow+0.01),histEMSignal.FindBin(lowMassHigh-0.01),ofLowMassErrSignal)
 	ofHighMassErrSignal = ROOT.Double()
-	ofHighMassSignal = histEMSignal.IntegralAndError(histEMSignal.FindBin(highMassLow+0.01),histEMSignal.FindBin(highMassHigh-0.01),ofHighMassErrSignal)
+	ofHighMassSignal = histEMSignal.IntegralAndError(histEMSignal.FindBin(highMassRSFOFLow+0.01),histEMSignal.FindBin(highMassRSFOFHigh-0.01),ofHighMassErrSignal)
 	
 	ofSignal = ofLowMassSignal + ofHighMassSignal
 	ofErrSignal = (ofLowMassErrSignal**2 + ofHighMassErrSignal**2)**0.5
