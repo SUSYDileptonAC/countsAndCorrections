@@ -151,7 +151,7 @@ def getLines(yMin,yMax, xPos = [70.,81., 101]):
 	return result
 
 	
-def makePlot(sfHist,ofHist,selection,plot,runRange,region,cmsExtra,combination,bSelection,dyHist=None,edgeShape=False):
+def makePlot(sfHist,ofHist,selection,plot,runRange,region,cmsExtra,combination,bSelection,dyHist=None):
 
 	colors = createMyColors()	
 
@@ -170,7 +170,7 @@ def makePlot(sfHist,ofHist,selection,plot,runRange,region,cmsExtra,combination,b
 	yMax = sfHist.GetBinContent(sfHist.GetMaximumBin())
 	
 	if plot.yMax == 0:
-		yMax = yMax*2.15 
+		yMax = yMax*2.35 
 						
 	else: 
 		yMax = plot.yMax
@@ -201,7 +201,7 @@ def makePlot(sfHist,ofHist,selection,plot,runRange,region,cmsExtra,combination,b
 	dyHist.SetFillStyle(3002)
 	
 
-	
+
 	
 	
 		
@@ -250,46 +250,7 @@ def makePlot(sfHist,ofHist,selection,plot,runRange,region,cmsExtra,combination,b
 	#~ errGraph.SetMarkerColor(myColors["MyDarkBlue"])
 	
 	errGraph.Draw("SAME02")
-
-	if edgeShape:
-		
-		edgeFile = ROOT.TFile("edgeShape.root","READ")
-		edgeHist = ROOT.TH1F()
-		edgeHist = edgeFile.Get("edgeHist300__inv")
-		edgeHist.Scale(1./edgeHist.Integral())
-		
-		edgeHist500 = edgeFile.Get("edgeHist500__inv")
-		edgeHist500.Scale(1./edgeHist500.Integral())
-		
-		edgeHist700 = edgeFile.Get("edgeHist700__inv")
-		edgeHist700.Scale(1./edgeHist700.Integral())
-
-		
-		edgeHist.Scale(61)
-		edgeHist.Add(bkgHist.Clone())
-		edgeHist.SetLineColor(ROOT.kRed)		
-		edgeHist.SetLineWidth(2)		
-		edgeHist.Draw("samehist")	
-		
-		
-		edgeHist500.Scale(86)
-		edgeHist500.Add(bkgHist.Clone())
-		edgeHist500.SetLineColor(ROOT.kRed)		
-		edgeHist500.SetLineWidth(2)		
-		edgeHist500.SetLineStyle(ROOT.kDashed)		
-		edgeHist500.Draw("samehist")	
-		
-		edgeHist700.Scale(117)
-		edgeHist700.Add(bkgHist.Clone())
-		edgeHist700.SetLineColor(ROOT.kRed)		
-		edgeHist700.SetLineStyle(ROOT.kDotted)		
-		edgeHist700.SetLineWidth(2)		
-		edgeHist700.Draw("samehist")	
-
 	bkgHist.Draw("samehist")	
-	
-	
-	
 	dyHist.Draw("samehist")	
 	sfHist.Draw("samepe")	
 
@@ -297,11 +258,8 @@ def makePlot(sfHist,ofHist,selection,plot,runRange,region,cmsExtra,combination,b
 	lines = getLines(0, sfHist.GetBinContent(sfHist.GetMaximumBin())+10,xPos=[mllBins.lowMass.high,mllBins.onZ.low,mllBins.onZ.high, mllBins.highMass.low ])
 	for line in lines:
 		line.Draw()
-	if edgeShape:
-		leg = TLegend(0.52, 0.45, 0.89, 0.92,"","brNDC")
-	else:
-		leg = TLegend(0.62, 0.51, 0.89, 0.92,"","brNDC")
-		
+
+	leg = TLegend(0.62, 0.51, 0.89, 0.92,"","brNDC")
 	leg.SetFillColor(10)
 	leg.SetLineColor(10)
 	leg.SetShadowColor(0)
@@ -319,12 +277,6 @@ def makePlot(sfHist,ofHist,selection,plot,runRange,region,cmsExtra,combination,b
 	leg.AddEntry(bkgHist, "Total backgrounds","l")
 	leg.AddEntry(dyHist,"Drell--Yan", "f")
 	leg.AddEntry(errGraph,"Total uncert.", "f")	
-	
-	if edgeShape:
-		leg.AddEntry(legendHistDing,"Scaled 8 TeV signal fit:", "h")	
-		leg.AddEntry(edgeHist,"m_{#tilde{b}} = 300 GeV hypothesis", "l")	
-		leg.AddEntry(edgeHist500,"m_{#tilde{b}} = 500 GeV hypothesis", "l")	
-		leg.AddEntry(edgeHist700,"m_{#tilde{b}} = 700 GeV hypothesis", "l")	
 	
 	leg.Draw("same")
 
@@ -356,16 +308,14 @@ def makePlot(sfHist,ofHist,selection,plot,runRange,region,cmsExtra,combination,b
 	plotPad.RedrawAxis()
 	ratioPad.RedrawAxis()
 
-	if edgeShape:
-		hCanvas.Print("fig/mllResult_%s_%s_%s_%s_edgeShape.pdf"%(selection.name,runRange.label,bSelection,combination))	
-	else:
-		hCanvas.Print("fig/mllResult_%s_%s_%s_%s.pdf"%(selection.name,runRange.label,bSelection,combination))	
+	
+	hCanvas.Print("fig/mllResult_%s_%s_%s_%s.pdf"%(selection.name,runRange.label,bSelection,combination))	
 	
 	
 		
 
 
-def makeResultPlot(path,selection,runRange,cmsExtra,edgeShape=False):
+def makeResultPlot(path,selection,runRange,cmsExtra):
 	
 	for bSelection in ["default","noBTags","geOneBTags","geTwoBTags"]:
 	
@@ -429,9 +379,9 @@ def makeResultPlot(path,selection,runRange,cmsExtra,edgeShape=False):
 			histEEDY.Scale(getattr(getattr(zPredictions,bSelection).EE,region).val / histEEDYScale.Integral(histEEDYScale.FindBin(81),histEEDYScale.FindBin(101)))
 			histMMDY.Scale(getattr(getattr(zPredictions,bSelection).MM,region).val / histMMDYScale.Integral(histMMDYScale.FindBin(81),histMMDYScale.FindBin(101)))
 		
-		makePlot(histSF,histOFSF,selection,plot,runRange,region,cmsExtra,"SF",bSelection,histSFDY,edgeShape=edgeShape)
-		makePlot(histEE,histOFEE,selection,plot,runRange,region,cmsExtra,"EE",bSelection,histEEDY,edgeShape=edgeShape)
-		makePlot(histMM,histOFMM,selection,plot,runRange,region,cmsExtra,"MM",bSelection,histMMDY,edgeShape=edgeShape)
+		makePlot(histSF,histOFSF,selection,plot,runRange,region,cmsExtra,"SF",bSelection,histSFDY)
+		makePlot(histEE,histOFEE,selection,plot,runRange,region,cmsExtra,"EE",bSelection,histEEDY)
+		makePlot(histMM,histOFMM,selection,plot,runRange,region,cmsExtra,"MM",bSelection,histMMDY)
 
 
 def makeDependencyPlot(path,selection,plots,useMC,backgrounds,runRange,cmsExtra):
@@ -640,8 +590,6 @@ def main():
 						  help="name of run range.")
 	parser.add_argument("-x", "--private", action="store_true", dest="private", default=False,
 						  help="plot is private work.")	
-	parser.add_argument("-e", "--edgeShape", action="store_true", dest="edgeShape", default=False,
-						  help="add 8 TeV excess shape.")	
 	parser.add_argument("-b", "--backgrounds", dest="backgrounds", action="append", default=[],
 						  help="backgrounds to plot.")
 	parser.add_argument("-p", "--plot", dest="plots", action="append", default=[],
@@ -689,7 +637,7 @@ def main():
 			if args.dependencies:
 				makeDependencyPlot(path,selection,args.plots,args.mc,args.backgrounds,runRange,cmsExtra)
 			else:	
-				makeResultPlot(path,selection,runRange,cmsExtra,edgeShape=args.edgeShape)
+				makeResultPlot(path,selection,runRange,cmsExtra)
 
 main()
 
