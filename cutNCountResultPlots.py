@@ -20,13 +20,13 @@ plotNames = {"default":"mllPlot","noBTags":"mllPlotNoBTags","geOneBTags":"mllPlo
 
 import ROOT
 ROOT.PyConfig.IgnoreCommandLineOptions = True
-from ROOT import TCanvas, TEfficiency, TPad, TH1F, TH1I, THStack, TLegend, TMath, TGraphErrors, TF1, gStyle, TGraphAsymmErrors
+from ROOT import TCanvas, TEfficiency, TPad, TH1F, TH1I, THStack, TLegend, TMath, TGraphErrors, TF1, gStyle, TGraphAsymmErrors, TFile, TH2F
 ROOT.gROOT.SetBatch(True)
 
-from defs import getRegion, getPlot, getRunRange, Backgrounds, defineMyColors, myColors
+from defs import getRegion, getPlot, getRunRange, Backgrounds, defineMyColors, myColors,sbottom_masses
 
 from setTDRStyle import setTDRStyle
-from helpers import readTrees, getDataHist, TheStack, totalNumberOfGeneratedEvents, Process,createMyColors 
+from helpers import readTrees, getDataHist, TheStack, totalNumberOfGeneratedEvents, Process,createMyColors,createHistoFromTree 
 
 from corrections import rSFOF, rEEOF, rMMOF, rMuE, rSFOFTrig, rOutIn, rOutInEE, rOutInMM
 from centralConfig import regionsToUse, runRanges, backgroundLists, plotLists, systematics, mllBins, zPredictions
@@ -34,6 +34,20 @@ import corrections
 import ratios
 from locations import locations
 
+		
+	
+def getSignalMCHistograms(path,plot,runRange,sampleName):
+
+	treesEE = readTrees(path,"EE")
+	treesEM = readTrees(path,"EMu")
+	treesMM = readTrees(path,"MuMu")
+
+	histoEE = getDataHist(plot,treesEE,dataname = sampleName)
+	histoMM = getDataHist(plot,treesMM,dataname = sampleName)
+	histoEM = getDataHist(plot,treesEM,dataname = sampleName)
+
+	return histoEE , histoMM, histoEM
+	
 def getHistograms(path,plot,runRange,isMC,backgrounds):
 
 	treesEE = readTrees(path,"EE")
@@ -78,8 +92,7 @@ def getErrHist(plot,combination,bSelection,region,ofHist,dyHist,rSFOFErr):
 	for i in range(1,hist.GetNbinsX()+1):
 		hist.SetBinContent(i,1)
 		hist.SetBinError(i,ofHist.GetBinContent(i)*rSFOFErr)
-	if dyHist is not None:	
-		print "hier"
+	if dyHist is not None:
 		for i in range(hist.FindBin(mllBins.lowMass.low+0.01),hist.FindBin(mllBins.lowMass.high-0.01)):
 			
 			if region == "inclusive":
@@ -151,7 +164,7 @@ def getLines(yMin,yMax, xPos = [70.,81., 101]):
 	return result
 
 	
-def makePlot(sfHist,ofHist,selection,plot,runRange,region,cmsExtra,combination,bSelection,dyHist=None,edgeShape=False):
+def makePlot(sfHist,ofHist,selection,plot,runRange,region,cmsExtra,combination,bSelection,dyHist=None,edgeShape=False,edgeShapeMC=False,differentEdgePositions=False):
 
 	colors = createMyColors()	
 
@@ -170,7 +183,8 @@ def makePlot(sfHist,ofHist,selection,plot,runRange,region,cmsExtra,combination,b
 	yMax = sfHist.GetBinContent(sfHist.GetMaximumBin())
 	
 	if plot.yMax == 0:
-		yMax = yMax*2.15 
+		#~ yMax = yMax*2.15 
+		yMax = yMax*1.5 
 						
 	else: 
 		yMax = plot.yMax
@@ -286,6 +300,248 @@ def makePlot(sfHist,ofHist,selection,plot,runRange,region,cmsExtra,combination,b
 		edgeHist700.SetLineWidth(2)		
 		edgeHist700.Draw("samehist")	
 
+	if edgeShapeMC:
+		
+		signalPath = locations.signalDataSetPath
+		
+		denominatorFile = TFile("../SignalScan/T6bbllsleptonDenominatorHisto.root")
+		denominatorHisto = TH2F(denominatorFile.Get("massScan"))
+		
+		cutsWithoutSignalScaleFactors = plot.cuts
+		plot.cuts = "leptonFullSimScaleFactor1*leptonFullSimScaleFactor2*leptonFastSimScaleFactor1*leptonFastSimScaleFactor2*(%s)"%plot.cuts
+		
+		if "Central" in selection.name:
+			EETriggerEff = 0.945
+			EMuTriggerEff = 0.937
+			MuMuTriggerEff = 0.929
+			RSFOF = 1.032
+		elif "Forward" in selection.name:
+			EETriggerEff = 0.943
+			EMuTriggerEff = 0.938
+			MuMuTriggerEff = 0.916
+			RSFOF = 1.092
+		else:
+			EETriggerEff = 0.949
+			EMuTriggerEff = 0.921811
+			MuMuTriggerEff = 0.929178
+			RSFOF = 1.05
+
+		EEHistSignal450, MMHistSignal450, EMHistSignal450 = getSignalMCHistograms(signalPath,plot,runRange,"T6bbllslepton_msbottom_450_mneutralino_175")
+		
+		denominator = denominatorHisto.GetBinContent(denominatorHisto.GetXaxis().FindBin(450),denominatorHisto.GetYaxis().FindBin(175))		
+		xsection = getattr(sbottom_masses, "m_b_450").cross_section13TeV			
+		scalingLumi = runRange.lumi*xsection/denominator
+		
+		EEHistSignal450.Scale(EETriggerEff * scalingLumi)
+		MMHistSignal450.Scale(MuMuTriggerEff * scalingLumi)
+		EMHistSignal450.Scale(EMuTriggerEff * scalingLumi * RSFOF)
+		
+		if combination == "SF":
+			edgeHist450 = EEHistSignal450.Clone()
+			edgeHist450.Add(MMHistSignal450.Clone())
+			edgeHist450.Add(EMHistSignal450.Clone(),-1)
+		if combination == "EE":
+			edgeHist450 = EEHistSignal450.Clone()
+			edgeHist450.Add(EMHistSignal450.Clone(),-0.5)
+		if combination == "MM":
+			edgeHist450 = MMHistSignal450.Clone()
+			edgeHist450.Add(EMHistSignal450.Clone(),-0.5)
+			
+		for i in range(0,edgeHist450.GetNbinsX()):
+			if edgeHist450.GetBinContent(i) < 0:
+				edgeHist450.SetBinContent(i,0.)
+				
+		edgeHist450.Add(bkgHist.Clone())
+		edgeHist450.SetLineColor(ROOT.kRed)
+		edgeHist450.SetLineWidth(2)
+		edgeHist450.Draw("samehist")
+		
+		EEHistSignal550, MMHistSignal550, EMHistSignal550 = getSignalMCHistograms(signalPath,plot,runRange,"T6bbllslepton_msbottom_550_mneutralino_175")
+		
+		denominator = denominatorHisto.GetBinContent(denominatorHisto.GetXaxis().FindBin(550),denominatorHisto.GetYaxis().FindBin(175))		
+		xsection = getattr(sbottom_masses, "m_b_550").cross_section13TeV			
+		scalingLumi = runRange.lumi*xsection/denominator
+		
+		EEHistSignal550.Scale(EETriggerEff * scalingLumi)
+		MMHistSignal550.Scale(MuMuTriggerEff * scalingLumi)
+		EMHistSignal550.Scale(EMuTriggerEff * scalingLumi * RSFOF)
+		
+		if combination == "SF":
+			edgeHist550 = EEHistSignal550.Clone()
+			edgeHist550.Add(MMHistSignal550.Clone())
+			edgeHist550.Add(EMHistSignal550.Clone(),-1)
+		if combination == "EE":
+			edgeHist550 = EEHistSignal550.Clone()
+			edgeHist550.Add(EMHistSignal550.Clone(),-0.5)
+		if combination == "MM":
+			edgeHist550 = MMHistSignal550.Clone()
+			edgeHist550.Add(EMHistSignal550.Clone(),-0.5)
+			
+		for i in range(0,edgeHist550.GetNbinsX()):
+			if edgeHist550.GetBinContent(i) < 0:
+				edgeHist550.SetBinContent(i,0.)
+				
+		edgeHist550.Add(bkgHist.Clone())
+		edgeHist550.SetLineColor(ROOT.kRed)
+		edgeHist550.SetLineWidth(2)
+		edgeHist550.SetLineStyle(ROOT.kDashed)
+		edgeHist550.Draw("samehist")
+		
+		EEHistSignal650, MMHistSignal650, EMHistSignal650 = getSignalMCHistograms(signalPath,plot,runRange,"T6bbllslepton_msbottom_650_mneutralino_175")
+		
+		denominator = denominatorHisto.GetBinContent(denominatorHisto.GetXaxis().FindBin(650),denominatorHisto.GetYaxis().FindBin(175))		
+		xsection = getattr(sbottom_masses, "m_b_650").cross_section13TeV			
+		scalingLumi = runRange.lumi*xsection/denominator
+		
+		EEHistSignal650.Scale(EETriggerEff * scalingLumi)
+		MMHistSignal650.Scale(MuMuTriggerEff * scalingLumi)
+		EMHistSignal650.Scale(EMuTriggerEff * scalingLumi * RSFOF)
+		
+		if combination == "SF":
+			edgeHist650 = EEHistSignal650.Clone()
+			edgeHist650.Add(MMHistSignal650.Clone())
+			edgeHist650.Add(EMHistSignal650.Clone(),-1)
+		if combination == "EE":
+			edgeHist650 = EEHistSignal650.Clone()
+			edgeHist650.Add(EMHistSignal650.Clone(),-0.5)
+		if combination == "MM":
+			edgeHist650 = MMHistSignal650.Clone()
+			edgeHist650.Add(EMHistSignal650.Clone(),-0.5)
+			
+		for i in range(0,edgeHist650.GetNbinsX()):
+			if edgeHist650.GetBinContent(i) < 0:
+				edgeHist650.SetBinContent(i,0.)
+				
+		edgeHist650.Add(bkgHist.Clone())
+		edgeHist650.SetLineColor(ROOT.kRed)
+		edgeHist650.SetLineWidth(2)
+		edgeHist650.SetLineStyle(ROOT.kDotted)
+		edgeHist650.Draw("samehist")
+		
+		plot.cuts = cutsWithoutSignalScaleFactors
+			
+	if differentEdgePositions:
+		
+		signalPath = locations.signalDataSetPath
+		
+		denominatorFile = TFile("../SignalScan/T6bbllsleptonDenominatorHisto.root")
+		denominatorHisto = TH2F(denominatorFile.Get("massScan"))
+		
+		cutsWithoutSignalScaleFactors = plot.cuts
+		plot.cuts = "leptonFullSimScaleFactor1*leptonFullSimScaleFactor2*leptonFastSimScaleFactor1*leptonFastSimScaleFactor2*(%s)"%plot.cuts
+		
+		if "Central" in selection.name:
+			EETriggerEff = 0.945
+			EMuTriggerEff = 0.937
+			MuMuTriggerEff = 0.929
+			RSFOF = 1.032
+		elif "Forward" in selection.name:
+			EETriggerEff = 0.943
+			EMuTriggerEff = 0.938
+			MuMuTriggerEff = 0.916
+			RSFOF = 1.092
+		else:
+			EETriggerEff = 0.949
+			EMuTriggerEff = 0.921811
+			MuMuTriggerEff = 0.929178
+			RSFOF = 1.05
+
+		EEHistSignal75, MMHistSignal75, EMHistSignal75 = getSignalMCHistograms(signalPath,plot,runRange,"T6bbllslepton_msbottom_500_mneutralino_175")
+		
+		denominator = denominatorHisto.GetBinContent(denominatorHisto.GetXaxis().FindBin(500),denominatorHisto.GetYaxis().FindBin(175))		
+		xsection = getattr(sbottom_masses, "m_b_500").cross_section13TeV			
+		scalingLumi = runRange.lumi*xsection/denominator
+		
+		EEHistSignal75.Scale(EETriggerEff * scalingLumi)
+		MMHistSignal75.Scale(MuMuTriggerEff * scalingLumi)
+		EMHistSignal75.Scale(EMuTriggerEff * scalingLumi * RSFOF)
+		
+		if combination == "SF":
+			edgeHist75 = EEHistSignal75.Clone()
+			edgeHist75.Add(MMHistSignal75.Clone())
+			edgeHist75.Add(EMHistSignal75.Clone(),-1)
+		if combination == "EE":
+			edgeHist75 = EEHistSignal75.Clone()
+			edgeHist75.Add(EMHistSignal75.Clone(),-0.5)
+		if combination == "MM":
+			edgeHist75 = MMHistSignal75.Clone()
+			edgeHist75.Add(EMHistSignal75.Clone(),-0.5)
+			
+		for i in range(0,edgeHist75.GetNbinsX()):
+			if edgeHist75.GetBinContent(i) < 0:
+				edgeHist75.SetBinContent(i,0.)
+				
+		edgeHist75.Add(bkgHist.Clone())
+		edgeHist75.SetLineColor(ROOT.kRed)
+		edgeHist75.SetLineWidth(2)
+		edgeHist75.Draw("samehist")
+		
+		EEHistSignal125, MMHistSignal125, EMHistSignal125 = getSignalMCHistograms(signalPath,plot,runRange,"T6bbllslepton_msbottom_500_mneutralino_225")
+		
+		denominator = denominatorHisto.GetBinContent(denominatorHisto.GetXaxis().FindBin(500),denominatorHisto.GetYaxis().FindBin(225))		
+		xsection = getattr(sbottom_masses, "m_b_500").cross_section13TeV			
+		scalingLumi = runRange.lumi*xsection/denominator
+		
+		EEHistSignal125.Scale(EETriggerEff * scalingLumi)
+		MMHistSignal125.Scale(MuMuTriggerEff * scalingLumi)
+		EMHistSignal125.Scale(EMuTriggerEff * scalingLumi * RSFOF)
+		
+		if combination == "SF":
+			edgeHist125 = EEHistSignal125.Clone()
+			edgeHist125.Add(MMHistSignal125.Clone())
+			edgeHist125.Add(EMHistSignal125.Clone(),-1)
+		if combination == "EE":
+			edgeHist125 = EEHistSignal125.Clone()
+			edgeHist125.Add(EMHistSignal125.Clone(),-0.5)
+		if combination == "MM":
+			edgeHist125 = MMHistSignal125.Clone()
+			edgeHist125.Add(EMHistSignal125.Clone(),-0.5)
+			
+		for i in range(0,edgeHist125.GetNbinsX()):
+			if edgeHist125.GetBinContent(i) < 0:
+				edgeHist125.SetBinContent(i,0.)
+				
+		edgeHist125.Add(bkgHist.Clone())
+		edgeHist125.SetLineColor(ROOT.kRed)
+		edgeHist125.SetLineWidth(2)
+		edgeHist125.SetLineStyle(ROOT.kDashed)
+		edgeHist125.Draw("samehist")
+		
+		EEHistSignal200, MMHistSignal200, EMHistSignal200 = getSignalMCHistograms(signalPath,plot,runRange,"T6bbllslepton_msbottom_500_mneutralino_300")
+		
+		denominator = denominatorHisto.GetBinContent(denominatorHisto.GetXaxis().FindBin(500),denominatorHisto.GetYaxis().FindBin(300))		
+		xsection = getattr(sbottom_masses, "m_b_500").cross_section13TeV			
+		scalingLumi = runRange.lumi*xsection/denominator
+		
+		EEHistSignal200.Scale(EETriggerEff * scalingLumi)
+		MMHistSignal200.Scale(MuMuTriggerEff * scalingLumi)
+		EMHistSignal200.Scale(EMuTriggerEff * scalingLumi * RSFOF)
+		
+		if combination == "SF":
+			edgeHist200 = EEHistSignal200.Clone()
+			edgeHist200.Add(MMHistSignal200.Clone())
+			edgeHist200.Add(EMHistSignal200.Clone(),-1)
+		if combination == "EE":
+			edgeHist200 = EEHistSignal200.Clone()
+			edgeHist200.Add(EMHistSignal200.Clone(),-0.5)
+		if combination == "MM":
+			edgeHist200 = MMHistSignal200.Clone()
+			edgeHist200.Add(EMHistSignal200.Clone(),-0.5)
+			
+		for i in range(0,edgeHist200.GetNbinsX()):
+			if edgeHist200.GetBinContent(i) < 0:
+				edgeHist200.SetBinContent(i,0.)
+				
+		edgeHist200.Add(bkgHist.Clone())
+		edgeHist200.SetLineColor(ROOT.kRed)
+		edgeHist200.SetLineWidth(2)
+		edgeHist200.SetLineStyle(ROOT.kDotted)
+		edgeHist200.Draw("samehist")
+		
+		plot.cuts = cutsWithoutSignalScaleFactors
+			
+			
+	
 	bkgHist.Draw("samehist")	
 	
 	
@@ -297,8 +553,10 @@ def makePlot(sfHist,ofHist,selection,plot,runRange,region,cmsExtra,combination,b
 	lines = getLines(0, sfHist.GetBinContent(sfHist.GetMaximumBin())+10,xPos=[mllBins.lowMass.high,mllBins.onZ.low,mllBins.onZ.high, mllBins.highMass.low ])
 	for line in lines:
 		line.Draw()
-	if edgeShape:
-		leg = TLegend(0.52, 0.45, 0.89, 0.92,"","brNDC")
+	if edgeShape or edgeShapeMC:
+		leg = TLegend(0.45, 0.45, 0.89, 0.92,"","brNDC")
+	elif differentEdgePositions:
+		leg = TLegend(0.55, 0.45, 0.95, 0.92,"","brNDC")
 	else:
 		leg = TLegend(0.62, 0.51, 0.89, 0.92,"","brNDC")
 		
@@ -325,6 +583,18 @@ def makePlot(sfHist,ofHist,selection,plot,runRange,region,cmsExtra,combination,b
 		leg.AddEntry(edgeHist,"m_{#tilde{b}} = 300 GeV hypothesis", "l")	
 		leg.AddEntry(edgeHist500,"m_{#tilde{b}} = 500 GeV hypothesis", "l")	
 		leg.AddEntry(edgeHist700,"m_{#tilde{b}} = 700 GeV hypothesis", "l")	
+	
+	if edgeShapeMC:
+		leg.AddEntry(legendHistDing,"Slepton signal model", "h")
+		leg.AddEntry(edgeHist450,"m_{#tilde{b}} = 450 GeV, m_{#tilde{#chi}_{2}^{0}} = 175 GeV", "l")	
+		leg.AddEntry(edgeHist550,"m_{#tilde{b}} = 550 GeV, m_{#tilde{#chi}_{2}^{0}} = 175 GeV", "l")	
+		leg.AddEntry(edgeHist650,"m_{#tilde{b}} = 650 GeV, m_{#tilde{#chi}_{2}^{0}} = 175 GeV", "l")	
+	
+	if differentEdgePositions:
+		leg.AddEntry(legendHistDing,"Slepton signal model, m_{#tilde{b}} = 500 GeV", "h")
+		leg.AddEntry(edgeHist75,"75 GeV edge position", "l")	
+		leg.AddEntry(edgeHist125,"125 GeV edge position", "l")	
+		leg.AddEntry(edgeHist200,"200 GeV edge position", "l")	
 	
 	leg.Draw("same")
 
@@ -358,6 +628,10 @@ def makePlot(sfHist,ofHist,selection,plot,runRange,region,cmsExtra,combination,b
 
 	if edgeShape:
 		hCanvas.Print("fig/mllResult_%s_%s_%s_%s_edgeShape.pdf"%(selection.name,runRange.label,bSelection,combination))	
+	if edgeShapeMC:
+		hCanvas.Print("fig/mllResult_%s_%s_%s_%s_edgeShapeMC.pdf"%(selection.name,runRange.label,bSelection,combination))	
+	if differentEdgePositions:
+		hCanvas.Print("fig/mllResult_%s_%s_%s_%s_edgeShapeMC_differentEdgePositions.pdf"%(selection.name,runRange.label,bSelection,combination))	
 	else:
 		hCanvas.Print("fig/mllResult_%s_%s_%s_%s.pdf"%(selection.name,runRange.label,bSelection,combination))	
 	
@@ -365,7 +639,7 @@ def makePlot(sfHist,ofHist,selection,plot,runRange,region,cmsExtra,combination,b
 		
 
 
-def makeResultPlot(path,selection,runRange,cmsExtra,edgeShape=False):
+def makeResultPlot(path,selection,runRange,cmsExtra,edgeShape=False,edgeShapeMC=False,differentEdgePositions=False):
 	
 	for bSelection in ["default","noBTags","geOneBTags","geTwoBTags"]:
 	
@@ -429,9 +703,9 @@ def makeResultPlot(path,selection,runRange,cmsExtra,edgeShape=False):
 			histEEDY.Scale(getattr(getattr(zPredictions,bSelection).EE,region).val / histEEDYScale.Integral(histEEDYScale.FindBin(81),histEEDYScale.FindBin(101)))
 			histMMDY.Scale(getattr(getattr(zPredictions,bSelection).MM,region).val / histMMDYScale.Integral(histMMDYScale.FindBin(81),histMMDYScale.FindBin(101)))
 		
-		makePlot(histSF,histOFSF,selection,plot,runRange,region,cmsExtra,"SF",bSelection,histSFDY,edgeShape=edgeShape)
-		makePlot(histEE,histOFEE,selection,plot,runRange,region,cmsExtra,"EE",bSelection,histEEDY,edgeShape=edgeShape)
-		makePlot(histMM,histOFMM,selection,plot,runRange,region,cmsExtra,"MM",bSelection,histMMDY,edgeShape=edgeShape)
+		makePlot(histSF,histOFSF,selection,plot,runRange,region,cmsExtra,"SF",bSelection,histSFDY,edgeShape=edgeShape,edgeShapeMC=edgeShapeMC,differentEdgePositions=differentEdgePositions)
+		makePlot(histEE,histOFEE,selection,plot,runRange,region,cmsExtra,"EE",bSelection,histEEDY,edgeShape=edgeShape,edgeShapeMC=edgeShapeMC,differentEdgePositions=differentEdgePositions)
+		makePlot(histMM,histOFMM,selection,plot,runRange,region,cmsExtra,"MM",bSelection,histMMDY,edgeShape=edgeShape,edgeShapeMC=edgeShapeMC,differentEdgePositions=differentEdgePositions)
 
 
 def makeDependencyPlot(path,selection,plots,useMC,backgrounds,runRange,cmsExtra):
@@ -642,6 +916,10 @@ def main():
 						  help="plot is private work.")	
 	parser.add_argument("-e", "--edgeShape", action="store_true", dest="edgeShape", default=False,
 						  help="add 8 TeV excess shape.")	
+	parser.add_argument("-s", "--edgeShapeMC", action="store_true", dest="edgeShapeMC", default=False,
+						  help="add 13 TeV MC signals")	
+	parser.add_argument("-D", "--differentEdgePositions", action="store_true", dest="differentEdgePositions", default=False,
+						  help="add 13 TeV MC signals at different edge positions")	
 	parser.add_argument("-b", "--backgrounds", dest="backgrounds", action="append", default=[],
 						  help="backgrounds to plot.")
 	parser.add_argument("-p", "--plot", dest="plots", action="append", default=[],
@@ -678,7 +956,8 @@ def main():
 	if args.private:
 		cmsExtra = "Private Work"
 	else:
-		cmsExtra = "Preliminary"
+		#~ cmsExtra = "Preliminary"
+		cmsExtra = ""
 
 	for runRangeName in args.runRange:
 		runRange = getRunRange(runRangeName)
@@ -689,7 +968,7 @@ def main():
 			if args.dependencies:
 				makeDependencyPlot(path,selection,args.plots,args.mc,args.backgrounds,runRange,cmsExtra)
 			else:	
-				makeResultPlot(path,selection,runRange,cmsExtra,edgeShape=args.edgeShape)
+				makeResultPlot(path,selection,runRange,cmsExtra,edgeShape=args.edgeShape,edgeShapeMC=args.edgeShapeMC,differentEdgePositions=args.differentEdgePositions)
 
 main()
 
