@@ -1,6 +1,0 @@
-
-class pathes:
-	basePath = "../../frameworkBase/"
-
-
-

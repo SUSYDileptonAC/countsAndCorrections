@@ -38,10 +38,8 @@ def getEventLists(trees, cut,isMC, colNames = ["eventNr","lumiSec","runNr"]):
 		for comb in trees:
 			subtree = trees[comb].CopyTree(cut)
 			result[comb] = set()
-			#~ print comb
 			for ev in subtree:
 				
-				#~ print "%d:%d:%d"%(ev.runNr,ev.lumiSec,ev.eventNr)
 				cols = []
 				for varName in colNames:
 					cols.append( getattr(ev, varName) )
@@ -55,9 +53,7 @@ def getCounts(trees, cut, isMC, backgrounds,plot,runRange,path):
 	if isMC:
 		tmpCut = plot.cuts
 		plot.cuts = cut
-		source = ""
-		modifier = ""
-		eventCounts = totalNumberOfGeneratedEvents(path,source,modifier)	
+		eventCounts = totalNumberOfGeneratedEvents(path)	
 		processes = []
 		for background in backgrounds:
 			processes.append(Process(getattr(Backgrounds,background),eventCounts))
@@ -65,11 +61,7 @@ def getCounts(trees, cut, isMC, backgrounds,plot,runRange,path):
 		histEE = TheStack(processes,runRange.lumi,plot,trees["EE"],"None",1.0,1.0,1.0).theHistogram		
 		histMM = TheStack(processes,runRange.lumi,plot,trees["MM"],"None",1.0,1.0,1.0).theHistogram
 		histEM = TheStack(processes,runRange.lumi,plot,trees["EM"],"None",1.0,1.0,1.0).theHistogram
-						
-		#~ histoEE.Scale(getattr(triggerEffs,region).effEE.val)
-		#~ histoEE.Scale(getattr(triggerEffs,region).effMM.val)	
-		#~ histoEM.Scale(getattr(triggerEffs,region).effEM.val)	
-		
+							
 		
 		eeErr = ROOT.Double()
 		ee = histEE.IntegralAndError(1,histEE.GetNbinsX(),eeErr)
@@ -100,7 +92,6 @@ def getCounts(trees, cut, isMC, backgrounds,plot,runRange,path):
 		n["MMStatErr"] = n["MM"]**0.5	
 		n["EEStatErr"] = n["EE"]**0.5	
 		n["EMStatErr"] = n["EM"]**0.5	
-		#~ print cut, n
 	n["cut"] = cut
 	return n
 	
@@ -112,18 +103,16 @@ def getCounts(trees, cut, isMC, backgrounds,plot,runRange,path):
 	
 
 
-def cutAndCountForRegion(path,selection,plots,runRange,isMC,backgrounds,preselection,samesign):
-	
-	#~ path = "/home/jan/Trees/sw7412v2000Trigger/"
+def cutAndCountForRegion(path,selection,plots,runRange,isMC,backgrounds,preselection):
 	
 	if not isMC:
 		trees = getDataTrees(path)
 		for label, tree in trees.iteritems():
 			trees[label] = tree.CopyTree(preselection)		
 	else:
-		treesEE = readTrees(path,"EE",source = "",modifier= "")
-		treesEM = readTrees(path,"EMu",source = "",modifier= "")
-		treesMM = readTrees(path,"MuMu",source = "",modifier= "")		
+		treesEE = readTrees(path,"EE")
+		treesEM = readTrees(path,"EMu")
+		treesMM = readTrees(path,"MuMu")		
 		trees = {
 				"EE":treesEE,
 				"MM":treesMM,
@@ -137,9 +126,6 @@ def cutAndCountForRegion(path,selection,plots,runRange,isMC,backgrounds,preselec
 		plot.addRegion(selection)
 		plot.cleanCuts()
 		plot.cuts = plot.cuts % runRange.runCut	
-
-		if samesign:
-			plot.cuts = plot.cuts.replace("chargeProduct < 0","chargeProduct > 0")
 
 		counts = {}
 		eventLists = {}
@@ -204,8 +190,6 @@ def main():
 						  help="backgrounds to plot.")	
 	parser.add_argument("-w", "--write", action="store_true", dest="write", default=False,
 						  help="write results to central repository")	
-	parser.add_argument("-S", "--samesign", action="store_true", dest="samesign", default=False,
-						  help="use same-sign leptons")	
 					
 	args = parser.parse_args()
 
@@ -237,8 +221,6 @@ def main():
 			
 			selection = getRegion(selectionName)
 			
-			if args.samesign:
-				selection.name += "_samesign"
 			
 			
 			if args.write:
@@ -249,7 +231,7 @@ def main():
 				process = subprocess.Popen(bashCommand.split())		
 			
 			else:
-				counts, eventLists = cutAndCountForRegion(path,selection,args.plots,runRange,args.mc,args.backgrounds,preselection,args.samesign)
+				counts, eventLists = cutAndCountForRegion(path,selection,args.plots,runRange,args.mc,args.backgrounds,preselection)
 				outFile = open("shelves/cutAndCount_%s_%s.pkl"%(selection.name,runRange.label),"w")
 				pickle.dump(counts, outFile)
 				outFile.close()

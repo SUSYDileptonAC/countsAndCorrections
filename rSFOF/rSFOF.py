@@ -33,109 +33,7 @@ import corrections
 
 from locations import locations
 
-
-def illustration(name):
-	
-	if "Forward" in name:
-		label = "forward"
-	else:
-		if "Central" in name:
-			label = "central"
-		else:
-			label = "inclusive"
-	
-	
-	hCanvas = TCanvas("hCanvas", "Distribution", 800,800)
-	plotPad = ROOT.TPad("plotPad","plotPad",0,0,1,1)
-	style = setTDRStyle()
-	plotPad.UseCurrentStyle()		
-	plotPad.Draw()	
-	plotPad.cd()	
-	hCanvas.DrawFrame(0,0,3,2,"; %s ; %s" %("r_{#mu e}","R_{SF/OF}"))	
-
-	legend = TLegend(0.55, 0.18, 0.9, 0.525)
-	legend.SetFillStyle(0)
-	legend.SetBorderSize(0)
-	ROOT.gStyle.SetOptStat(0)
-
-
-	x= array("f",[getattr(rMuE,label).val-getattr(rMuE,label).err, getattr(rMuE,label).val+getattr(rMuE,label).err]) 
-   	y= array("f",[1.,1.])
-   	ey= array("f",[1, 1])
-   	ex= array("f",[0,0])
-   	ge= ROOT.TGraphErrors(2, x, y,ex,ey)
-   	ge.SetFillColor(ROOT.kGreen+3)
-   	ge.SetLineColor(ROOT.kGreen+3)
-   	ge.SetFillStyle(3001)
-   	ge.Draw("SAME 3")	
-	x= array("f",[0, 3]) 
- 	#~ y= array("f", [1.175, 1.175]) # 1.237
- 	#~ y= array([rMuEs[region], rMuEs[region]],"f") # 1.237
-   	y= array("f",[getattr(rSFOFFact,label).SF.val,getattr(rSFOFFact,label).SF.val])
-   	ey= array("f",[getattr(rSFOFFact,label).SF.err, getattr(rSFOFFact,label).SF.err])
-   	ex= array("f",[0.0,0.0])
-   	ge2= ROOT.TGraphErrors(2, x, y,ex,ey)
-   	ge2.SetFillColor(ROOT.kBlue-3)
-   	ge2.SetLineColor(ROOT.kBlue-3)
-   	ge2.SetFillStyle(3002)
-   	ge2.Draw("SAME 3")	
-	
-	
-	#~ print 0.5*((1+getattr(rMuE,label).val-1)+ 1./(1+getattr(rMuE,label).val-1))*getattr(rSFOFTrig,label).val
-	#~ print getattr(rSFOFFact,label).SF.val
-	#~ print 0.5*((getattr(rMuE,label).val-0.183218)+1./(getattr(rMuE,label).val-0.183218))*1.084055
-	#~ print "0.5*((x-%f)+1./(x-%f))*%f"%(getattr(rMuE,label).val-1,getattr(rMuE,label).val-1,getattr(rSFOFTrig,label).val)
-	#~ rSFOFLine = TF1("rSFOF%s"%label,"0.5*((x-%f)+1./(x-%f))*%f"%(getattr(rMuE,label).val-1,getattr(rMuE,label).val-1,getattr(rSFOFTrig,label).val),0.,3.)
-	rSFOFLine = TF1("rSFOF%s"%label,"0.5*((x)+1./(x))*%f"%(getattr(rSFOFTrig,label).val),0.,3.)
-	rSFOFLine.SetLineColor(ROOT.kRed)
-	rSFOFLine.SetLineWidth(2)
-	#~ rSFOFTrigUp = TF1("rSFOFUp%s"%label,"0.5*((x-%f)+1./(x-%f))*%f"%(getattr(rMuE,label).val-1,getattr(rMuE,label).val-1,getattr(rSFOFTrig,label).val+getattr(rSFOFTrig,label).err),0.,3.)
-	rSFOFTrigUp = TF1("rSFOFUp%s"%label,"0.5*((x)+1./(x))*%f"%(getattr(rSFOFTrig,label).val+getattr(rSFOFTrig,label).err),0.,3.)
-	rSFOFTrigUp.SetLineColor(ROOT.kBlack)
-	rSFOFTrigUp.SetLineWidth(2)
-	rSFOFTrigUp.SetLineStyle(ROOT.kDashed)
-	#~ rSFOFTrigDown = TF1("rSFOFDown%s"%label,"0.5*((x-%f)+1./(x-%f))*%f"%(getattr(rMuE,label).val-1,getattr(rMuE,label).val-1,getattr(rSFOFTrig,label).val-getattr(rSFOFTrig,label).err),0.,3.)
-	rSFOFTrigDown = TF1("rSFOFDown%s"%label,"0.5*((x)+1./(x))*%f"%(getattr(rSFOFTrig,label).val-getattr(rSFOFTrig,label).err),0.,3.)
-	rSFOFTrigDown.SetLineColor(ROOT.kBlack)
-	rSFOFTrigDown.SetLineWidth(2)
-	rSFOFTrigDown.SetLineStyle(ROOT.kDashed)
-	
-	rmueline= ROOT.TF1("rmueline","%s"%getattr(rSFOFFact,label).SF.val,0, 3)
-	rmueline.SetLineColor(ROOT.kBlue)
-	rmueline.SetLineWidth(3)
-	rmueline.SetLineStyle(2)
-	rmueline.Draw("SAME") 
-
-	line1 = ROOT.TLine(getattr(rMuE,label).val,0,getattr(rMuE,label).val,2)
-	line1.Draw("Same")
-	line1.SetLineWidth(2)
-	line1.SetLineColor(ROOT.kGreen+3)
-	legendHistDing = ROOT.TH1F()
-	legendHistDing.SetFillColor(ROOT.kWhite)
-	legend.AddEntry(legendHistDing,"Factorization method:","h")
-	legend.AddEntry(rSFOFLine,"R_{SF/OF} (r_{#mu e})","l")
-	legend.AddEntry(rSFOFTrigDown,"R_{SF/OF} (r_{#mu e}) #pm 1 #sigma on R_{T} ","l")
-	legend.AddEntry(ge,"measured r_{#mu e} #pm 1 #sigma","fl")
-	legend.AddEntry(ge2,"measured R_{SF/OF} #pm 1 #sigma","fl")
-	
-	legend.Draw("SAME")
-	
-	rSFOFLine.Draw("SAME")
-	rSFOFTrigUp.Draw("SAME")
-	rSFOFTrigDown.Draw("SAME")
-	
-	latex = ROOT.TLatex()
-	latex.SetTextSize(0.04)
-	latex.SetNDC(True)
-	latex.DrawLatex(0.15, 0.96, "%s dilepton selection"%label.title())	  	
-
-	
-	hCanvas.Print("fig/rMuEPropaganda_%s.pdf"%label)
-
-
-
-
-def dependencies(source,modifier,path,selection,plots,runRange,isMC,nonNormalized,backgrounds,cmsExtra,fit,ptCut):
+def dependencies(path,selection,plots,runRange,isMC,nonNormalized,backgrounds,cmsExtra,fit,ptCut):
 	for name in plots:
 		plot = getPlot(name)
 		plot.addRegion(selection)
@@ -156,7 +54,7 @@ def dependencies(source,modifier,path,selection,plots,runRange,isMC,nonNormalize
 			label = "inclusive"
 
 
-		histEE, histMM, histEM = getHistograms(path,source,modifier,plot,runRange,isMC,nonNormalized, backgrounds,label)
+		histEE, histMM, histEM = getHistograms(path,plot,runRange,isMC,nonNormalized, backgrounds,label)
 		histRSFOF = histEE.Clone("histRSFOF")
 		histRSFOF.Add(histMM.Clone())
 		histRSFOF.Divide(histEM)				
@@ -167,7 +65,6 @@ def dependencies(source,modifier,path,selection,plots,runRange,isMC,nonNormalize
 		
 		plotPad = ROOT.TPad("plotPad","plotPad",0,0,1,1)
 		style = setTDRStyle()
-		#~ style.SetTitleYOffset(0.70)
 		style.SetTitleSize(0.1, "XYZ")
 		style.SetTitleYOffset(0.35)
 		style.SetTitleXOffset(0.7)
@@ -203,16 +100,9 @@ def dependencies(source,modifier,path,selection,plots,runRange,isMC,nonNormalize
 		histEE.SetLineColor(ROOT.kBlue)
 		histEE.SetMarkerColor(ROOT.kBlue)
 		histEE.SetMarkerStyle(20)
-		#~ histEE.Draw("sameE0")
 		histMM.SetLineColor(ROOT.kRed)
 		histMM.SetMarkerColor(ROOT.kRed)
 		histMM.SetMarkerStyle(20)
-		#~ histMM.Draw("sameE0")
-
-
-		#~ legend.AddEntry(histRSFOF,"R_{SF/OF}","pe")	
-		#~ legend.AddEntry(histEE,"R_{EE/OF}","p")	
-		#~ legend.AddEntry(histMM,"R_{MM/OF}","p")	
 
 
 		legend.Draw("same")
@@ -230,19 +120,13 @@ def dependencies(source,modifier,path,selection,plots,runRange,isMC,nonNormalize
 		latexLumi.SetNDC(True)
 		latexCMS = ROOT.TLatex()
 		latexCMS.SetTextFont(61)
-		#latexCMS.SetTextAlign(31)
 		latexCMS.SetTextSize(0.12)
 		latexCMS.SetNDC(True)
 		latexCMSExtra = ROOT.TLatex()
 		latexCMSExtra.SetTextFont(52)
-		#latexCMSExtra.SetTextAlign(31)
 		latexCMSExtra.SetTextSize(0.1)
 		latexCMSExtra.SetNDC(True)	
 		latexLumi.DrawLatex(0.95, 0.91, "%s fb^{-1} (13 TeV)"%runRange.printval)
-		#~ latexLumi.DrawLatex(0.95, 0.96, "(13 TeV)")
-		
-		#~ latex.DrawLatex(0.25, 0.2, pt_label)
-		#~ latex.DrawLatex(0.25, 0.25, selection.latex)
 		
 
 		latexCMS.DrawLatex(0.12,0.76,"CMS")
@@ -274,17 +158,16 @@ def dependencies(source,modifier,path,selection,plots,runRange,isMC,nonNormalize
 
 
 
-def getHistograms(path,source,modifier,plot,runRange,isMC,nonNormalized,backgrounds,region=""):
+def getHistograms(path,plot,runRange,isMC,nonNormalized,backgrounds,region=""):
 
-	treesEE = readTrees(path,"EE",source = source,modifier= modifier)
-	treesEM = readTrees(path,"EMu",source = source,modifier= modifier)
-	treesMM = readTrees(path,"MuMu",source = source,modifier= modifier)
+	treesEE = readTrees(path,"EE")
+	treesEM = readTrees(path,"EMu")
+	treesMM = readTrees(path,"MuMu")
 		
 	
 	
 	if isMC:
-		#~ print path, source, modifier
-		eventCounts = totalNumberOfGeneratedEvents(path,source,modifier)	
+		eventCounts = totalNumberOfGeneratedEvents(path)	
 		processes = []
 		for background in backgrounds:
 			if nonNormalized:
@@ -295,10 +178,6 @@ def getHistograms(path,source,modifier,plot,runRange,isMC,nonNormalized,backgrou
 		histoEE = TheStack(processes,runRange.lumi,plot,treesEE,"None",1.0,1.0,1.0).theHistogram		
 		histoMM = TheStack(processes,runRange.lumi,plot,treesMM,"None",1.0,1.0,1.0).theHistogram
 		histoEM = TheStack(processes,runRange.lumi,plot,treesEM,"None",1.0,1.0,1.0).theHistogram
-						
-		#~ histoEE.Scale(getattr(triggerEffs,region).effEE.val)
-		#~ histoEE.Scale(getattr(triggerEffs,region).effMM.val)	
-		#~ histoEM.Scale(getattr(triggerEffs,region).effEM.val)
 			
 	else:
 		histoEE = getDataHist(plot,treesEE)
@@ -311,7 +190,7 @@ def getHistograms(path,source,modifier,plot,runRange,isMC,nonNormalized,backgrou
 
 	
 
-def centralValues(source,modifier,path,selection,runRange,isMC,nonNormalized,backgrounds,cmsExtra):
+def centralValues(path,selection,runRange,isMC,nonNormalized,backgrounds,cmsExtra):
 
 
 	plot = getPlot("mllPlotROutIn")
@@ -337,11 +216,11 @@ def centralValues(source,modifier,path,selection,runRange,isMC,nonNormalized,bac
 	plotSignal.cuts = plotSignal.cuts % runRange.runCut	
 
 
-	histEE, histMM, histEM = getHistograms(path,source,modifier,plot,runRange,isMC,nonNormalized,backgrounds,label)
+	histEE, histMM, histEM = getHistograms(path,plot,runRange,isMC,nonNormalized,backgrounds,label)
 	histSF = histEE.Clone("histSF")
 	histSF.Add(histMM.Clone())
 
-	histEESignal, histMMSignal, histEMSignal = getHistograms(path,source,modifier,plotSignal,runRange,isMC,nonNormalized,backgrounds,label)
+	histEESignal, histMMSignal, histEMSignal = getHistograms(path,plotSignal,runRange,isMC,nonNormalized,backgrounds,label)
 	histSFSignal = histEESignal.Clone("histSFSignal")
 	histSFSignal.Add(histMMSignal.Clone())
 	result = {}
@@ -648,21 +527,11 @@ def main():
 	parser.add_argument("-b", "--backgrounds", dest="backgrounds", action="append", default=[],
 						  help="backgrounds to plot.")
 	parser.add_argument("-d", "--dependencies", action="store_true", dest="dependencies", default= False,
-						  help="make dependency plots")	
-	parser.add_argument("-l", "--dilepton", action="store_true", dest="dilepton", default=False,
-						  help="use dilepton triggers as baseline.")	
-	parser.add_argument("-e", "--effectiveArea", action="store_true", dest="effectiveArea", default=False,
-						  help="use effective area PU corrections.")	
-	parser.add_argument("-D", "--deltaBeta", action="store_true", dest="deltaBeta", default=False,
-						  help="use delta beta PU corrections.")	
-	parser.add_argument("-R", "--constantConeSize", action="store_true", dest="constantConeSize", default=False,
-						  help="use constant cone of R=0.3 for iso.")	
+						  help="make dependency plots")			
 	parser.add_argument("-f", "--fit", action="store_true", dest="fit", default= False,
 						  help="do dependecy fit")	
 	parser.add_argument("-x", "--private", action="store_true", dest="private", default=False,
-						  help="plot is private work.")	
-	parser.add_argument("-i", "--illustrate", action="store_true", dest="illustrate", default=False,
-						  help="plot dependency illustrations.")	
+						  help="plot is private work.")		
 	parser.add_argument("-w", "--write", action="store_true", dest="write", default=False,
 						  help="write results to central repository")	
 	parser.add_argument("-n", "--nonNormalized", action="store_true", dest="nonNormalized", default=False,
@@ -684,30 +553,7 @@ def main():
 			
 
 	path = locations.dataSetPathTrigger
-	
-	if args.dilepton:
-		source = "DiLeptonTrigger"
-		modifier = "DiLeptonTrigger"
-	else:
-		source = ""		
-		modifier = ""	
 		
-	#~ if args.constantConeSize:
-		#~ if args.effectiveArea:
-			#~ source = "EffAreaIso%s"%source
-		#~ elif args.deltaBeta:
-			#~ source = "DeltaBetaIso%s"%source
-		#~ else:
-			#~ print "Constant cone size (option -R) can only be used in combination with effective area (-e) or delta beta (-D) pileup corrections."
-			#~ print "Using default miniIso cone with PF weights instead"
-	#~ else:
-		#~ if args.effectiveArea:
-			#~ source = "MiniIsoEffAreaIso%s"%source
-		#~ elif args.deltaBeta:
-			#~ source = "MiniIsoDeltaBetaIso%s"%source
-		#~ else:
-			#~ source = "MiniIsoPFWeights%s"%source	
-
 
 	cmsExtra = ""
 	if args.private:
@@ -728,7 +574,7 @@ def main():
 
 			if args.central:
 				
-				centralVal = centralValues(source,modifier,path,selection,runRange,args.mc,args.nonNormalized,args.backgrounds,cmsExtra)
+				centralVal = centralValues(path,selection,runRange,args.mc,args.nonNormalized,args.backgrounds,cmsExtra)
 				if args.mc:
 					outFilePkl = open("shelves/rSFOF_%s_%s_MC.pkl"%(selection.name,runRange.label),"w")
 				else:
@@ -737,10 +583,7 @@ def main():
 				outFilePkl.close()
 				
 			if args.dependencies:
-				 dependencies(source,modifier,path,selection,args.plots,runRange,args.mc,args.nonNormalized,args.backgrounds,cmsExtra,args.fit,args.ptCut)		
-				
-			if args.illustrate:
-				illustration(selectionName)
+				 dependencies(path,selection,args.plots,runRange,args.mc,args.nonNormalized,args.backgrounds,cmsExtra,args.fit,args.ptCut)		
 				
 			if args.write:
 				import subprocess

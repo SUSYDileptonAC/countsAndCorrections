@@ -38,7 +38,6 @@ def rMuEMeasure(eeHist,mumuHist):
 	for x in range(1,eeHist.GetNbinsX()+1):
 		if mumuHist.GetBinContent(x) > 0 and eeHist.GetBinContent(x) > 0:
 			val = sqrt(mumuHist.GetBinContent(x)/eeHist.GetBinContent(x))	
-			#~ err = 1./(0.5*val)*sqrt((sqrt(mumuHist.GetBinContent(x))/eeHist.GetBinContent(x))**2+(mumuHist.GetBinContent(x)/eeHist.GetBinContent(x)**2*sqrt(eeHist.GetBinContent(x)))**2)
 			err = 0.5*val*sqrt(1./float(eeHist.GetBinContent(x)) + 1./float(mumuHist.GetBinContent(x)) )
 			result["vals"].append(val)
 			result["errs"].append(err)
@@ -108,13 +107,10 @@ def getHistograms(path,plot,runRange,isMC,backgrounds,region,EM=False):
 		
 		histoEE = TheStack(processes,runRange.lumi,plot,treesEE,"None",1.0,1.0,1.0).theHistogram		
 		histoMM = TheStack(processes,runRange.lumi,plot,treesMM,"None",1.0,1.0,1.0).theHistogram
-		#~ histoEE.Scale(getattr(triggerEffs,region).effEE.val)
-		#~ histoMM.Scale(getattr(triggerEffs,region).effMM.val)
 		
 		if EM:
 			histoEM = TheStack(processes,runRange.lumi,plot,treesEM,"None",1.0,1.0,1.0).theHistogram		
-			#~ histoEM.Scale(getattr(triggerEffs,region).effEM.val)
-		
+			
 	else:
 		histoEE = getDataHist(plot,treesEE)
 		histoMM = getDataHist(plot,treesMM)
@@ -130,7 +126,6 @@ def centralValues(path,selection,runRange,isMC,backgrounds):
 
 	plot = getPlot("mllPlot")
 	plot.addRegion(selection)
-	#~ plot.cleanCuts()
 	plot.cuts = plot.cuts % runRange.runCut		
 
 
@@ -237,15 +232,10 @@ def dependencies(path,selection,plots,runRange,isMC,backgrounds,cmsExtra,fit):
 			if rMuEMC.GetBinContent(i) > 0:
 				rMuEMC.SetBinContent(i, pow(rMuEMC.GetBinContent(i),0.5))
 			if rMuE.GetBinContent(i) > 0:
-				#~ rMuE.SetBinError(i, 0.5*rMuE.GetBinContent(i)*pow(1./abs(histMM.GetBinContent(i)) + 1./abs(histEE.GetBinContent(i)), 0.5))
 				rMuE.SetBinError(i, 0.5*pow( histMM.GetBinError(i)**2/(abs(histEE.GetBinContent(i))*abs(histMM.GetBinContent(i))) + histEE.GetBinError(i)**2*abs(histMM.GetBinContent(i))/abs(histEE.GetBinContent(i)**3), 0.5))
-				#~ rMuE.SetBinError(i, 0.5*rMuE.GetBinError(i))
 			if rMuEMC.GetBinContent(i) > 0:
-				#~ rMuEMC.SetBinError(i, 0.5*rMuEMC.GetBinContent(i)*pow(1./abs(histMMMC.GetBinContent(i)) + 1./abs(histEEMC.GetBinContent(i)), 0.5))
-				#~ rMuEMC.SetBinError(i, pow( pow(histMMMC.GetBinError(i)/histEEMC.GetBinContent(i),2) + pow(histEEMC.GetBinError(i)*histMMMC.GetBinContent(i)/(histEEMC.GetBinContent(i)**2),2), 0.5))
 				rMuEMC.SetBinError(i, 0.5*pow( histMMMC.GetBinError(i)**2/(abs(histEEMC.GetBinContent(i))*abs(histMMMC.GetBinContent(i))) + histEEMC.GetBinError(i)**2*abs(histMMMC.GetBinContent(i))/abs(histEEMC.GetBinContent(i)**3), 0.5))
-				#~ rMuEMC.SetBinError(i, 0.5*rMuEMC.GetBinError(i))
-
+				
 		rMuEMC.SetMarkerStyle(21)
 		rMuEMC.SetLineColor(ROOT.kGreen-2) 
 		rMuEMC.SetMarkerColor(ROOT.kGreen-2) 

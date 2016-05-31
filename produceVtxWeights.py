@@ -59,10 +59,7 @@ def getHistograms(path,plot,runRange,isMC,backgrounds,region=""):
 			processes.append(Process(getattr(Backgrounds,background),eventCounts))
 		histoEE = TheStack(processes,runRange.lumi,plot,treesEE,"None",1.0,1.0,1.0).theHistogram		
 		histoMM = TheStack(processes,runRange.lumi,plot,treesMM,"None",1.0,1.0,1.0).theHistogram
-		histoEM = TheStack(processes,runRange.lumi,plot,treesEM,"None",1.0,1.0,1.0).theHistogram		
-		#~ histoEE.Scale(getattr(triggerEffs,region).effEE.val)
-		#~ histoEE.Scale(getattr(triggerEffs,region).effMM.val)	
-		#~ histoEM.Scale(getattr(triggerEffs,region).effEM.val)
+		histoEM = TheStack(processes,runRange.lumi,plot,treesEM,"None",1.0,1.0,1.0).theHistogram	
 			
 	else:
 		histoEE = getDataHist(plot,treesEE)
@@ -95,8 +92,6 @@ def main():
 
 	path = locations.dataSetPathTrigger	
 
-
-	#~ f = ROOT.TFile("weights_Run2015_25ns.root","recreate")
 	f = ROOT.TFile("data_PU_25ns.root","recreate")
 	f.cd()
 
@@ -142,21 +137,5 @@ def main():
 		
 	f.Write()
 	f.Close()
-	
-	
-	#from Vince
-	#~ 
-	#~ f = ROOT.TFile("nvtx_ratio.root")
-	#~ f.cd()
-	#~ 
-	#~ histo = ROOT.TH1F()
-	#~ histo = f.Get("h_vet_ratio")
-	#~ print type(histo)
-	#~ 
-	#~ vinceWeights = []
-#~ 
-	#~ for i in range(0,histo.GetNbinsX()+1):
-		#~ vinceWeights.append(histo.GetBinContent(i))
-#~ 
-	#~ print vinceWeights		 
+		 
 main()

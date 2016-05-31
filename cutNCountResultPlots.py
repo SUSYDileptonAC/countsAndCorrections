@@ -28,8 +28,8 @@ from defs import getRegion, getPlot, getRunRange, Backgrounds, defineMyColors, m
 from setTDRStyle import setTDRStyle
 from helpers import readTrees, getDataHist, TheStack, totalNumberOfGeneratedEvents, Process,createMyColors,createHistoFromTree 
 
-from corrections import rSFOF, rEEOF, rMMOF, rMuE, rSFOFTrig, rOutIn, rOutInEE, rOutInMM
-from centralConfig import regionsToUse, runRanges, backgroundLists, plotLists, systematics, mllBins, zPredictions
+from corrections import rSFOF, rEEOF, rMMOF, rMuE, rSFOFTrig, rOutIn, rOutInEE, rOutInMM, triggerEffs
+from centralConfig import regionsToUse, runRanges, backgroundLists, plotLists, systematics, mllBins, zPredictions, OtherPredictions, OnlyZPredictions
 import corrections
 import ratios
 from locations import locations
@@ -183,8 +183,11 @@ def makePlot(sfHist,ofHist,selection,plot,runRange,region,cmsExtra,combination,b
 	yMax = sfHist.GetBinContent(sfHist.GetMaximumBin())
 	
 	if plot.yMax == 0:
-		#~ yMax = yMax*2.15 
-		yMax = yMax*1.5 
+		#~ yMax = yMax*2.15
+		if edgeShape or edgeShapeMC or differentEdgePositions: 
+			yMax = yMax*1.75 
+		else:
+			yMax = yMax*1.5 
 						
 	else: 
 		yMax = plot.yMax
@@ -210,9 +213,29 @@ def makePlot(sfHist,ofHist,selection,plot,runRange,region,cmsExtra,combination,b
 	bkgHist.SetLineColor(ROOT.kBlue+3)
 	bkgHist.SetLineWidth(2)
 	
-	dyHist.SetLineColor(ROOT.kGreen+3)
-	dyHist.SetFillColor(ROOT.kGreen+3)
-	dyHist.SetFillStyle(3002)
+	dyHist.SetLineColor(ROOT.kGreen+2)
+	dyHist.SetFillColor(ROOT.kGreen+2)
+	#~ dyHist.SetFillStyle(3002)
+	
+	dyOnlyHist = dyHist.Clone("dyOnlyHist")
+	dyOnlyHist.Scale(getattr(getattr(OnlyZPredictions,bSelection).SF,region).val / getattr(getattr(zPredictions,bSelection).SF,region).val)
+	
+	rareBGHist = dyHist.Clone("rareBGHist")
+	rareBGHist.Scale(getattr(getattr(OtherPredictions,bSelection).SF,region).val / getattr(getattr(zPredictions,bSelection).SF,region).val)
+	
+	rareBGHist.SetLineColor(ROOT.kViolet+2)
+	rareBGHist.SetFillColor(ROOT.kViolet+2)
+	
+	from ROOT import THStack
+	
+	stack = THStack()
+	stack.Add(rareBGHist)	
+	stack.Add(dyOnlyHist)
+	
+	bkgHistForLegend = bkgHist.Clone("bkgHistForLegend")
+	bkgHistForLegend.SetLineColor(ROOT.kBlue+3)
+	bkgHistForLegend.SetFillColor(ROOT.kWhite)
+	bkgHistForLegend.SetLineWidth(2)
 	
 
 	
@@ -222,7 +245,8 @@ def makePlot(sfHist,ofHist,selection,plot,runRange,region,cmsExtra,combination,b
 	latex = ROOT.TLatex()
 	latex.SetTextFont(42)
 	latex.SetTextAlign(31)
-	latex.SetTextSize(0.04)
+	latex.SetTextSize(0.055)
+	latex.SetLineWidth(2)
 	latex.SetNDC(True)
 	latexCMS = ROOT.TLatex()
 	latexCMS.SetTextFont(61)
@@ -233,10 +257,10 @@ def makePlot(sfHist,ofHist,selection,plot,runRange,region,cmsExtra,combination,b
 	latexCMSExtra.SetTextSize(0.03)
 	latexCMSExtra.SetNDC(True) 
 		
-	latex.DrawLatex(0.95, 0.96, "%s fb^{-1} (13 TeV)"%runRange.printval)
+	latex.DrawLatex(0.93, 0.942, "%s fb^{-1} (13 TeV)"%runRange.printval)
 	
 
-	latexCMS.DrawLatex(0.19,0.88,"CMS")
+	latexCMS.DrawLatex(0.19,0.86,"CMS")
 	if "Simulation" in cmsExtra:
 		yLabelPos = 0.81	
 	else:
@@ -258,12 +282,11 @@ def makePlot(sfHist,ofHist,selection,plot,runRange,region,cmsExtra,combination,b
 		rSFOFErr = getattr(rMMOF,region).err
 	
 	errGraph, histUp, histDown = getErrHist(plot,combination,bSelection,region,ofHist,dyHist,rSFOFErr)
-	errGraph.SetFillColor(myColors["MyBlue"])
+	errGraph.SetFillColor(myColors["MyBlueOverview"])
 	errGraph.SetFillStyle(3001)
 	#~ errGraph.SetLineColor(myColors["MyDarkBlue"])
 	#~ errGraph.SetMarkerColor(myColors["MyDarkBlue"])
 	
-	errGraph.Draw("SAME02")
 
 	if edgeShape:
 		
@@ -282,23 +305,20 @@ def makePlot(sfHist,ofHist,selection,plot,runRange,region,cmsExtra,combination,b
 		edgeHist.Scale(61)
 		edgeHist.Add(bkgHist.Clone())
 		edgeHist.SetLineColor(ROOT.kRed)		
-		edgeHist.SetLineWidth(2)		
-		edgeHist.Draw("samehist")	
+		edgeHist.SetLineWidth(2)	
 		
 		
 		edgeHist500.Scale(86)
 		edgeHist500.Add(bkgHist.Clone())
 		edgeHist500.SetLineColor(ROOT.kRed)		
 		edgeHist500.SetLineWidth(2)		
-		edgeHist500.SetLineStyle(ROOT.kDashed)		
-		edgeHist500.Draw("samehist")	
+		edgeHist500.SetLineStyle(ROOT.kDashed)
 		
 		edgeHist700.Scale(117)
 		edgeHist700.Add(bkgHist.Clone())
 		edgeHist700.SetLineColor(ROOT.kRed)		
 		edgeHist700.SetLineStyle(ROOT.kDotted)		
-		edgeHist700.SetLineWidth(2)		
-		edgeHist700.Draw("samehist")	
+		edgeHist700.SetLineWidth(2)	
 
 	if edgeShapeMC:
 		
@@ -354,7 +374,6 @@ def makePlot(sfHist,ofHist,selection,plot,runRange,region,cmsExtra,combination,b
 		edgeHist450.Add(bkgHist.Clone())
 		edgeHist450.SetLineColor(ROOT.kRed)
 		edgeHist450.SetLineWidth(2)
-		edgeHist450.Draw("samehist")
 		
 		EEHistSignal550, MMHistSignal550, EMHistSignal550 = getSignalMCHistograms(signalPath,plot,runRange,"T6bbllslepton_msbottom_550_mneutralino_175")
 		
@@ -385,7 +404,6 @@ def makePlot(sfHist,ofHist,selection,plot,runRange,region,cmsExtra,combination,b
 		edgeHist550.SetLineColor(ROOT.kRed)
 		edgeHist550.SetLineWidth(2)
 		edgeHist550.SetLineStyle(ROOT.kDashed)
-		edgeHist550.Draw("samehist")
 		
 		EEHistSignal650, MMHistSignal650, EMHistSignal650 = getSignalMCHistograms(signalPath,plot,runRange,"T6bbllslepton_msbottom_650_mneutralino_175")
 		
@@ -416,7 +434,6 @@ def makePlot(sfHist,ofHist,selection,plot,runRange,region,cmsExtra,combination,b
 		edgeHist650.SetLineColor(ROOT.kRed)
 		edgeHist650.SetLineWidth(2)
 		edgeHist650.SetLineStyle(ROOT.kDotted)
-		edgeHist650.Draw("samehist")
 		
 		plot.cuts = cutsWithoutSignalScaleFactors
 			
@@ -424,27 +441,27 @@ def makePlot(sfHist,ofHist,selection,plot,runRange,region,cmsExtra,combination,b
 		
 		signalPath = locations.signalDataSetPath
 		
-		denominatorFile = TFile("../SignalScan/T6bbllsleptonDenominatorHisto.root")
+		denominatorFile = TFile("T6bbllsleptonDenominatorHisto.root")
 		denominatorHisto = TH2F(denominatorFile.Get("massScan"))
 		
 		cutsWithoutSignalScaleFactors = plot.cuts
 		plot.cuts = "leptonFullSimScaleFactor1*leptonFullSimScaleFactor2*leptonFastSimScaleFactor1*leptonFastSimScaleFactor2*(%s)"%plot.cuts
 		
 		if "Central" in selection.name:
-			EETriggerEff = 0.945
-			EMuTriggerEff = 0.937
-			MuMuTriggerEff = 0.929
-			RSFOF = 1.032
+			EETriggerEff = triggerEffs.central.effEE.val
+			EMuTriggerEff = triggerEffs.central.effEM.val
+			MuMuTriggerEff = triggerEffs.central.effMM.val
+			RSFOF = rSFOF.central.val
 		elif "Forward" in selection.name:
-			EETriggerEff = 0.943
-			EMuTriggerEff = 0.938
-			MuMuTriggerEff = 0.916
-			RSFOF = 1.092
+			EETriggerEff = triggerEffs.forward.effEE.val
+			EMuTriggerEff = triggerEffs.forward.effEM.val
+			MuMuTriggerEff = triggerEffs.forward.effMM.val
+			RSFOF = rSFOF.forward.val
 		else:
-			EETriggerEff = 0.949
-			EMuTriggerEff = 0.921811
-			MuMuTriggerEff = 0.929178
-			RSFOF = 1.05
+			EETriggerEff = triggerEffs.inclusive.effEE.val
+			EMuTriggerEff = triggerEffs.inclusive.effEM.val
+			MuMuTriggerEff = triggerEffs.inclusive.effMM.val
+			RSFOF = rSFOF.inclusive.val
 
 		EEHistSignal75, MMHistSignal75, EMHistSignal75 = getSignalMCHistograms(signalPath,plot,runRange,"T6bbllslepton_msbottom_500_mneutralino_175")
 		
@@ -474,7 +491,6 @@ def makePlot(sfHist,ofHist,selection,plot,runRange,region,cmsExtra,combination,b
 		edgeHist75.Add(bkgHist.Clone())
 		edgeHist75.SetLineColor(ROOT.kRed)
 		edgeHist75.SetLineWidth(2)
-		edgeHist75.Draw("samehist")
 		
 		EEHistSignal125, MMHistSignal125, EMHistSignal125 = getSignalMCHistograms(signalPath,plot,runRange,"T6bbllslepton_msbottom_500_mneutralino_225")
 		
@@ -505,7 +521,6 @@ def makePlot(sfHist,ofHist,selection,plot,runRange,region,cmsExtra,combination,b
 		edgeHist125.SetLineColor(ROOT.kRed)
 		edgeHist125.SetLineWidth(2)
 		edgeHist125.SetLineStyle(ROOT.kDashed)
-		edgeHist125.Draw("samehist")
 		
 		EEHistSignal200, MMHistSignal200, EMHistSignal200 = getSignalMCHistograms(signalPath,plot,runRange,"T6bbllslepton_msbottom_500_mneutralino_300")
 		
@@ -536,29 +551,20 @@ def makePlot(sfHist,ofHist,selection,plot,runRange,region,cmsExtra,combination,b
 		edgeHist200.SetLineColor(ROOT.kRed)
 		edgeHist200.SetLineWidth(2)
 		edgeHist200.SetLineStyle(ROOT.kDotted)
-		edgeHist200.Draw("samehist")
 		
 		plot.cuts = cutsWithoutSignalScaleFactors
-			
-			
-	
-	bkgHist.Draw("samehist")	
-	
-	
-	
-	dyHist.Draw("samehist")	
-	sfHist.Draw("samepe")	
+				
 
 
 	lines = getLines(0, sfHist.GetBinContent(sfHist.GetMaximumBin())+10,xPos=[mllBins.lowMass.high,mllBins.onZ.low,mllBins.onZ.high, mllBins.highMass.low ])
 	for line in lines:
 		line.Draw()
 	if edgeShape or edgeShapeMC:
-		leg = TLegend(0.45, 0.45, 0.89, 0.92,"","brNDC")
+		leg = TLegend(0.45, 0.4, 0.92, 0.91,"","brNDC")
 	elif differentEdgePositions:
-		leg = TLegend(0.55, 0.45, 0.95, 0.92,"","brNDC")
+		leg = TLegend(0.55, 0.4, 0.95, 0.92,"","brNDC")
 	else:
-		leg = TLegend(0.62, 0.51, 0.89, 0.92,"","brNDC")
+		leg = TLegend(0.55, 0.4, 0.95, 0.92,"","brNDC")
 		
 	leg.SetFillColor(10)
 	leg.SetLineColor(10)
@@ -573,10 +579,13 @@ def makePlot(sfHist,ofHist,selection,plot,runRange,region,cmsExtra,combination,b
 		leg.AddEntry(legendHistDing,"Central signal region","h")
 	elif region == "forward":
 		leg.AddEntry(legendHistDing,"Forward signal region","h")
-	leg.AddEntry(sfHist,"Data","pe")
-	leg.AddEntry(bkgHist, "Total backgrounds","l")
-	leg.AddEntry(dyHist,"Drell--Yan", "f")
-	leg.AddEntry(errGraph,"Total uncert.", "f")	
+	leg.AddEntry(sfHist,"Data","pe1")
+	#~ leg.AddEntry(bkgHist, "Total background","l")
+	leg.AddEntry(bkgHistForLegend, "Flavor symmetric","f")
+	#~ leg.AddEntry(dyHist,"Drell-Yan", "f")
+	leg.AddEntry(dyOnlyHist,"Z+jets", "f")
+	leg.AddEntry(rareBGHist,"Other SM", "f")
+	leg.AddEntry(errGraph,"Total uncertainty", "f")	
 	
 	if edgeShape:
 		leg.AddEntry(legendHistDing,"Scaled 8 TeV signal fit:", "h")	
@@ -597,6 +606,30 @@ def makePlot(sfHist,ofHist,selection,plot,runRange,region,cmsExtra,combination,b
 		leg.AddEntry(edgeHist200,"200 GeV edge position", "l")	
 	
 	leg.Draw("same")
+	
+	errGraph.Draw("SAME02")
+	
+	if edgeShape:		
+		edgeHist.Draw("samehist")	
+		edgeHist500.Draw("samehist")	
+		edgeHist700.Draw("samehist")
+		
+	if edgeShapeMC:
+		edgeHist450.Draw("samehist")
+		edgeHist550.Draw("samehist")
+		edgeHist650.Draw("samehist")
+		
+	if differentEdgePositions:
+		edgeHist75.Draw("samehist")
+		edgeHist125.Draw("samehist")
+		edgeHist200.Draw("samehist")
+	
+	
+	bkgHist.Draw("samehist")	
+	
+	
+	stack.Draw("samehist")	
+	sfHist.Draw("samepe1")
 
 
 
@@ -609,18 +642,10 @@ def makePlot(sfHist,ofHist,selection,plot,runRange,region,cmsExtra,combination,b
 
 	ratioPad.cd()
 		
-	ratioGraphs =  ratios.RatioGraph(sfHist,bkgHist, xMin=plot.firstBin, xMax=plot.lastBin,title="Data / Bgnd",yMin=0.0,yMax=2,ndivisions=10,color=ROOT.kBlack,adaptiveBinning=1000)
+	ratioGraphs =  ratios.RatioGraph(sfHist,bkgHist, xMin=plot.firstBin, xMax=plot.lastBin,title="#frac{Data}{Prediction}  ",yMin=0.0,yMax=2,ndivisions=10,color=ROOT.kBlack,adaptiveBinning=1000)
 	ratioGraphs.addErrorByHistograms( "rSFOF", histUp, histDown,color= myColors["MyBlue"],fillStyle=3001)			
 
 	ratioGraphs.draw(ROOT.gPad,True,False,True,chi2Pos=0.8)
-
-	leg2 = TLegend(0.175, 0.78, 0.475, 0.9,"","brNDC")
-	leg2.SetFillColor(10)
-	leg2.SetLineColor(10)
-	leg2.SetShadowColor(0)
-	leg2.SetBorderSize(1)
-	leg2.AddEntry(errGraph,"Systematic uncert.", "f")	
-	leg2.Draw("same")
 	
 	ROOT.gPad.RedrawAxis()
 	plotPad.RedrawAxis()
@@ -628,9 +653,9 @@ def makePlot(sfHist,ofHist,selection,plot,runRange,region,cmsExtra,combination,b
 
 	if edgeShape:
 		hCanvas.Print("fig/mllResult_%s_%s_%s_%s_edgeShape.pdf"%(selection.name,runRange.label,bSelection,combination))	
-	if edgeShapeMC:
+	elif edgeShapeMC:
 		hCanvas.Print("fig/mllResult_%s_%s_%s_%s_edgeShapeMC.pdf"%(selection.name,runRange.label,bSelection,combination))	
-	if differentEdgePositions:
+	elif differentEdgePositions:
 		hCanvas.Print("fig/mllResult_%s_%s_%s_%s_edgeShapeMC_differentEdgePositions.pdf"%(selection.name,runRange.label,bSelection,combination))	
 	else:
 		hCanvas.Print("fig/mllResult_%s_%s_%s_%s.pdf"%(selection.name,runRange.label,bSelection,combination))	
@@ -641,7 +666,7 @@ def makePlot(sfHist,ofHist,selection,plot,runRange,region,cmsExtra,combination,b
 
 def makeResultPlot(path,selection,runRange,cmsExtra,edgeShape=False,edgeShapeMC=False,differentEdgePositions=False):
 	
-	for bSelection in ["default","noBTags","geOneBTags","geTwoBTags"]:
+	for bSelection in ["default","noBTags","geOneBTags"]:
 	
 		plot = getPlot(plotNames[bSelection])
 		plot.addRegion(selection)
@@ -708,192 +733,6 @@ def makeResultPlot(path,selection,runRange,cmsExtra,edgeShape=False,edgeShapeMC=
 		makePlot(histMM,histOFMM,selection,plot,runRange,region,cmsExtra,"MM",bSelection,histMMDY,edgeShape=edgeShape,edgeShapeMC=edgeShapeMC,differentEdgePositions=differentEdgePositions)
 
 
-def makeDependencyPlot(path,selection,plots,useMC,backgrounds,runRange,cmsExtra):
-	colors = createMyColors()
-	for plotName in plots:
-		plot = getPlot(plotName)
-		plot.addRegion(selection)
-		plot.cuts = plot.cuts % runRange.runCut			
-		
-		if "Forward" in selection.name:
-			region = "forward"
-		elif "Central" in selection.name:
-			region = "central"
-		else:		
-			region = "inclusive"	
-		tmpCuts = plot.cuts
-		for binName in ["lowMass","highMass"]: 
-
-				
-			plot.cuts = tmpCuts
-			plot.cuts += "*(p4.M() > %f && p4.M() < %f)"%(getattr(mllBins,binName).low,getattr(mllBins,binName).high)
-
-			histEE, histMM, histEM = getHistograms(path,plot,runRange,False,[])
-			histSF = histEE.Clone("histSF")
-			histSF.Add(histMM.Clone())
-					
-			histOFSF = histEM.Clone("histOFSF")
-			histOFEE = histEM.Clone("histOFEE")
-			histOFMM = histEM.Clone("histOFMM")
-			histOFSF.Scale(getattr(rSFOF,region).val)
-			histOFEE.Scale(getattr(rEEOF,region).val)
-			histOFMM.Scale(getattr(rMMOF,region).val)
-
-
-			
-			if useMC:
-				histEEMC, histMMMC, histEMMC = getHistograms(path,plot,runRange,True,backgrounds)
-				histSFMC = histEEMC.Clone("histSFMC")
-				histSFMC.Add(histMMMC.Clone())		
-				histOFSFMC = histEMMC.Clone("histOFSFMC")
-				histOFEEMC = histEMMC.Clone("histOFEEMC")
-				histOFMMMC = histEMMC.Clone("histOFMMMC")
-				histOFSFMC.Scale(getattr(rSFOF,region).valMC)
-				histOFEEMC.Scale(getattr(rEEOF,region).valMC)
-				histOFMMMC.Scale(getattr(rMMOF,region).valMC)		
-				histsSFMC = {}
-				histsOFMC = {}
-				histsSFMC["SF"] = histSFMC
-				histsSFMC["EE"] = histEEMC
-				histsSFMC["MM"] = histMMMC
-				histsOFMC["SF"] = histOFSFMC
-				histsOFMC["EE"] = histOFEEMC
-				histsOFMC["MM"] = histOFMMMC
-
-			histsSF = {}
-			histsOF = {}
-			histsSF["SF"] = histSF
-			histsSF["EE"] = histEE
-			histsSF["MM"] = histMM
-			histsOF["SF"] = histOFSF
-			histsOF["EE"] = histOFEE
-			histsOF["MM"] = histOFMM
-			
-
-			for combination in ["SF","EE","MM"]: 
-
-				
-				hCanvas = TCanvas("hCanvas", "Distribution", 800,800)
-				
-				plotPad = ROOT.TPad("plotPad","plotPad",0,0.3,1,1)
-				ratioPad = ROOT.TPad("ratioPad","ratioPad",0,0.,1,0.3)
-				style = setTDRStyle()		
-				ROOT.gStyle.SetOptStat(0)
-				plotPad.UseCurrentStyle()
-				ratioPad.UseCurrentStyle()
-				plotPad.Draw()	
-				ratioPad.Draw()	
-				plotPad.cd()
-
-				sfHist = histsSF[combination]
-				bkgHist = histsOF[combination]	
-				
-				sfHist.SetMarkerStyle(20)
-				bkgHist.SetLineColor(ROOT.kBlue+3)
-				bkgHist.SetLineWidth(2)			
-						
-				yMax = sfHist.GetBinContent(sfHist.GetMaximumBin())
-				
-				if plot.yMax == 0:
-					yMax = yMax*1.35
-									
-				else: 
-					yMax = plot.yMax
-								
-				
-				plotPad.DrawFrame(plot.firstBin,0,plot.lastBin, yMax,"; %s ; %s" %(plot.xaxis,plot.yaxis))
-				
-							
-				latex = ROOT.TLatex()
-				latex.SetTextFont(42)
-				latex.SetTextAlign(31)
-				latex.SetTextSize(0.04)
-				latex.SetNDC(True)
-				latexCMS = ROOT.TLatex()
-				latexCMS.SetTextFont(61)
-				latexCMS.SetTextSize(0.055)
-				latexCMS.SetNDC(True)
-				latexCMSExtra = ROOT.TLatex()
-				latexCMSExtra.SetTextFont(52)
-				latexCMSExtra.SetTextSize(0.03)
-				latexCMSExtra.SetNDC(True) 
-					
-				latex.DrawLatex(0.95, 0.96, "%s fb^{-1} (13 TeV)"%runRange.printval)
-				
-
-				latexCMS.DrawLatex(0.21,0.88,"CMS")
-				if "Simulation" in cmsExtra:
-					yLabelPos = 0.81	
-				else:
-					yLabelPos = 0.84	
-
-				latexCMSExtra.DrawLatex(0.21,yLabelPos,"%s"%(cmsExtra))
-				
-				
-				if combination == "SF":
-					rSFOFErr = getattr(rSFOF,region).err
-				elif combination == "EE":
-					rSFOFErr = getattr(rEEOF,region).err
-				elif combination == "MM":
-					rSFOFErr = getattr(rMMOF,region).err
-				
-				errGraph, histUp, histDown = getErrHist(plot,combination,region,bkgHist,None,rSFOFErr)
-				errGraph.SetFillColor(myColors["MyBlue"])
-				errGraph.SetFillStyle(3001)
-				#~ errGraph.SetLineColor(myColors["MyDarkBlue"])
-				#~ errGraph.SetMarkerColor(myColors["MyDarkBlue"])
-				
-				errGraph.Draw("SAME02")
-				bkgHist.Draw("samehist")	
-				sfHist.Draw("samepe")	
-
-
-
-				leg = TLegend(0.62, 0.51, 0.89, 0.92,"","brNDC")
-				leg.SetFillColor(10)
-				leg.SetLineColor(10)
-				leg.SetShadowColor(0)
-				leg.SetBorderSize(1)
-				from ROOT import TH1F,kWhite
-				legendHistDing = TH1F()
-				legendHistDing.SetFillColor(kWhite)
-				if region == "inclusive":
-					leg.AddEntry(legendHistDing,"Inclusive signal region","h")
-				elif region == "central":
-					leg.AddEntry(legendHistDing,"Central signal region","h")
-				elif region == "forward":
-					leg.AddEntry(legendHistDing,"Forward signal region","h")
-				leg.AddEntry(sfHist,"Data","PE")
-				leg.AddEntry(bkgHist, "Flav. Sym. backgrounds","l")
-				leg.AddEntry(errGraph,"Background uncert.", "f")	
-				
-				leg.Draw("same")
-					
-				plotPad.RedrawAxis()	
-
-
-				ratioPad.cd()
-					
-				ratioGraphs =  ratios.RatioGraph(sfHist,bkgHist, xMin=plot.firstBin, xMax=plot.lastBin,title="%s / OF"%combination,yMin=0.0,yMax=2,ndivisions=10,color=ROOT.kBlack,adaptiveBinning=1000)
-				ratioGraphs.addErrorByHistograms( "rSFOF", histUp, histDown,color= myColors["MyBlue"],fillStyle=3001)			
-
-				ratioGraphs.draw(ROOT.gPad,True,False,True,chi2Pos=0.8)
-
-				leg2 = TLegend(0.175, 0.78, 0.475, 0.9,"","brNDC")
-				leg2.SetFillColor(10)
-				leg2.SetLineColor(10)
-				leg2.SetShadowColor(0)
-				leg2.SetBorderSize(1)
-				leg2.AddEntry(errGraph,"Systematic uncert.", "f")	
-				leg2.Draw("same")
-				
-				ROOT.gPad.RedrawAxis()
-				plotPad.RedrawAxis()
-				ratioPad.RedrawAxis()
-
-				
-				hCanvas.Print("fig/rSFOFDependency_%s_%s_%s_%s_%s.pdf"%(selection.name,plot.variablePlotName,runRange.label,combination,binName))	
-
 
 
 def main():
@@ -903,9 +742,7 @@ def main():
 	parser = argparse.ArgumentParser(description='rSFOF from control region.')
 	
 	parser.add_argument("-v", "--verbose", action="store_true", dest="verbose", default=False,
-						  help="Verbose mode.")		
-	parser.add_argument("-d", "--dependencies", action="store_true", dest="dependencies", default=False,
-						  help="SF/OF dependency crosschecks.")								  			  	
+						  help="Verbose mode.")								  			  	
 	parser.add_argument("-m", "--mc", action="store_true", dest="mc", default=False,
 						  help="add MC.")								  			  	
 	parser.add_argument("-c", "--control", action="store_true", dest="control", default=False,
@@ -964,11 +801,8 @@ def main():
 	
 		for selectionName in selections:
 			
-			selection = getRegion(selectionName)
-			if args.dependencies:
-				makeDependencyPlot(path,selection,args.plots,args.mc,args.backgrounds,runRange,cmsExtra)
-			else:	
-				makeResultPlot(path,selection,runRange,cmsExtra,edgeShape=args.edgeShape,edgeShapeMC=args.edgeShapeMC,differentEdgePositions=args.differentEdgePositions)
+			selection = getRegion(selectionName)	
+			makeResultPlot(path,selection,runRange,cmsExtra,edgeShape=args.edgeShape,edgeShapeMC=args.edgeShapeMC,differentEdgePositions=args.differentEdgePositions)
 
 main()
 
