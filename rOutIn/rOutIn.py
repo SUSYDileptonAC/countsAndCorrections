@@ -582,7 +582,7 @@ def main():
 		args.runRange.append(runRanges.name)	
 
 
-	path = locations.dataSetPathTrigger	
+	path = locations.dataSetPath
 
 
 	cmsExtra = ""

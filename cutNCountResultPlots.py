@@ -776,18 +776,16 @@ def main():
 	if args.control:
 		
 		selections.append(regionsToUse.rSFOF.central.name)	
-		selections.append(regionsToUse.rSFOF.forward.name)	
-		selections.append(regionsToUse.rSFOF.inclusive.name)	
+		selections.append(regionsToUse.rSFOF.forward.name)		
 	else:	
 		selections.append(regionsToUse.signal.central.name)	
 		selections.append(regionsToUse.signal.forward.name)	
-		selections.append(regionsToUse.signal.inclusive.name)	
 	
 	if len(args.runRange) == 0:
 		args.runRange.append(runRanges.name)	
 			
 
-	path = locations.dataSetPathTrigger	
+	path = locations.dataSetPath	
 	
 	cmsExtra = ""
 	if args.private:

@@ -759,7 +759,7 @@ def main():
 	if len(args.runRange) == 0:
 		args.runRange.append(runRanges.name)		
 
-	path = locations.dataSetPathTrigger	
+	path = locations.dataSetPath	
 
 	
 

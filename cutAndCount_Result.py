@@ -207,7 +207,7 @@ def main():
 		args.runRange.append(runRanges.name)	
 
 
-	path = locations.dataSetPathTrigger
+	path = locations.dataSetPath
 
 	preselection = "nJets >= 2 && deltaR > 0.3"
 	
