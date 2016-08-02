@@ -207,8 +207,8 @@ def plotMllSpectra(SFhist,EMuhist,runRange,selection,suffix,cmsExtra,additionalL
 	Labelin.DrawLatex(89.35,SFhist.GetBinContent(SFhist.GetMaximumBin())/18,"on Z")
 	Labelout.SetTextAngle(90)
 	Labelout.DrawLatex(47.25,SFhist.GetBinContent(SFhist.GetMaximumBin())/18,"low mass")
-	Labelout.DrawLatex(75.25,SFhist.GetBinContent(SFhist.GetMaximumBin())/18,"below Z")
-	Labelout.DrawLatex(109.25,SFhist.GetBinContent(SFhist.GetMaximumBin())/18,"above Z")
+	#~ Labelout.DrawLatex(75.25,SFhist.GetBinContent(SFhist.GetMaximumBin())/18,"below Z")
+	#~ Labelout.DrawLatex(109.25,SFhist.GetBinContent(SFhist.GetMaximumBin())/18,"above Z")
 	Labelout.DrawLatex(150.25,SFhist.GetBinContent(SFhist.GetMaximumBin())/18,"high mass")
 	latex.DrawLatex(0.95, 0.96, "%s fb^{-1} (13 TeV)"%runRange.printval)
 	
@@ -256,8 +256,10 @@ def dependencies(path,selection,plots,runRange,mc,backgrounds,cmsExtra):
 			bins = [plot.firstBin+(plot.lastBin-plot.firstBin)/plot.nBins*i for i in range(plot.nBins+1)]
 		else:
 			bins = plot.binning
-		rOutIn = {"LowMass":{"EE":[],"MM":[],"SF":[]},"HighMass":{"EE":[],"MM":[],"SF":[]},"BelowZ":{"EE":[],"MM":[],"SF":[]},"AboveZ":{"EE":[],"MM":[],"SF":[]}}
-		rOutInErr = {"LowMass":{"EE":[],"MM":[],"SF":[]},"HighMass":{"EE":[],"MM":[],"SF":[]},"BelowZ":{"EE":[],"MM":[],"SF":[]},"AboveZ":{"EE":[],"MM":[],"SF":[]}}
+		#~ rOutIn = {"LowMass":{"EE":[],"MM":[],"SF":[]},"HighMass":{"EE":[],"MM":[],"SF":[]},"BelowZ":{"EE":[],"MM":[],"SF":[]},"AboveZ":{"EE":[],"MM":[],"SF":[]}}
+		#~ rOutInErr = {"LowMass":{"EE":[],"MM":[],"SF":[]},"HighMass":{"EE":[],"MM":[],"SF":[]},"BelowZ":{"EE":[],"MM":[],"SF":[]},"AboveZ":{"EE":[],"MM":[],"SF":[]}}
+		rOutIn = {"EdgeMass":{"EE":[],"MM":[],"SF":[]},"LowMass":{"EE":[],"MM":[],"SF":[]},"HighMass":{"EE":[],"MM":[],"SF":[]},}
+		rOutInErr = {"EdgeMass":{"EE":[],"MM":[],"SF":[]},"LowMass":{"EE":[],"MM":[],"SF":[]},"HighMass":{"EE":[],"MM":[],"SF":[]}}
 
 
 		binningErrs	= []
@@ -292,7 +294,8 @@ def dependencies(path,selection,plots,runRange,mc,backgrounds,cmsExtra):
 			additionalLabel = "%s_%.2f_%.2f"%(plot.variable,bins[i],bins[i+1])
 			centralVal = centralValues(path,selection,runRange,mc,backgrounds,cmsExtra,additionalLabel)
 			for combination in ["EE","MM","SF"]:
-				for region in ["LowMass","HighMass","BelowZ","AboveZ"]:
+				#~ for region in ["LowMass","HighMass","BelowZ","AboveZ"]:
+				for region in ["EdgeMass","LowMass","HighMass"]:
 					rOutIn[region][combination].append(centralVal["rOutIn%s%s"%(region,combination)])
 					rOutInErr[region][combination].append(centralVal["rOutIn%sErr%s"%(region,combination)])
 
@@ -312,7 +315,8 @@ def dependencies(path,selection,plots,runRange,mc,backgrounds,cmsExtra):
 		
 		for combination in ["EE","MM","SF"]:
 			relSystSave = relSyst
-			for region in ["LowMass","HighMass","BelowZ","AboveZ"]:
+			#~ for region in ["LowMass","HighMass","BelowZ","AboveZ"]:
+			for region in ["EdgeMass","LowMass","HighMass"]:
 				relSyst = relSystSave	
 				hCanvas = TCanvas("hCanvas", "Distribution", 800,800)
 
@@ -419,16 +423,18 @@ def centralValues(path,selection,runRange,isMC,backgrounds,cmsExtra,additionalLa
 	histSF.Add(histMM.Clone())
 
 	result = {}
+	edgeMassLow = mllBins.edgeMass.low
+	edgeMassHigh = mllBins.edgeMass.high
 	lowMassLow = mllBins.lowMass.low
 	lowMassHigh = mllBins.lowMass.high
 	peakLow = mllBins.onZ.low
 	peakHigh = mllBins.onZ.high
 	highMassLow = mllBins.highMass.low
 	highMassHigh = mllBins.highMass.high
-	belowZLow = mllBins.belowZ.low
-	belowZHigh = mllBins.belowZ.high
-	aboveZLow = mllBins.aboveZ.low
-	aboveZHigh = mllBins.aboveZ.high
+	#~ belowZLow = mllBins.belowZ.low
+	#~ belowZHigh = mllBins.belowZ.high
+	#~ aboveZLow = mllBins.aboveZ.low
+	#~ aboveZHigh = mllBins.aboveZ.high
 
 		
 	result["peakEE"] = histEE.Integral(histEE.FindBin(peakLow+0.01),histEE.FindBin(peakHigh-0.01))
@@ -436,6 +442,10 @@ def centralValues(path,selection,runRange,isMC,backgrounds,cmsExtra,additionalLa
 	result["peakSF"] = result["peakEE"] + result["peakMM"]
 	result["peakOF"] = histEM.Integral(histEM.FindBin(peakLow+0.01),histEM.FindBin(peakHigh-0.01))
 
+	result["edgeMassEE"] = histEE.Integral(histEE.FindBin(edgeMassLow+0.01),histEE.FindBin(edgeMassHigh-0.01))
+	result["edgeMassMM"] = histMM.Integral(histMM.FindBin(edgeMassLow+0.01),histMM.FindBin(edgeMassHigh-0.01))
+	result["edgeMassSF"] = result["edgeMassEE"] + result["edgeMassMM"]
+	result["edgeMassOF"] = histEM.Integral(histEM.FindBin(edgeMassLow),histEM.FindBin(edgeMassHigh-0.01))
 	result["lowMassEE"] = histEE.Integral(histEE.FindBin(lowMassLow+0.01),histEE.FindBin(lowMassHigh-0.01))
 	result["lowMassMM"] = histMM.Integral(histMM.FindBin(lowMassLow+0.01),histMM.FindBin(lowMassHigh-0.01))
 	result["lowMassSF"] = result["lowMassEE"] + result["lowMassMM"]
@@ -445,14 +455,14 @@ def centralValues(path,selection,runRange,isMC,backgrounds,cmsExtra,additionalLa
 	result["highMassSF"] = result["highMassEE"] + result["highMassMM"]
 	result["highMassOF"] = histEM.Integral(histEM.FindBin(highMassLow+0.01),histEM.FindBin(highMassHigh))
 	
-	result["belowZEE"] = histEE.Integral(histEE.FindBin(belowZLow+0.01),histEE.FindBin(belowZHigh-0.01))
-	result["belowZMM"] = histMM.Integral(histMM.FindBin(belowZLow+0.01),histMM.FindBin(belowZHigh-0.01))
-	result["belowZSF"] = result["belowZEE"] + result["belowZMM"]
-	result["belowZOF"] = histEM.Integral(histEM.FindBin(belowZLow),histEM.FindBin(belowZHigh-0.01))
-	result["aboveZEE"] = histEE.Integral(histEE.FindBin(aboveZLow+0.01),histEE.FindBin(aboveZHigh))
-	result["aboveZMM"] = histMM.Integral(histMM.FindBin(aboveZLow+0.01),histMM.FindBin(aboveZHigh))
-	result["aboveZSF"] = result["aboveZEE"] + result["aboveZMM"]
-	result["aboveZOF"] = histEM.Integral(histEM.FindBin(aboveZLow+0.01),histEM.FindBin(aboveZHigh))
+	#~ result["belowZEE"] = histEE.Integral(histEE.FindBin(belowZLow+0.01),histEE.FindBin(belowZHigh-0.01))
+	#~ result["belowZMM"] = histMM.Integral(histMM.FindBin(belowZLow+0.01),histMM.FindBin(belowZHigh-0.01))
+	#~ result["belowZSF"] = result["belowZEE"] + result["belowZMM"]
+	#~ result["belowZOF"] = histEM.Integral(histEM.FindBin(belowZLow),histEM.FindBin(belowZHigh-0.01))
+	#~ result["aboveZEE"] = histEE.Integral(histEE.FindBin(aboveZLow+0.01),histEE.FindBin(aboveZHigh))
+	#~ result["aboveZMM"] = histMM.Integral(histMM.FindBin(aboveZLow+0.01),histMM.FindBin(aboveZHigh))
+	#~ result["aboveZSF"] = result["aboveZEE"] + result["aboveZMM"]
+	#~ result["aboveZOF"] = histEM.Integral(histEM.FindBin(aboveZLow+0.01),histEM.FindBin(aboveZHigh))
 
 	for combination in ["EE","MM","SF"]:
 		corr = getattr(corrections,"r%sOF"%combination).central.val
@@ -465,45 +475,55 @@ def centralValues(path,selection,runRange,isMC,backgrounds,cmsExtra,additionalLa
 
 		lowMass = result["lowMass%s"%combination] - result["lowMassOF"]*corr			
 		lowMassErr = sqrt(result["lowMass%s"%combination] + (sqrt(result["lowMassOF"])*corr)**2 + (sqrt(result["lowMassOF"])*corr*corrErr)**2)
+		edgeMass = result["edgeMass%s"%combination] - result["edgeMassOF"]*corr			
+		edgeMassErr = sqrt(result["edgeMass%s"%combination] + (sqrt(result["edgeMassOF"])*corr)**2 + (sqrt(result["edgeMassOF"])*corr*corrErr)**2)
 		highMass = result["highMass%s"%combination] - result["highMassOF"]*corr			
 		highMassErr = sqrt(result["highMass%s"%combination] + (sqrt(result["highMassOF"])*corr)**2 + (sqrt(result["highMassOF"])*corr*corrErr)**2)	
 				
-		belowZ = result["belowZ%s"%combination] - result["belowZOF"]*corr			
-		belowZErr = sqrt(result["belowZ%s"%combination] + (sqrt(result["belowZOF"])*corr)**2 + (sqrt(result["belowZOF"])*corr*corrErr)**2)
-		aboveZ = result["aboveZ%s"%combination] - result["aboveZOF"]*corr			
-		aboveZErr = sqrt(result["aboveZ%s"%combination] + (sqrt(result["aboveZOF"])*corr)**2 + (sqrt(result["aboveZOF"])*corr*corrErr)**2)	
+		#~ belowZ = result["belowZ%s"%combination] - result["belowZOF"]*corr			
+		#~ belowZErr = sqrt(result["belowZ%s"%combination] + (sqrt(result["belowZOF"])*corr)**2 + (sqrt(result["belowZOF"])*corr*corrErr)**2)
+		#~ aboveZ = result["aboveZ%s"%combination] - result["aboveZOF"]*corr			
+		#~ aboveZErr = sqrt(result["aboveZ%s"%combination] + (sqrt(result["aboveZOF"])*corr)**2 + (sqrt(result["aboveZOF"])*corr*corrErr)**2)	
 				
 		result["correctedPeak%s"%combination] = peak
 		result["peakError%s"%combination] = peakErr
 
+		result["correctedEdgeMass%s"%combination] = edgeMass
+		result["edgeMassError%s"%combination] = edgeMassErr
 		result["correctedLowMass%s"%combination] = lowMass
 		result["lowMassError%s"%combination] = lowMassErr
 		result["correctedHighMass%s"%combination] = highMass
 		result["highMassError%s"%combination] = highMassErr
 
-		result["correctedBelowZ%s"%combination] = belowZ
-		result["belowZError%s"%combination] = belowZErr
-		result["correctedAboveZ%s"%combination] = aboveZ
-		result["aboveZError%s"%combination] = aboveZErr
+		#~ result["correctedBelowZ%s"%combination] = belowZ
+		#~ result["belowZError%s"%combination] = belowZErr
+		#~ result["correctedAboveZ%s"%combination] = aboveZ
+		#~ result["aboveZError%s"%combination] = aboveZErr
 		
 		result["correction"] = 	corr
 		result["correctionErr"] = 	corrErr
 	
+		rOutInEdgeMass =   edgeMass / peak
 		rOutInLowMass =   lowMass / peak
 		rOutInHighMass = highMass / peak
+		rOutInEdgeMassSystErr = rOutInEdgeMass*systematics.rOutIn.central.val
 		rOutInLowMassSystErr = rOutInLowMass*systematics.rOutIn.central.val
 		rOutInHighMassSystErr = rOutInHighMass*systematics.rOutIn.central.val
+		rOutInEdgeMassErr = sqrt((edgeMassErr/peak)**2 + (edgeMass*peakErr/peak**2)**2)
 		rOutInLowMassErr = sqrt((lowMassErr/peak)**2 + (lowMass*peakErr/peak**2)**2)
 		rOutInHighMassErr = sqrt((highMassErr/peak)**2 + (highMass*peakErr/peak**2)**2)
 	
-		rOutInBelowZ =   belowZ / peak
-		rOutInAboveZ = aboveZ / peak
-		rOutInBelowZSystErr = rOutInBelowZ*systematics.rOutIn.central.val
-		rOutInAboveZSystErr = rOutInAboveZ*systematics.rOutIn.central.val
-		rOutInBelowZErr = sqrt((belowZErr/peak)**2 + (belowZ*peakErr/peak**2)**2)
-		rOutInAboveZErr = sqrt((aboveZErr/peak)**2 + (aboveZ*peakErr/peak**2)**2)
+		#~ rOutInBelowZ =   belowZ / peak
+		#~ rOutInAboveZ = aboveZ / peak
+		#~ rOutInBelowZSystErr = rOutInBelowZ*systematics.rOutIn.central.val
+		#~ rOutInAboveZSystErr = rOutInAboveZ*systematics.rOutIn.central.val
+		#~ rOutInBelowZErr = sqrt((belowZErr/peak)**2 + (belowZ*peakErr/peak**2)**2)
+		#~ rOutInAboveZErr = sqrt((aboveZErr/peak)**2 + (aboveZ*peakErr/peak**2)**2)
 
 
+		result["rOutInEdgeMass%s"%combination] = rOutInEdgeMass
+		result["rOutInEdgeMassErr%s"%combination] = rOutInEdgeMassErr
+		result["rOutInEdgeMassSyst%s"%combination] = rOutInEdgeMassSystErr
 		result["rOutInLowMass%s"%combination] = rOutInLowMass
 		result["rOutInLowMassErr%s"%combination] = rOutInLowMassErr
 		result["rOutInLowMassSyst%s"%combination] = rOutInLowMassSystErr
@@ -511,12 +531,12 @@ def centralValues(path,selection,runRange,isMC,backgrounds,cmsExtra,additionalLa
 		result["rOutInHighMassErr%s"%combination] = rOutInHighMassErr
 		result["rOutInHighMassSyst%s"%combination] = rOutInHighMassSystErr
 
-		result["rOutInBelowZ%s"%combination] = rOutInBelowZ
-		result["rOutInBelowZErr%s"%combination] = rOutInBelowZErr
-		result["rOutInBelowZSyst%s"%combination] = rOutInBelowZSystErr
-		result["rOutInAboveZ%s"%combination] = rOutInAboveZ
-		result["rOutInAboveZErr%s"%combination] = rOutInAboveZErr
-		result["rOutInAboveZSyst%s"%combination] = rOutInAboveZSystErr
+		#~ result["rOutInBelowZ%s"%combination] = rOutInBelowZ
+		#~ result["rOutInBelowZErr%s"%combination] = rOutInBelowZErr
+		#~ result["rOutInBelowZSyst%s"%combination] = rOutInBelowZSystErr
+		#~ result["rOutInAboveZ%s"%combination] = rOutInAboveZ
+		#~ result["rOutInAboveZErr%s"%combination] = rOutInAboveZErr
+		#~ result["rOutInAboveZSyst%s"%combination] = rOutInAboveZSystErr
 
 		
 		saveLabel = additionalLabel
@@ -585,7 +605,7 @@ def main():
 		args.runRange.append(runRanges.name)	
 
 
-	path = locations.dataSetPathTrigger	
+	path = locations.dataSetPath
 
 
 	cmsExtra = ""

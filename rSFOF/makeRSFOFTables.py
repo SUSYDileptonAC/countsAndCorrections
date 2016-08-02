@@ -3,7 +3,8 @@
 
 
 def saveTable(table, name):
-	tabFile = open("tab/table_%s_Run2015C.tex"%name, "w")
+	#~ tabFile = open("tab/table_%s_Run2016B_2fb.tex"%name, "w")
+	tabFile = open("tab/table_%s_Run2016B_2fb_old.tex"%name, "w")
 	tabFile.write(table)
 	tabFile.close()
 
@@ -25,12 +26,18 @@ def main():
 	from sys import argv
 	#~ allPkls = loadPickles("shelves/*.pkl")
 
-	dataPkls = loadPickles("shelves/rSFOF_Control_Run2015C.pkl")
-	dataBarrelPkls = loadPickles("shelves/rSFOF_ControlCentral_Run2015C.pkl")
-	dataEndcapPkls = loadPickles("shelves/rSFOF_ControlForward_Run2015C.pkl")
-	mcPkls = loadPickles("shelves/rSFOF_Control_RunIITest_MC.pkl")
-	mcBarrelPkls = loadPickles("shelves/rSFOF_ControlCentral_RunIITest_MC.pkl")
-	mcEndcapPkls = loadPickles("shelves/rSFOF_ControlForward_RunIITest_MC.pkl")
+	#~ dataPkls = loadPickles("shelves/rSFOF_Control_Run2016B_2fb.pkl")
+	#~ dataBarrelPkls = loadPickles("shelves/rSFOF_ControlCentral_Run2016B_2fb.pkl")
+	#~ dataEndcapPkls = loadPickles("shelves/rSFOF_ControlForward_Run2016B_2fb.pkl")
+	#~ mcPkls = loadPickles("shelves/rSFOF_Control_Run2016B_2fb_MC.pkl")
+	#~ mcBarrelPkls = loadPickles("shelves/rSFOF_ControlCentral_Run2016B_2fb_MC.pkl")
+	#~ mcEndcapPkls = loadPickles("shelves/rSFOF_ControlForward_Run2016B_2fb_MC.pkl")
+	dataPkls = loadPickles("shelves/rSFOF_Control_Run2016B_2fb_old.pkl")
+	dataBarrelPkls = loadPickles("shelves/rSFOF_ControlCentral_Run2016B_2fb_old.pkl")
+	dataEndcapPkls = loadPickles("shelves/rSFOF_ControlForward_Run2016B_2fb_old.pkl")
+	mcPkls = loadPickles("shelves/rSFOF_Control_Run2016B_2fb_MC_old.pkl")
+	mcBarrelPkls = loadPickles("shelves/rSFOF_ControlCentral_Run2016B_2fb_MC_old.pkl")
+	mcEndcapPkls = loadPickles("shelves/rSFOF_ControlForward_Run2016B_2fb_MC_old.pkl")
 
 	#~ print dataPkls
 	

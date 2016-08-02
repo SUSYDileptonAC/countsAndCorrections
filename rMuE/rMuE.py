@@ -108,12 +108,12 @@ def getHistograms(path,plot,runRange,isMC,backgrounds,region,EM=False):
 		
 		histoEE = TheStack(processes,runRange.lumi,plot,treesEE,"None",1.0,1.0,1.0).theHistogram		
 		histoMM = TheStack(processes,runRange.lumi,plot,treesMM,"None",1.0,1.0,1.0).theHistogram
-		#~ histoEE.Scale(getattr(triggerEffs,region).effEE.val)
-		#~ histoMM.Scale(getattr(triggerEffs,region).effMM.val)
+		histoEE.Scale(getattr(triggerEffs,region).effEE.val)
+		histoMM.Scale(getattr(triggerEffs,region).effMM.val)
 		
 		if EM:
 			histoEM = TheStack(processes,runRange.lumi,plot,treesEM,"None",1.0,1.0,1.0).theHistogram		
-			#~ histoEM.Scale(getattr(triggerEffs,region).effEM.val)
+			histoEM.Scale(getattr(triggerEffs,region).effEM.val)
 		
 	else:
 		histoEE = getDataHist(plot,treesEE)
@@ -169,7 +169,10 @@ def centralValues(path,selection,runRange,isMC,backgrounds):
 def dependencies(path,selection,plots,runRange,isMC,backgrounds,cmsExtra,fit):
 	
 
-	backgroundsTT = ["TT_Powheg"]
+	pathMC = locations.dataSetPathMC
+	#~ backgroundsTT = ["TT_Powheg"]
+	#~ backgroundsMC = ["TT_Powheg","DrellYan"]
+	backgroundsMC = ["Rare","SingleTop","TT_Powheg","Diboson","DrellYanTauTau","DrellYan"]
 	
 	for name in plots:
 		plot = getPlot(name)
@@ -188,10 +191,11 @@ def dependencies(path,selection,plots,runRange,isMC,backgrounds,cmsExtra,fit):
 			region = "forward"
 
 		if isMC:
-			histEE, histMM = getHistograms(path,plot,runRange,True, backgrounds,region)	
+			histEE, histMM = getHistograms(pathMC,plot,runRange,True, backgrounds,region)	
 		else:
 			histEE, histMM = getHistograms(path,plot,runRange,False, backgrounds,region)	
-		histEEMC, histMMMC = getHistograms(path,plot,runRange,True, backgroundsTT,region)	
+		#~ histEEMC, histMMMC = getHistograms(pathMC,plot,runRange,True, backgroundsTT,region)	
+		histEEMC, histMMMC = getHistograms(pathMC,plot,runRange,True, backgroundsMC,region)	
 			
 		
 		hCanvas = TCanvas("hCanvas", "Distribution", 800,800)
@@ -341,7 +345,8 @@ def dependencies(path,selection,plots,runRange,isMC,backgrounds,cmsExtra,fit):
 		if not isMC:
 			rMuE.Draw("hist E1P SAME")			
 			leg.AddEntry(rMuE, "Data", "p")
-			leg.AddEntry(rMuEMC,"t#bar{t} MC","p")
+			#~ leg.AddEntry(rMuEMC,"t#bar{t} MC","p")
+			leg.AddEntry(rMuEMC,"MC","p")
 			
 		else:
 			rMuE.Draw("hist E1P SAME")			
@@ -488,7 +493,8 @@ def dependencies(path,selection,plots,runRange,isMC,backgrounds,cmsExtra,fit):
 		if not isMC:
 			rMuE.Draw("hist E1P SAME")			
 			leg.AddEntry(rMuE, "Data", "p")
-			leg.AddEntry(rMuEMC,"t#bar{t} MC","p")
+			#~ leg.AddEntry(rMuEMC,"t#bar{t} MC","p")
+			leg.AddEntry(rMuEMC,"MC","p")
 			
 		else:
 			rMuE.Draw("hist E1P SAME")			
@@ -523,13 +529,13 @@ def dependencies(path,selection,plots,runRange,isMC,backgrounds,cmsExtra,fit):
 		# Pfeile
 		
 		if "eta" in plot.variable:
-			yMin = 0.8
-			yMax = 1.6
-			lineU1 = ROOT.TLine(1.4, yMin, 1.4, yMax-0.2)
+			yMin = 0.975
+			yMax = 1.05
+			lineU1 = ROOT.TLine(1.4, yMin, 1.4, yMax)
 			lineU1.SetLineColor(ROOT.kBlue-3)
 			lineU1.SetLineWidth(2)
 			lineU1.Draw("")
-			lineU2 = ROOT.TLine(1.6, yMin, 1.6, yMax-0.2)
+			lineU2 = ROOT.TLine(1.6, yMin, 1.6, yMax)
 			lineU2.SetLineColor(ROOT.kBlue-3)
 			lineU2.SetLineWidth(2)
 			lineU2.Draw("")
@@ -544,7 +550,7 @@ def dependencies(path,selection,plots,runRange,isMC,backgrounds,cmsExtra,fit):
 			arrow2.SetLineWidth(3)
 			arrow2.Draw("")
 
-			lineE = ROOT.TLine(2.4, yMin, 2.4, yMax-0.2) #3.5 -> 1.7
+			lineE = ROOT.TLine(2.4, yMin, 2.4, yMax) #3.5 -> 1.7
 			lineE.SetLineColor(ROOT.kRed-3)
 			lineE.SetLineWidth(2)
 			lineE.Draw("")
@@ -758,18 +764,18 @@ def main():
 	if len(args.selection) == 0:
 		
 		if args.signalRegion:
-			args.selection.append(regionsToUse.signal.central.name)	
-			args.selection.append(regionsToUse.signal.forward.name)	
+			#~ args.selection.append(regionsToUse.signal.central.name)	
+			#~ args.selection.append(regionsToUse.signal.forward.name)	
 			args.selection.append(regionsToUse.signal.inclusive.name)		
 		else:
-			args.selection.append(regionsToUse.rMuE.central.name)	
-			args.selection.append(regionsToUse.rMuE.forward.name)	
+			#~ args.selection.append(regionsToUse.rMuE.central.name)	
+			#~ args.selection.append(regionsToUse.rMuE.forward.name)	
 			args.selection.append(regionsToUse.rMuE.inclusive.name)
 			
 	if len(args.runRange) == 0:
 		args.runRange.append(runRanges.name)		
 
-	path = locations.dataSetPathTrigger	
+	path = locations.dataSetPath
 
 	
 

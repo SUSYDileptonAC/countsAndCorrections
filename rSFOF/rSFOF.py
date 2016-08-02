@@ -26,7 +26,7 @@ from setTDRStyle import setTDRStyle
 from helpers import readTrees, getDataHist, TheStack, totalNumberOfGeneratedEvents, Process
 
 from corrections import rSFOF, rEEOF, rMMOF, rMuE, rSFOFTrig, rSFOFFact, triggerEffs
-from centralConfig import regionsToUse, runRanges, backgroundLists, plotLists, systematics, mllBins
+from centralConfig import regionsToUse, runRanges, backgroundLists, plotLists, systematics, mllBinsOld
 import corrections
 
 
@@ -147,6 +147,10 @@ def dependencies(source,modifier,path,selection,plots,runRange,isMC,nonNormalize
 		else:
 			pt_label = "p_{T} > 20 GeV"		
 		plot.cuts = plot.cuts % runRange.runCut	
+		
+		#~ print plot.cuts
+		#~ plot.cuts = plot.cuts.replace("&& 100 <  met","") 
+		#~ print plot.cuts
 
 		if "Forward" in selection.name:
 			label = "forward"
@@ -268,8 +272,10 @@ def dependencies(source,modifier,path,selection,plots,runRange,isMC,nonNormalize
 		
 		if isMC:
 			hCanvas.Print("fig/rSFOF_%s_%s_%s_%s_MC.pdf"%(selection.name,runRange.label,plot.variablePlotName,plot.additionalName))	
+			#~ hCanvas.Print("fig/rSFOF_%s_%s_%s_%s_MC_old.pdf"%(selection.name,runRange.label,plot.variablePlotName,plot.additionalName))	
 		else:
 			hCanvas.Print("fig/rSFOF_%s_%s_%s_%s.pdf"%(selection.name,runRange.label,plot.variablePlotName,plot.additionalName))	
+			#~ hCanvas.Print("fig/rSFOF_%s_%s_%s_%s_old.pdf"%(selection.name,runRange.label,plot.variablePlotName,plot.additionalName))	
 
 
 
@@ -296,9 +302,9 @@ def getHistograms(path,source,modifier,plot,runRange,isMC,nonNormalized,backgrou
 		histoMM = TheStack(processes,runRange.lumi,plot,treesMM,"None",1.0,1.0,1.0).theHistogram
 		histoEM = TheStack(processes,runRange.lumi,plot,treesEM,"None",1.0,1.0,1.0).theHistogram
 						
-		#~ histoEE.Scale(getattr(triggerEffs,region).effEE.val)
-		#~ histoEE.Scale(getattr(triggerEffs,region).effMM.val)	
-		#~ histoEM.Scale(getattr(triggerEffs,region).effEM.val)
+		histoEE.Scale(getattr(triggerEffs,region).effEE.val)
+		histoEE.Scale(getattr(triggerEffs,region).effMM.val)	
+		histoEM.Scale(getattr(triggerEffs,region).effEM.val)
 			
 	else:
 		histoEE = getDataHist(plot,treesEE)
@@ -347,15 +353,15 @@ def centralValues(source,modifier,path,selection,runRange,isMC,nonNormalized,bac
 	result = {}
 	
 
-	lowMassLow = mllBins.lowMass.low
-	lowMassHigh = mllBins.lowMass.high
-	peakLow = mllBins.onZ.low
-	peakHigh = mllBins.onZ.high
-	highMassLow = mllBins.highMass.low
-	highMassHigh = mllBins.highMass.high
+	lowMassLow = mllBinsOld.lowMass.low
+	lowMassHigh = mllBinsOld.lowMass.high
+	peakLow = mllBinsOld.onZ.low
+	peakHigh = mllBinsOld.onZ.high
+	highMassLow = mllBinsOld.highMass.low
+	highMassHigh = mllBinsOld.highMass.high
 	
-	highMassRSFOFLow = mllBins.highMassRSFOF.low
-	highMassRSFOFHigh = mllBins.highMassRSFOF.high
+	highMassRSFOFLow = mllBinsOld.highMassRSFOF.low
+	highMassRSFOFHigh = mllBinsOld.highMassRSFOF.high
 		
 
 	eeLowMassErr = ROOT.Double()
@@ -676,14 +682,17 @@ def main():
 	if len(args.plots) == 0:
 		args.plots = plotLists.rSFOF
 	if len(args.selection) == 0:
-		args.selection.append(regionsToUse.rSFOF.central.name)	
-		args.selection.append(regionsToUse.rSFOF.forward.name)	
+		#~ args.selection.append(regionsToUse.rSFOF.central.name)	
+		#~ args.selection.append(regionsToUse.rSFOF.forward.name)	
 		args.selection.append(regionsToUse.rSFOF.inclusive.name)	
 	if len(args.runRange) == 0:
 		args.runRange.append(runRanges.name)	
 			
 
-	path = locations.dataSetPathTrigger
+	if args.mc:
+		path = locations.dataSetPathMC
+	else:
+		path = locations.dataSetPath
 	
 	if args.dilepton:
 		source = "DiLeptonTrigger"
@@ -731,8 +740,10 @@ def main():
 				centralVal = centralValues(source,modifier,path,selection,runRange,args.mc,args.nonNormalized,args.backgrounds,cmsExtra)
 				if args.mc:
 					outFilePkl = open("shelves/rSFOF_%s_%s_MC.pkl"%(selection.name,runRange.label),"w")
+					#~ outFilePkl = open("shelves/rSFOF_%s_%s_MC_old.pkl"%(selection.name,runRange.label),"w")
 				else:
 					outFilePkl = open("shelves/rSFOF_%s_%s.pkl"%(selection.name,runRange.label),"w")
+					#~ outFilePkl = open("shelves/rSFOF_%s_%s_old.pkl"%(selection.name,runRange.label),"w")
 				pickle.dump(centralVal, outFilePkl)
 				outFilePkl.close()
 				
@@ -747,6 +758,6 @@ def main():
 				if args.mc:
 					bashCommand = "cp shelves/rSFOF_%s_%s_MC.pkl %s/shelves"%(selection.name,runRange.label,pathes.basePath)		
 				else:	
-					bashCommand = "cp shelves//rSFOF_%s_%s.pkl %s/shelves"%(selection.name,runRange.label,pathes.basePath)
+					bashCommand = "cp shelves/rSFOF_%s_%s.pkl %s/shelves"%(selection.name,runRange.label,pathes.basePath)
 				process = subprocess.Popen(bashCommand.split())					
 main()

@@ -50,14 +50,14 @@ def getEventLists(trees, cut,isMC, colNames = ["eventNr","lumiSec","runNr"]):
 			gc.collect()
 	return result
 
-def getCounts(trees, cut, isMC, backgrounds,plot,runRange,path):
+def getCounts(trees, cut, isMC, backgrounds,plot,runRange,baseTreePath):
 
 	if isMC:
 		tmpCut = plot.cuts
 		plot.cuts = cut
 		source = ""
 		modifier = ""
-		eventCounts = totalNumberOfGeneratedEvents(path,source,modifier)	
+		eventCounts = totalNumberOfGeneratedEvents(baseTreePath,source,modifier)	
 		processes = []
 		for background in backgrounds:
 			processes.append(Process(getattr(Backgrounds,background),eventCounts))
@@ -112,14 +112,14 @@ def getCounts(trees, cut, isMC, backgrounds,plot,runRange,path):
 	
 
 
-def cutAndCountForRegion(path,selection,plots,runRange,isMC,backgrounds,preselection,samesign):
+def cutAndCountForRegion(path,baseTreePath,selection,plots,runRange,isMC,backgrounds):
 	
 	#~ path = "/home/jan/Trees/sw7412v2000Trigger/"
 	
 	if not isMC:
 		trees = getDataTrees(path)
 		for label, tree in trees.iteritems():
-			trees[label] = tree.CopyTree(preselection)		
+			trees[label] = tree.CopyTree("nJets > 1")		
 	else:
 		treesEE = readTrees(path,"EE",source = "",modifier= "")
 		treesEM = readTrees(path,"EMu",source = "",modifier= "")
@@ -138,51 +138,34 @@ def cutAndCountForRegion(path,selection,plots,runRange,isMC,backgrounds,preselec
 		plot.cleanCuts()
 		plot.cuts = plot.cuts % runRange.runCut	
 
-		if samesign:
-			plot.cuts = plot.cuts.replace("chargeProduct < 0","chargeProduct > 0")
-
 		counts = {}
 		eventLists = {}
 		#~ massRanges = ["default","edgeMass","zMass","highMass","belowZ","aboveZ"]
 		massRanges = ["default","edgeMass","lowMass","zMass","highMass"]
+		nLLRegions = ["lowNLL","highNLL"]
+		
 		counts["default"] = {}
 		eventLists["default"] = {}
 		for mllCut in massRanges:
-			counts["default"][getattr(theCuts.massCuts,mllCut).name] = getCounts(trees, plot.cuts+"*(%s)"%getattr(theCuts.massCuts,mllCut).cut,isMC,backgrounds,plot,runRange,path)
-			eventLists["default"][getattr(theCuts.massCuts,mllCut).name] = getEventLists(trees, plot.cuts+"*(%s)"%getattr(theCuts.massCuts,mllCut).cut,isMC)		
+			cut = plot.cuts+" && (%s)"%getattr(theCuts.massCuts,mllCut).cut
+			cut = cut.replace("p4.M()","mll")
+			cut = cut.replace("genWeight*weight*","")
+			#~ cut = "genWeight*weight*("+cut+")"
+			counts["default"][getattr(theCuts.massCuts,mllCut).name] = getCounts(trees, cut,isMC,backgrounds,plot,runRange,baseTreePath)
+			eventLists["default"][getattr(theCuts.massCuts,mllCut).name] = getEventLists(trees,cut,isMC)		
 
-		for categoryName, category in cutNCountXChecks.cutList.iteritems():
-			if categoryName == "leptonPt":
-				for subcut in category:
-					counts[subcut] = {}
-					eventLists[subcut] = {}
-					
-					for mllCut in massRanges:
-						cut = plot.cuts.replace("pt1 > 20 && pt2 > 20 &&","")
-						cut = cut+"*(%s)"%getattr(theCuts.ptCuts,subcut).cut + "*(%s)"%getattr(theCuts.massCuts,mllCut).cut
-						counts[getattr(theCuts.ptCuts,subcut).name][getattr(theCuts.massCuts,mllCut).name] = getCounts(trees, cut,isMC,backgrounds,plot,runRange,path)
-						eventLists[getattr(theCuts.ptCuts,subcut).name][getattr(theCuts.massCuts,mllCut).name] = getEventLists(trees, cut,isMC)
-			elif categoryName == "mets":
-				for subcut in category:
-					counts[subcut] = {}
-					eventLists[subcut] = {}					
-					
-					for mllCut in massRanges:
-						cut = plot.cuts.replace("met",subcut)
-						cut = cut + "*(%s)"%getattr(theCuts.massCuts,mllCut).cut
-						counts[subcut][getattr(theCuts.massCuts,mllCut).name] = getCounts(trees, cut,isMC,backgrounds,plot,runRange,path)
-						eventLists[subcut][getattr(theCuts.massCuts,mllCut).name] = getEventLists(trees, cut,isMC)			
-				
-			else:
-				for subcut in category:
-					counts[subcut] = {}
-					eventLists[subcut] = {}					
-					
-					for mllCut in massRanges:
-						cut = plot.cuts+"*(%s)"%getattr(getattr(theCuts,categoryName),subcut).cut
-						cut = cut + "*(%s)"%getattr(theCuts.massCuts,mllCut).cut
-						counts[subcut][getattr(theCuts.massCuts,mllCut).name] = getCounts(trees, cut,isMC,backgrounds,plot,runRange,path)
-						eventLists[subcut][getattr(theCuts.massCuts,mllCut).name] = getEventLists(trees, cut,isMC)				
+		for nLLRegion in nLLRegions:		
+			counts[nLLRegion] = {}
+			eventLists[nLLRegion] = {}					
+			
+			for mllCut in massRanges:
+				cut = plot.cuts+" && (%s)"%getattr(theCuts.nLLCuts,nLLRegion).cut
+				cut = cut + " && (%s)"%getattr(theCuts.massCuts,mllCut).cut
+				cut = cut.replace("p4.M()","mll")
+				cut = cut.replace("genWeight*weight*","")
+				#~ cut = "genWeight*weight*("+cut+")"
+				counts[nLLRegion][getattr(theCuts.massCuts,mllCut).name] = getCounts(trees, cut,isMC,backgrounds,plot,runRange,baseTreePath)
+				eventLists[nLLRegion][getattr(theCuts.massCuts,mllCut).name] = getEventLists(trees, cut,isMC)				
 
 		
 		return counts, eventLists
@@ -217,16 +200,13 @@ def main():
 	if len(args.plots) == 0:
 		args.plots = plotLists.signal
 	if len(args.selection) == 0:
-		args.selection.append(regionsToUse.signalOld.central.name)	
-		args.selection.append(regionsToUse.signalOld.forward.name)	
-		args.selection.append(regionsToUse.signalOld.inclusive.name)	
+		args.selection.append(regionsToUse.signal.inclusive.name)	
 	if len(args.runRange) == 0:
 		args.runRange.append(runRanges.name)	
 
 
-	path = locations.dataSetPathTrigger
-
-	preselection = "nJets >= 2 && deltaR > 0.3"
+	path = locations.dataSetPathNLL
+	baseTreePath = locations.dataSetPath
 	
 			
 	
@@ -246,12 +226,12 @@ def main():
 
 				import subprocess
 
-				bashCommand = "cp shelves/cutAndCount_%s_%s.pkl %s/shelves"%(selection.name,runRange.label,pathes.basePath)
+				bashCommand = "cp shelves/cutAndCountNLL_%s_%s.pkl %s/shelves"%(selection.name,runRange.label,pathes.basePath)
 				process = subprocess.Popen(bashCommand.split())		
 			
 			else:
-				counts, eventLists = cutAndCountForRegion(path,selection,args.plots,runRange,args.mc,args.backgrounds,preselection,args.samesign)
-				outFile = open("shelves/cutAndCount_%s_%s.pkl"%(selection.name,runRange.label),"w")
+				counts, eventLists = cutAndCountForRegion(path,baseTreePath,selection,args.plots,runRange,args.mc,args.backgrounds)
+				outFile = open("shelves/cutAndCountNLL_%s_%s.pkl"%(selection.name,runRange.label),"w")
 				pickle.dump(counts, outFile)
 				outFile.close()
 				if not args.mc:
