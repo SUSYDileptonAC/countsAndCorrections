@@ -137,37 +137,16 @@ def cutAndCountForRegion(path,selection,plots,runRange,isMC,backgrounds,preselec
 			eventLists["default"][getattr(theCuts.massCuts,mllCut).name] = getEventLists(trees, plot.cuts+"*(%s)"%getattr(theCuts.massCuts,mllCut).cut,isMC)		
 
 		for categoryName, category in cutNCountXChecks.cutList.iteritems():
-			if categoryName == "leptonPt":
-				for subcut in category:
-					counts[subcut] = {}
-					eventLists[subcut] = {}
-					
-					for mllCut in massRanges:
-						cut = plot.cuts.replace("pt1 > 20 && pt2 > 20 &&","")
-						cut = cut+"*(%s)"%getattr(theCuts.ptCuts,subcut).cut + "*(%s)"%getattr(theCuts.massCuts,mllCut).cut
-						counts[getattr(theCuts.ptCuts,subcut).name][getattr(theCuts.massCuts,mllCut).name] = getCounts(trees, cut,isMC,backgrounds,plot,runRange,path)
-						eventLists[getattr(theCuts.ptCuts,subcut).name][getattr(theCuts.massCuts,mllCut).name] = getEventLists(trees, cut,isMC)
-			elif categoryName == "mets":
-				for subcut in category:
-					counts[subcut] = {}
-					eventLists[subcut] = {}					
-					
-					for mllCut in massRanges:
-						cut = plot.cuts.replace("met",subcut)
-						cut = cut + "*(%s)"%getattr(theCuts.massCuts,mllCut).cut
-						counts[subcut][getattr(theCuts.massCuts,mllCut).name] = getCounts(trees, cut,isMC,backgrounds,plot,runRange,path)
-						eventLists[subcut][getattr(theCuts.massCuts,mllCut).name] = getEventLists(trees, cut,isMC)			
 				
-			else:
-				for subcut in category:
-					counts[subcut] = {}
-					eventLists[subcut] = {}					
-					
-					for mllCut in massRanges:
-						cut = plot.cuts+"*(%s)"%getattr(getattr(theCuts,categoryName),subcut).cut
-						cut = cut + "*(%s)"%getattr(theCuts.massCuts,mllCut).cut
-						counts[subcut][getattr(theCuts.massCuts,mllCut).name] = getCounts(trees, cut,isMC,backgrounds,plot,runRange,path)
-						eventLists[subcut][getattr(theCuts.massCuts,mllCut).name] = getEventLists(trees, cut,isMC)				
+			for subcut in category:
+				counts[subcut] = {}
+				eventLists[subcut] = {}					
+				
+				for mllCut in massRanges:
+					cut = plot.cuts+"*(%s)"%getattr(getattr(theCuts,categoryName),subcut).cut
+					cut = cut + "*(%s)"%getattr(theCuts.massCuts,mllCut).cut
+					counts[subcut][getattr(theCuts.massCuts,mllCut).name] = getCounts(trees, cut,isMC,backgrounds,plot,runRange,path)
+					eventLists[subcut][getattr(theCuts.massCuts,mllCut).name] = getEventLists(trees, cut,isMC)				
 
 		
 		return counts, eventLists
@@ -188,8 +167,6 @@ def main():
 						  help="name of run range.")
 	parser.add_argument("-b", "--backgrounds", dest="backgrounds", action="append", default=[],
 						  help="backgrounds to plot.")	
-	parser.add_argument("-w", "--write", action="store_true", dest="write", default=False,
-						  help="write results to central repository")	
 					
 	args = parser.parse_args()
 
@@ -222,23 +199,19 @@ def main():
 			selection = getRegion(selectionName)
 			
 			
-			
-			if args.write:
-
-				import subprocess
-
-				bashCommand = "cp shelves/cutAndCount_%s_%s.pkl %s/shelves"%(selection.name,runRange.label,pathes.basePath)
-				process = subprocess.Popen(bashCommand.split())		
-			
-			else:
-				counts, eventLists = cutAndCountForRegion(path,selection,args.plots,runRange,args.mc,args.backgrounds,preselection)
-				outFile = open("shelves/cutAndCount_%s_%s.pkl"%(selection.name,runRange.label),"w")
-				pickle.dump(counts, outFile)
+			counts, eventLists = cutAndCountForRegion(path,selection,args.plots,runRange,args.mc,args.backgrounds,preselection)
+			outFile = open("shelves/cutAndCount_%s_%s.pkl"%(selection.name,runRange.label),"w")
+			pickle.dump(counts, outFile)
+			outFile.close()
+			if not args.mc:
+				outFile = open("shelves/eventLists_%s_%s.pkl"%(selection.name,runRange.label),"w")
+				pickle.dump(eventLists, outFile)
 				outFile.close()
-				if not args.mc:
-					outFile = open("shelves/eventLists_%s_%s.pkl"%(selection.name,runRange.label),"w")
-					pickle.dump(eventLists, outFile)
-					outFile.close()
+				
+			import subprocess
+
+			bashCommand = "cp shelves/cutAndCount_%s_%s.pkl %s/shelves"%(selection.name,runRange.label,pathes.basePath)
+			process = subprocess.Popen(bashCommand.split())
 			
 
 

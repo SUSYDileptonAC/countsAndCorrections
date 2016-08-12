@@ -222,36 +222,81 @@ def centralValues(path,selection,runRange,isMC,nonNormalized,backgrounds,cmsExtr
 
 	lowMassLow = mllBins.lowMass.low
 	lowMassHigh = mllBins.lowMass.high
+	highMassLow = mllBins.highMass.low
+	highMassHigh = mllBins.highMass.high
 	
 	highMassRSFOFLow = mllBins.highMassRSFOF.low
-		
-	eeErr = ROOT.Double()
-	ee = histEE.IntegralAndError(histEE.FindBin(lowMassLow+0.01),histEE.FindBin(lowMassHigh-0.01),eeErr)
+	highMassRSFOFHigh = mllBins.highMassRSFOF.high
 	
-	mmErr = ROOT.Double()
-	mm = histMM.IntegralAndError(histMM.FindBin(lowMassLow+0.01),histMM.FindBin(lowMassHigh-0.01),mmErr)
+	eeLowMassErr = ROOT.Double()
+	eeLowMass = histEE.IntegralAndError(histEE.FindBin(lowMassLow+0.01),histEE.FindBin(lowMassHigh-0.01),eeLowMassErr)
+	eeHighMassErr = ROOT.Double()
+	eeHighMass = histEE.IntegralAndError(histEE.FindBin(highMassRSFOFLow+0.01),histEE.FindBin(highMassRSFOFHigh-0.01),eeHighMassErr)
 	
-	ofErr = ROOT.Double()
-	of = histEM.IntegralAndError(histEM.FindBin(lowMassLow+0.01),histEM.FindBin(lowMassHigh-0.01),ofErr)
+	ee = eeLowMass + eeHighMass
+	eeErr = (eeLowMassErr**2 + eeHighMassErr**2)**0.5
+	
+	mmLowMassErr = ROOT.Double()
+	mmLowMass = histMM.IntegralAndError(histMM.FindBin(lowMassLow+0.01),histMM.FindBin(lowMassHigh-0.01),mmLowMassErr)
+	mmHighMassErr = ROOT.Double()
+	mmHighMass = histMM.IntegralAndError(histMM.FindBin(highMassRSFOFLow+0.01),histMM.FindBin(highMassRSFOFHigh-0.01),mmHighMassErr)
+	
+	mm = mmLowMass + mmHighMass
+	mmErr = (mmLowMassErr**2 + mmHighMassErr**2)**0.5
+	
+	ofLowMassErr = ROOT.Double()
+	ofLowMass = histEM.IntegralAndError(histEM.FindBin(lowMassLow+0.01),histEM.FindBin(lowMassHigh-0.01),ofLowMassErr)
+	ofHighMassErr = ROOT.Double()
+	ofHighMass = histEM.IntegralAndError(histEM.FindBin(highMassRSFOFLow+0.01),histEM.FindBin(highMassRSFOFHigh-0.01),ofHighMassErr)
+	
+	of = ofLowMass + ofHighMass
+	ofErr = (ofLowMassErr**2 + ofHighMassErr**2)**0.5
 	
 	sf = ee + mm 
-	sfErr = (eeErr**2 + mmErr**2)**0.5	
+	sfLowMass = eeLowMass + mmLowMass 
+	sfHighMass = eeHighMass + mmHighMass 
+	sfErr = (eeErr**2 + mmErr**2)**0.5
+	sfLowMassErr = (eeLowMassErr**2 + mmLowMassErr**2)**0.5
+	sfHighMassErr = (eeHighMassErr**2 + mmHighMassErr**2)**0.5
 	
 	rsfof = float(sf)/float(of)
-	rsfofErr = rsfof*(sfErr**2/sf**2+ofErr**2/of**2)**0.5		
+	rsfofErr = rsfof*(sfErr**2/sf**2+ofErr**2/of**2)**0.5
+	rsfofLowMass = float(sfLowMass)/float(ofLowMass)
+	rsfofLowMassErr = rsfofLowMass*(sfLowMassErr**2/sfLowMass**2+ofLowMassErr**2/ofLowMass**2)**0.5
+	rsfofHighMass = float(sfHighMass)/float(ofHighMass)
+	rsfofHighMassErr = rsfofHighMass*(sfHighMassErr**2/sf**2+ofHighMassErr**2/of**2)**0.5
 		
 	rEEOF = float(ee)/float(of)
 	rEEOFErr = rEEOF * (eeErr**2/ee**2 + ofErr**2/of**2)**0.5
+	rEEOFLowMass = float(eeLowMass)/float(ofLowMass)
+	rEEOFLowMassErr = rEEOFLowMass * (eeLowMassErr**2/eeLowMass**2 + ofLowMassErr**2/ofLowMass**2)**0.5
+	rEEOFHighMass = float(eeHighMass)/float(ofHighMass)
+	rEEOFHighMassErr = rEEOFHighMass * (eeHighMassErr**2/eeHighMass**2 + ofHighMassErr**2/ofHighMass**2)**0.5
 	
 	rMMOF = float(mm)/float(of)
-	rMMOFErr = rMMOF * (mmErr**2/mm**2 + ofErr**2/of**2)**0.5	
+	rMMOFErr = rMMOF * (mmErr**2/mm**2 + ofErr**2/of**2)**0.5
+	rMMOFLowMass = float(mmLowMass)/float(ofLowMass)
+	rMMOFLowMassErr = rMMOFLowMass * (mmLowMassErr**2/mmLowMass**2 + ofLowMassErr**2/ofLowMass**2)**0.5
+	rMMOFHighMass = float(mmHighMass)/float(ofHighMass)
+	rMMOFHighMassErr = rMMOFHighMass * (mmHighMassErr**2/mmHighMass**2 + ofHighMassErr**2/ofHighMass**2)**0.5
+	
 		
 	
 	result = {}
 	result["EE"] = ee
 	result["MM"] = mm
 	result["SF"] = sf
-	result["OF"] = of		
+	result["OF"] = of
+	result["EELowMass"] = eeLowMass
+	result["MMLowMass"] = mmLowMass
+	result["SFLowMass"] = eeLowMass + mmLowMass
+	result["OFLowMass"] = ofLowMass
+	result["EEHighMass"] = eeHighMass
+	result["MMHighMass"] = mmHighMass
+	result["SFHighMass"] = eeHighMass + mmHighMass
+	result["OFHighMass"] = ofHighMass
+		
+		
 		
 	result["rSFOF"] = rsfof
 	result["rSFOFErr"] = rsfofErr
@@ -259,29 +304,73 @@ def centralValues(path,selection,runRange,isMC,nonNormalized,backgrounds,cmsExtr
 	result["rEEOFErr"] = rEEOFErr
 	result["rMMOF"] = rMMOF
 	result["rMMOFErr"] = rMMOFErr
+	
+	result["rSFOFLowMass"] = sfLowMass / ofLowMass
+	result["rSFOFErrLowMass"] = result["rSFOFLowMass"]*(sfLowMassErr**2/sfLowMass**2+ofLowMassErr**2/ofLowMass**2)**0.5
+	result["rEEOFLowMass"] = eeLowMass / ofLowMass
+	result["rEEOFErrLowMass"] =  result["rEEOFLowMass"]*((eeLowMassErr**2)**0.5**2/sfLowMass**2+ofLowMassErr**2/ofLowMass**2)**0.5
+	result["rMMOFLowMass"] = mmLowMass / ofLowMass
+	result["rMMOFErrLowMass"] =  result["rMMOFLowMass"]*((mmLowMassErr**2)**0.5**2/sfLowMass**2+ofLowMassErr**2/ofLowMass**2)**0.5
+	result["rSFOFHighMass"] = sfHighMass / ofHighMass
+	result["rSFOFErrHighMass"] = result["rSFOFHighMass"]*(sfHighMassErr**2/sfHighMass**2+ofHighMassErr**2/ofHighMass**2)**0.5
+	result["rEEOFHighMass"] = eeHighMass / ofHighMass
+	result["rEEOFErrHighMass"] =  result["rEEOFHighMass"]*((eeHighMassErr**2)**0.5**2/sfHighMass**2+ofHighMassErr**2/ofHighMass**2)**0.5
+	result["rMMOFHighMass"] = mmHighMass / ofHighMass
+	result["rMMOFErrHighMass"] =  result["rMMOFHighMass"]*((mmHighMassErr**2)**0.5**2/sfHighMass**2+ofHighMassErr**2/ofHighMass**2)**0.5
 
 	if isMC:
-
-		eeErrSignal = ROOT.Double()
-		eeSignal = histEESignal.IntegralAndError(histEESignal.FindBin(lowMassLow+0.01),histEESignal.FindBin(lowMassHigh-0.01),eeErrSignal)
 		
-		mmErrSignal = ROOT.Double()
-		mmSignal = histMMSignal.IntegralAndError(histMMSignal.FindBin(lowMassLow+0.01),histMMSignal.FindBin(lowMassHigh-0.01),mmErrSignal)
+		eeLowMassErrSignal = ROOT.Double()
+		eeLowMassSignal = histEESignal.IntegralAndError(histEESignal.FindBin(lowMassLow+0.01),histEESignal.FindBin(lowMassHigh-0.01),eeLowMassErrSignal)
+		eeHighMassErrSignal = ROOT.Double()
+		eeHighMassSignal = histEESignal.IntegralAndError(histEESignal.FindBin(highMassRSFOFLow+0.01),histEESignal.FindBin(highMassRSFOFHigh-0.01),eeHighMassErrSignal)
 		
-		ofErrSignal = ROOT.Double()
-		ofSignal = histEMSignal.IntegralAndError(histEMSignal.FindBin(lowMassLow+0.01),histEMSignal.FindBin(lowMassHigh-0.01),ofErrSignal)	
+		eeSignal = eeLowMassSignal + eeHighMassSignal
+		eeErrSignal = (eeLowMassErrSignal**2 + eeHighMassErrSignal**2)**0.5
 		
-		sfSignal = eeSignal + mmSignal
+		mmLowMassErrSignal = ROOT.Double()
+		mmLowMassSignal = histMMSignal.IntegralAndError(histMMSignal.FindBin(lowMassLow+0.01),histMMSignal.FindBin(lowMassHigh-0.01),mmLowMassErrSignal)
+		mmHighMassErrSignal = ROOT.Double()
+		mmHighMassSignal = histMMSignal.IntegralAndError(histMMSignal.FindBin(highMassRSFOFLow+0.01),histMMSignal.FindBin(highMassRSFOFHigh-0.01),mmHighMassErrSignal)
+		
+		mmSignal = mmLowMassSignal + mmHighMassSignal
+		mmErrSignal = (mmLowMassErrSignal**2 + mmHighMassErrSignal**2)**0.5
+		
+		ofLowMassErrSignal = ROOT.Double()
+		ofLowMassSignal = histEMSignal.IntegralAndError(histEMSignal.FindBin(lowMassLow+0.01),histEMSignal.FindBin(lowMassHigh-0.01),ofLowMassErrSignal)
+		ofHighMassErrSignal = ROOT.Double()
+		ofHighMassSignal = histEMSignal.IntegralAndError(histEMSignal.FindBin(highMassRSFOFLow+0.01),histEMSignal.FindBin(highMassRSFOFHigh-0.01),ofHighMassErrSignal)
+		
+		ofSignal = ofLowMassSignal + ofHighMassSignal
+		ofErrSignal = (ofLowMassErrSignal**2 + ofHighMassErrSignal**2)**0.5
+		 
+		sfSignal = eeSignal + mmSignal 
+		sfLowMassSignal = eeLowMassSignal + mmLowMassSignal
+		sfHighMassSignal = eeHighMassSignal + mmHighMassSignal
 		sfErrSignal = (eeErrSignal**2 + mmErrSignal**2)**0.5
+		sfLowMassErrSignal = (eeLowMassErrSignal**2 + mmLowMassErrSignal**2)**0.5
+		sfHighMassErrSignal = (eeHighMassErrSignal**2 + mmHighMassErrSignal**2)**0.5
 		
-		rsfofSignal = float(sfSignal)/float(ofSignal)
+		rsfofSignal = float(sfSignal)/float(ofSignal)	
 		rsfofErrSignal = rsfofSignal*(sfErrSignal**2/sfSignal**2+ofErrSignal**2/ofSignal**2)**0.5
+		rsfofLowMassSignal = float(sfLowMassSignal)/float(ofLowMassSignal)
+		rsfofLowMassErrSignal = rsfofLowMassSignal*(sfLowMassErrSignal**2/sfLowMassSignal**2+ofLowMassErrSignal**2/ofLowMassSignal**2)**0.5
+		rsfofHighMassSignal = float(sfHighMassSignal)/float(ofHighMassSignal)
+		rsfofHighMassErrSignal = rsfofHighMassSignal*(sfHighMassErrSignal**2/sfHighMassSignal**2+ofHighMassErrSignal**2/ofHighMassSignal**2)**0.5
 		
 		rEEOFSignal = float(eeSignal)/float(ofSignal)
 		rEEOFErrSignal = rEEOFSignal * (eeErrSignal**2/eeSignal**2 + ofErrSignal**2/ofSignal**2)**0.5
+		rEEOFLowMassSignal = float(eeLowMassSignal)/float(ofLowMassSignal)
+		rEEOFLowMassErrSignal = rEEOFLowMassSignal * (eeLowMassErrSignal**2/eeLowMassSignal**2 + ofLowMassErrSignal**2/ofLowMassSignal**2)**0.5
+		rEEOFHighMassSignal = float(eeHighMassSignal)/float(ofHighMassSignal)
+		rEEOFHighMassErrSignal = rEEOFHighMassSignal * (eeHighMassErrSignal**2/eeHighMassSignal**2 + ofHighMassErrSignal**2/ofHighMassSignal**2)**0.5
 		
 		rMMOFSignal = float(mmSignal)/float(ofSignal)
 		rMMOFErrSignal = rMMOFSignal * (mmErrSignal**2/mmSignal**2 + ofErrSignal**2/ofSignal**2)**0.5
+		rMMOFLowMassSignal = float(mmLowMassSignal)/float(ofLowMassSignal)
+		rMMOFLowMassErrSignal = rMMOFLowMassSignal * (mmLowMassErrSignal**2/mmLowMassSignal**2 + ofLowMassErrSignal**2/ofLowMassSignal**2)**0.5
+		rMMOFHighMassSignal = float(mmHighMassSignal)/float(ofHighMassSignal)
+		rMMOFHighMassErrSignal = rMMOFHighMassSignal * (mmHighMassErrSignal**2/mmHighMassSignal**2 + ofHighMassErrSignal**2/ofHighMassSignal**2)**0.5
 
 		transferFaktor = rsfofSignal/rsfof
 		transferFaktorErr = transferFaktor*((rsfofErr/rsfof)**2+(rsfofErrSignal/rsfofSignal)**2)**0.5
@@ -292,10 +381,34 @@ def centralValues(path,selection,runRange,isMC,nonNormalized,backgrounds,cmsExtr
 		transferFaktorMM = rMMOFSignal/rMMOF
 		transferFaktorMMErr = transferFaktorMM*((rMMOFErr/rMMOF)**2+(rMMOFErrSignal/rMMOFSignal)**2)**0.5
 		
+		transferFaktorLowMass = rsfofLowMassSignal/rsfofLowMass
+		transferFaktorLowMassErr = transferFaktorLowMass*((rsfofLowMassErr/rsfofLowMass)**2+(rsfofLowMassErrSignal/rsfofLowMassSignal)**2)**0.5
+		transferFaktorEELowMass = rEEOFLowMassSignal/rEEOFLowMass
+		transferFaktorEELowMassErr = transferFaktorEELowMass*((rEEOFLowMassErr/rEEOFLowMass)**2+(rEEOFLowMassErrSignal/rEEOFLowMassSignal)**2)**0.5
+		transferFaktorMMLowMass = rMMOFLowMassSignal/rMMOFLowMass
+		transferFaktorMMLowMassErr = transferFaktorMMLowMass*((rMMOFLowMassErr/rMMOFLowMass)**2+(rMMOFLowMassErrSignal/rMMOFLowMassSignal)**2)**0.5
+		
+		transferFaktorHighMass = rsfofHighMassSignal/rsfofHighMass
+		transferFaktorHighMassErr = transferFaktorHighMass*((rsfofHighMassErr/rsfofHighMass)**2+(rsfofHighMassErrSignal/rsfofHighMassSignal)**2)**0.5
+		transferFaktorEEHighMass = rEEOFHighMassSignal/rEEOFHighMass
+		transferFaktorEEHighMassErr = transferFaktorEEHighMass*((rEEOFHighMassErr/rEEOFHighMass)**2+(rEEOFHighMassErrSignal/rEEOFHighMassSignal)**2)**0.5
+		transferFaktorMMHighMass = rMMOFHighMassSignal/rMMOFHighMass
+		transferFaktorMMHighMassErr = transferFaktorMMHighMass*((rMMOFHighMassErr/rMMOFHighMass)**2+(rMMOFHighMassErrSignal/rMMOFHighMassSignal)**2)**0.5
+		
 		result["EESignal"] = eeSignal
 		result["MMSignal"] = mmSignal
 		result["SFSignal"] = sfSignal
 		result["OFSignal"] = ofSignal
+		result["EELowMassSignal"] = eeLowMassSignal
+		result["MMLowMassSignal"] = mmLowMassSignal
+		result["SFLowMassSignal"] = eeLowMassSignal + mmLowMassSignal
+		result["OFLowMassSignal"] = ofLowMassSignal
+		result["EEHighMassSignal"] = eeHighMassSignal
+		result["MMHighMassSignal"] = mmHighMassSignal
+		result["SFHighMassSignal"] = eeHighMassSignal + mmHighMassSignal
+		result["OFHighMassSignal"] = ofHighMassSignal
+		
+		
 		
 		result["rSFOFSignal"] = rsfofSignal
 		result["rSFOFErrSignal"] = rsfofErrSignal
@@ -303,12 +416,39 @@ def centralValues(path,selection,runRange,isMC,nonNormalized,backgrounds,cmsExtr
 		result["rEEOFErrSignal"] = rEEOFErrSignal
 		result["rMMOFSignal"] = rMMOFSignal
 		result["rMMOFErrSignal"] = rMMOFErrSignal
+		
+		result["rSFOFLowMassSignal"] = sfLowMassSignal / ofLowMassSignal
+		result["rSFOFErrLowMassSignal"] = result["rSFOFLowMassSignal"]*(sfLowMassErrSignal**2/sfLowMassSignal**2+ofLowMassErrSignal**2/ofLowMassSignal**2)**0.5
+		result["rEEOFLowMassSignal"] = eeLowMassSignal / ofLowMassSignal
+		result["rEEOFErrLowMassSignal"] =  result["rEEOFLowMassSignal"]*(eeLowMassErrSignal**2/eeLowMassSignal**2+ofLowMassErrSignal**2/ofLowMassSignal**2)**0.5
+		result["rMMOFLowMassSignal"] = mmLowMassSignal / ofLowMassSignal
+		result["rMMOFErrLowMassSignal"] =  result["rMMOFLowMassSignal"]*(mmLowMassErrSignal**2/mmLowMassSignal**2+ofLowMassErrSignal**2/ofLowMassSignal**2)**0.5
+		result["rSFOFHighMassSignal"] = sfHighMassSignal / ofHighMassSignal
+		result["rSFOFErrHighMassSignal"] = result["rSFOFHighMassSignal"]*(sfHighMassErrSignal**2/sfHighMassSignal**2+ofHighMassErrSignal**2/ofHighMassSignal**2)**0.5
+		result["rEEOFHighMassSignal"] = eeHighMassSignal / ofHighMassSignal
+		result["rEEOFErrHighMassSignal"] =  result["rEEOFHighMassSignal"]*(eeHighMassErrSignal**2/eeHighMassSignal**2+ofHighMassErrSignal**2/ofHighMassSignal**2)**0.5
+		result["rMMOFHighMassSignal"] = mmHighMassSignal / ofHighMassSignal
+		result["rMMOFErrHighMassSignal"] =  result["rMMOFHighMassSignal"]*(mmHighMassErrSignal**2/mmHighMassSignal**2+ofHighMassErrSignal**2/ofHighMassSignal**2)**0.5
+		
 		result["transfer"] = transferFaktor
 		result["transferErr"] = transferFaktorErr
 		result["transferEE"] = transferFaktorEE
 		result["transferEEErr"] = transferFaktorEEErr
 		result["transferMM"] = transferFaktorMM
 		result["transferMMErr"] = transferFaktorMMErr
+	
+		result["transferLowMass"] = transferFaktorLowMass
+		result["transferLowMassErr"] = transferFaktorLowMassErr
+		result["transferEELowMass"] = transferFaktorEELowMass
+		result["transferEELowMassErr"] = transferFaktorEELowMassErr
+		result["transferMMLowMass"] = transferFaktorMMLowMass
+		result["transferMMLowMassErr"] = transferFaktorMMLowMassErr
+		result["transferHighMass"] = transferFaktorHighMass
+		result["transferHighMassErr"] = transferFaktorHighMassErr
+		result["transferEEHighMass"] = transferFaktorEEHighMass
+		result["transferEEHighMassErr"] = transferFaktorEEHighMassErr
+		result["transferMMHighMass"] = transferFaktorMMHighMass
+		result["transferMMHighMassErr"] = transferFaktorMMHighMassErr
 	
 	return result
 	

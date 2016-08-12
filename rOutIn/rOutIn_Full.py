@@ -40,6 +40,7 @@ from locations import locations
 def getHistograms(path,plot,runRange,isMC,backgrounds):
 
 	treesEE = readTrees(path,"EE")
+	treesEM = readTrees(path,"EMu")
 	treesMM = readTrees(path,"MuMu")
 		
 	
@@ -52,19 +53,22 @@ def getHistograms(path,plot,runRange,isMC,backgrounds):
 			processes.append(Process(getattr(Backgrounds,background),eventCounts))
 		histoEE = TheStack(processes,runRange.lumi,plot,treesEE,"None",1.0,1.0,1.0).theHistogram		
 		histoMM = TheStack(processes,runRange.lumi,plot,treesMM,"None",1.0,1.0,1.0).theHistogram
+		histoEM = TheStack(processes,runRange.lumi,plot,treesEM,"None",1.0,1.0,1.0).theHistogram	
 		
 	else:
 		histoEE = getDataHist(plot,treesEE)
 		histoMM = getDataHist(plot,treesMM)
+		histoEM = getDataHist(plot,treesEM)
 	
-	return histoEE , histoMM
+	return histoEE , histoMM, histoEM
 
 
 	
-def plotMllSpectra(SFhist,runRange,selection,suffix,cmsExtra,additionalLabel):
+def plotMllSpectra(SFhist,EMuhist,runRange,selection,suffix,cmsExtra,additionalLabel):
 
 		
 	SFhist.Rebin(5)
+	EMuhist.Rebin(5)
 
 	hCanvas = TCanvas("hCanvas", "Distribution", 800,800)
 	plotPad = TPad("plotPad","plotPad",0,0,1,1)
@@ -84,12 +88,15 @@ def plotMllSpectra(SFhist,runRange,selection,suffix,cmsExtra,additionalLabel):
 	SFhist.SetMarkerStyle(20)
 	SFhist.SetMarkerColor(ROOT.kBlack)
 	
+	EMuhist.Draw("samehist")
 	SFhist.Draw("samepe")
+	EMuhist.SetFillColor(855)
 	legend = TLegend(0.6, 0.7, 0.95, 0.95)
 	legend.SetFillStyle(0)
 	legend.SetBorderSize(0)
 	ROOT.gStyle.SetOptStat(0)	
 	legend.AddEntry(SFhist,"%s events"%suffix,"p")
+	legend.AddEntry(EMuhist,"OF events","f")
 	legend.Draw("same")
 
 	
@@ -178,6 +185,7 @@ def plotMllSpectra(SFhist,runRange,selection,suffix,cmsExtra,additionalLabel):
 	plotPad.SetLogy()
 
 	
+	EMuhist.Draw("samehist")
 	SFhist.Draw("samepe")
 	legend.Draw("same")
 	
@@ -403,59 +411,129 @@ def centralValues(path,selection,runRange,isMC,backgrounds,cmsExtra,additionalLa
 	else:		
 		region = "forward"
 
-	histEE, histMM = getHistograms(path,plot,runRange,isMC,backgrounds)
+	histEE, histMM, histEM = getHistograms(path,plot,runRange,isMC,backgrounds)
 	histSF = histEE.Clone("histSF")
 	histSF.Add(histMM.Clone())
 
 	result = {}
 	lowMassLow = mllBins.lowMass.low
 	lowMassHigh = mllBins.lowMass.high
+	belowZLow = mllBins.belowZ.low
+	belowZHigh = mllBins.belowZ.high
 	peakLow = mllBins.onZ.low
 	peakHigh = mllBins.onZ.high
+	aboveZLow = mllBins.aboveZ.low
+	aboveZHigh = mllBins.aboveZ.high
+	highMassLow = mllBins.highMass.low
+	highMassHigh = mllBins.highMass.high
 
 		
 	result["peakEE"] = histEE.Integral(histEE.FindBin(peakLow+0.01),histEE.FindBin(peakHigh-0.01))
 	result["peakMM"] = histMM.Integral(histMM.FindBin(peakLow+0.01),histMM.FindBin(peakHigh-0.01))
 	result["peakSF"] = result["peakEE"] + result["peakMM"]
+	result["peakOF"] = histEM.Integral(histEM.FindBin(peakLow+0.01),histEM.FindBin(peakHigh-0.01))
 
 	result["lowMassEE"] = histEE.Integral(histEE.FindBin(lowMassLow+0.01),histEE.FindBin(lowMassHigh-0.01))
 	result["lowMassMM"] = histMM.Integral(histMM.FindBin(lowMassLow+0.01),histMM.FindBin(lowMassHigh-0.01))
 	result["lowMassSF"] = result["lowMassEE"] + result["lowMassMM"]
+	result["lowMassOF"] = histEM.Integral(histEM.FindBin(lowMassLow),histEM.FindBin(lowMassHigh-0.01))
+	
+	result["belowZEE"] = histEE.Integral(histEE.FindBin(belowZLow+0.01),histEE.FindBin(belowZHigh-0.01))
+	result["belowZMM"] = histMM.Integral(histMM.FindBin(belowZLow+0.01),histMM.FindBin(belowZHigh-0.01))
+	result["belowZSF"] = result["belowZEE"] + result["belowZMM"]
+	result["belowZOF"] = histEM.Integral(histEM.FindBin(belowZLow),histEM.FindBin(belowZHigh-0.01))
+	
+	result["aboveZEE"] = histEE.Integral(histEE.FindBin(aboveZLow+0.01),histEE.FindBin(aboveZHigh))
+	result["aboveZMM"] = histMM.Integral(histMM.FindBin(aboveZLow+0.01),histMM.FindBin(aboveZHigh))
+	result["aboveZSF"] = result["aboveZEE"] + result["aboveZMM"]
+	result["aboveZOF"] = histEM.Integral(histEM.FindBin(aboveZLow+0.01),histEM.FindBin(aboveZHigh))
+	
+	result["highMassEE"] = histEE.Integral(histEE.FindBin(highMassLow+0.01),histEE.FindBin(highMassHigh))
+	result["highMassMM"] = histMM.Integral(histMM.FindBin(highMassLow+0.01),histMM.FindBin(highMassHigh))
+	result["highMassSF"] = result["highMassEE"] + result["highMassMM"]
+	result["highMassOF"] = histEM.Integral(histEM.FindBin(highMassLow+0.01),histEM.FindBin(highMassHigh))
+	
 
 	for combination in ["EE","MM","SF"]:
-		peak = result["peak%s"%combination]		
-		peakErr = sqrt(result["peak%s"%combination])
+		corr = getattr(corrections,"r%sOF"%combination).central.val
+		corrErr = getattr(corrections,"r%sOF"%combination).central.err
+		if isMC:
+			corr = getattr(corrections,"r%sOF"%combination).central.valMC
+			corrErr = getattr(corrections,"r%sOF"%combination).central.errMC
+		peak = result["peak%s"%combination] - result["peakOF"]*corr			
+		peakErr = sqrt(result["peak%s"%combination] + (sqrt(result["peakOF"])*corr)**2 + (sqrt(result["peakOF"])*corr*corrErr)**2)
 
-		lowMass = result["lowMass%s"%combination]			
-		lowMassErr = sqrt(result["lowMass%s"%combination])
-				
+		lowMass = result["lowMass%s"%combination] - result["lowMassOF"]*corr			
+		lowMassErr = sqrt(result["lowMass%s"%combination] + (sqrt(result["lowMassOF"])*corr)**2 + (sqrt(result["lowMassOF"])*corr*corrErr)**2)
+		belowZ = result["belowZ%s"%combination] - result["belowZOF"]*corr			
+		belowZErr = sqrt(result["belowZ%s"%combination] + (sqrt(result["belowZOF"])*corr)**2 + (sqrt(result["belowZOF"])*corr*corrErr)**2)
+		aboveZ = result["aboveZ%s"%combination] - result["aboveZOF"]*corr			
+		aboveZErr = sqrt(result["aboveZ%s"%combination] + (sqrt(result["aboveZOF"])*corr)**2 + (sqrt(result["aboveZOF"])*corr*corrErr)**2)	
+		highMass = result["highMass%s"%combination] - result["highMassOF"]*corr			
+		highMassErr = sqrt(result["highMass%s"%combination] + (sqrt(result["highMassOF"])*corr)**2 + (sqrt(result["highMassOF"])*corr*corrErr)**2)	
+							
 		result["correctedPeak%s"%combination] = peak
 		result["peakError%s"%combination] = peakErr
 
 		result["correctedLowMass%s"%combination] = lowMass
 		result["lowMassError%s"%combination] = lowMassErr
+		result["correctedBelowZ%s"%combination] = belowZ
+		result["belowZError%s"%combination] = belowZErr
+		result["correctedAboveZ%s"%combination] = aboveZ
+		result["aboveZError%s"%combination] = aboveZErr
+		result["correctedHighMass%s"%combination] = highMass
+		result["highMassError%s"%combination] = highMassErr
+		
+		
+		result["correction"] = 	corr
+		result["correctionErr"] = 	corrErr
 	
 		rOutInLowMass =   lowMass / peak
+		rOutInBelowZ =   belowZ / peak
+		rOutInAboveZ = aboveZ / peak
+		rOutInHighMass = highMass / peak
+		
 		rOutInLowMassSystErr = rOutInLowMass*systematics.rOutIn.central.val
+		rOutInBelowZSystErr = rOutInBelowZ*systematics.rOutIn.central.val
+		rOutInAboveZSystErr = rOutInAboveZ*systematics.rOutIn.central.val
+		rOutInHighMassSystErr = rOutInHighMass*systematics.rOutIn.central.val
+		
 		rOutInLowMassErr = sqrt((lowMassErr/peak)**2 + (lowMass*peakErr/peak**2)**2)
+		rOutInBelowZErr = sqrt((belowZErr/peak)**2 + (belowZ*peakErr/peak**2)**2)
+		rOutInAboveZErr = sqrt((aboveZErr/peak)**2 + (aboveZ*peakErr/peak**2)**2)
+		rOutInHighMassErr = sqrt((highMassErr/peak)**2 + (highMass*peakErr/peak**2)**2)
 
 
 		result["rOutInLowMass%s"%combination] = rOutInLowMass
 		result["rOutInLowMassErr%s"%combination] = rOutInLowMassErr
 		result["rOutInLowMassSyst%s"%combination] = rOutInLowMassSystErr
 		
+		result["rOutInBelowZ%s"%combination] = rOutInBelowZ
+		result["rOutInBelowZErr%s"%combination] = rOutInBelowZErr
+		result["rOutInBelowZSyst%s"%combination] = rOutInBelowZSystErr
+		
+		result["rOutInAboveZ%s"%combination] = rOutInAboveZ
+		result["rOutInAboveZErr%s"%combination] = rOutInAboveZErr
+		result["rOutInAboveZSyst%s"%combination] = rOutInAboveZSystErr
+		
+		result["rOutInHighMass%s"%combination] = rOutInHighMass
+		result["rOutInHighMassErr%s"%combination] = rOutInHighMassErr
+		result["rOutInHighMassSyst%s"%combination] = rOutInHighMassSystErr
+		
 		saveLabel = additionalLabel
 		tmpLabel = additionalLabel
 		if isMC:
 			tmpLabel += "_MC"
 
+		histEMToPlot = histEM.Clone()
+		histEMToPlot.Scale(corr)
 		additionalLabel = tmpLabel
 		if combination == "EE":
-			plotMllSpectra(histEE.Clone(),runRange,selection,combination,cmsExtra,additionalLabel)
+			plotMllSpectra(histEE.Clone(),histEMToPlot,runRange,selection,combination,cmsExtra,additionalLabel)
 		elif combination == "MM":	
-			plotMllSpectra(histMM.Clone(),runRange,selection,combination,cmsExtra,additionalLabel)
+			plotMllSpectra(histMM.Clone(),histEMToPlot,runRange,selection,combination,cmsExtra,additionalLabel)
 		else:	
-			plotMllSpectra(histSF.Clone(),runRange,selection,combination,cmsExtra,additionalLabel)
+			plotMllSpectra(histSF.Clone(),histEMToPlot,runRange,selection,combination,cmsExtra,additionalLabel)
 			
 
 		additionalLabel = saveLabel

@@ -183,11 +183,11 @@ def makePlot(sfHist,ofHist,selection,plot,runRange,region,cmsExtra,combination,b
 	yMax = sfHist.GetBinContent(sfHist.GetMaximumBin())
 	
 	if plot.yMax == 0:
-		#~ yMax = yMax*2.15
-		if edgeShape or edgeShapeMC or differentEdgePositions: 
-			yMax = yMax*1.75 
-		else:
-			yMax = yMax*1.5 
+		yMax = yMax*2.25
+		#~ if edgeShape or edgeShapeMC or differentEdgePositions: 
+			#~ yMax = yMax*1.75 
+		#~ else:
+			#~ yMax = yMax*2.
 						
 	else: 
 		yMax = plot.yMax
