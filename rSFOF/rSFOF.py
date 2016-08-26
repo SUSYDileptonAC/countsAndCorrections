@@ -33,7 +33,7 @@ import corrections
 
 from locations import locations
 
-def dependencies(path,selection,plots,runRange,isMC,nonNormalized,backgrounds,cmsExtra,fit):
+def dependencies(path,selection,plots,runRange,isMC,nonNormalized,backgrounds,cmsExtra):
 	for name in plots:
 		plot = getPlot(name)
 		plot.addRegion(selection)
@@ -49,99 +49,8 @@ def dependencies(path,selection,plots,runRange,isMC,nonNormalized,backgrounds,cm
 
 
 		histEE, histMM, histEM = getHistograms(path,plot,runRange,isMC,nonNormalized, backgrounds,label)
-		histRSFOF = histEE.Clone("histRSFOF")
-		histRSFOF.Add(histMM.Clone())
-		histRSFOF.Divide(histEM)				
-		histEE.Divide(histEM)				
-		histMM.Divide(histEM)				
 		
-		hCanvas = TCanvas("hCanvas", "Distribution", 800,300)
-		
-		plotPad = ROOT.TPad("plotPad","plotPad",0,0,1,1)
-		style = setTDRStyle()
-		style.SetTitleSize(0.1, "XYZ")
-		style.SetTitleYOffset(0.35)
-		style.SetTitleXOffset(0.7)
-		style.SetPadLeftMargin(0.1)
-		style.SetPadTopMargin(0.12)
-		style.SetPadBottomMargin(0.17)
-		plotPad.UseCurrentStyle()		
-		plotPad.Draw()	
-		plotPad.cd()	
-					
-	
-		plotPad.DrawFrame(plot.firstBin,0,plot.lastBin,3,"; %s ; %s" %(plot.xaxis,"SF/OF"))
-		
-		
-		from ROOT import TH1F,kWhite
-		legendHistDing = TH1F()
-		legendHistDing.SetFillColor(kWhite)
-		legend = ROOT.TLegend(0.65,0.6,1,0.85)
-		legend.SetFillStyle(0)
-		legend.SetBorderSize(0)			
-		legend.AddEntry(legendHistDing,"%s"%selection.latex,"h")	
-
-
-		zeroLine = ROOT.TLine(plot.firstBin, 1., plot.lastBin , 1.)
-		zeroLine.SetLineWidth(1)
-		zeroLine.SetLineColor(ROOT.kBlue)
-		zeroLine.SetLineStyle(2)
-		zeroLine.Draw("same")
-		histRSFOF.SetLineColor(ROOT.kBlack)
-		histRSFOF.SetMarkerColor(ROOT.kBlack)
-		histRSFOF.SetMarkerStyle(20)
-		histRSFOF.Draw("sameE0")
-		histEE.SetLineColor(ROOT.kBlue)
-		histEE.SetMarkerColor(ROOT.kBlue)
-		histEE.SetMarkerStyle(20)
-		histMM.SetLineColor(ROOT.kRed)
-		histMM.SetMarkerColor(ROOT.kRed)
-		histMM.SetMarkerStyle(20)
-
-
-		legend.Draw("same")
-
-		
-		latex = ROOT.TLatex()
-		latex.SetTextFont(42)
-		latex.SetTextAlign(11)
-		latex.SetTextSize(0.04)
-		latex.SetNDC(True)
-		latexLumi = ROOT.TLatex()
-		latexLumi.SetTextFont(42)
-		latexLumi.SetTextAlign(31)
-		latexLumi.SetTextSize(0.1)
-		latexLumi.SetNDC(True)
-		latexCMS = ROOT.TLatex()
-		latexCMS.SetTextFont(61)
-		latexCMS.SetTextSize(0.12)
-		latexCMS.SetNDC(True)
-		latexCMSExtra = ROOT.TLatex()
-		latexCMSExtra.SetTextFont(52)
-		latexCMSExtra.SetTextSize(0.1)
-		latexCMSExtra.SetNDC(True)	
-		latexLumi.DrawLatex(0.95, 0.91, "%s fb^{-1} (13 TeV)"%runRange.printval)
-		
-
-		latexCMS.DrawLatex(0.12,0.76,"CMS")
-		if "Simulation" in cmsExtra and "Private Work" in cmsExtra:
-			yLabelPos = 0.635	
-		else:
-			yLabelPos = 0.68	
-
-		latexCMSExtra.DrawLatex(0.12,yLabelPos,"%s"%(cmsExtra))	
-
-
-		if fit:
-			fit = TF1("dataFit","pol1",0,300)
-			fit.SetLineColor(ROOT.kBlack)
-			histRSFOF.Fit("dataFit")		
-			
-			latex = ROOT.TLatex()
-			latex.SetTextSize(0.035)	
-			latex.SetNDC()	
-			latex.DrawLatex(0.2, 0.25, "Fit: %.2f #pm %.2f %.5f #pm %.5f * %s"%(fit.GetParameter(0),fit.GetParError(0),fit.GetParameter(1),fit.GetParError(1),plot.variable))
-
+		### Add code to make the dependency plots
 
 		
 		if isMC:
@@ -334,9 +243,7 @@ def main():
 	parser.add_argument("-b", "--backgrounds", dest="backgrounds", action="append", default=[],
 						  help="backgrounds to plot.")
 	parser.add_argument("-d", "--dependencies", action="store_true", dest="dependencies", default= False,
-						  help="make dependency plots")			
-	parser.add_argument("-f", "--fit", action="store_true", dest="fit", default= False,
-						  help="do dependecy fit")	
+						  help="make dependency plots")	
 	parser.add_argument("-w", "--write", action="store_true", dest="write", default=False,
 						  help="write results to central repository")	
 	parser.add_argument("-n", "--nonNormalized", action="store_true", dest="nonNormalized", default=False,
@@ -382,7 +289,7 @@ def main():
 				outFilePkl.close()
 				
 			if args.dependencies:
-				 dependencies(path,selection,args.plots,runRange,args.mc,args.nonNormalized,args.backgrounds,cmsExtra,args.fit)		
+				 dependencies(path,selection,args.plots,runRange,args.mc,args.nonNormalized,args.backgrounds,cmsExtra)		
 				
 			if args.write:
 				import subprocess

@@ -550,162 +550,6 @@ def dependencies(path,selection,plots,runRange,isMC,backgrounds,cmsExtra,fit):
 		hCanvas.Print("fig/rSFOFFromRMuE_%s_%s_%s_%s.pdf"%(selection.name,runRange.label,plot.variablePlotName,plot.additionalName))	
 	
 	
-def signalRegion(path,selection,plots,runRange,isMC,backgrounds,cmsExtra):
-	plots = ["mllPlotRMuESignal"]
-	for name in plots:
-		plot = getPlot(name)
-		plot.addRegion(selection)
-		#~ plot.cleanCuts()	
-		plot.cuts = plot.cuts % runRange.runCut	
-
-		if not "Forward" in selection.name:
-			corr = rSFOF.central.val
-			corrErr = rSFOF.central.err
-			if "Central" in selection.name:
-				region = "central"
-			else:
-				region = "inclusive"
-		else:	
-			corr = rSFOF.forward.val
-			corrErr = rSFOF.forward.err
-			region = "forward"
-
-		
-		histEE, histMM, histEM = getHistograms(path,plot,runRange,isMC, backgrounds,region,EM=True)	
-
-		rMuEMeasured = rMuEMeasure(histEE,histMM)	
-		rMuE, rMuEUncert = rMuEFromSFOF(histEE,histMM,histEM,corr,corrErr)
-		
-		hCanvas = TCanvas("hCanvas", "Distribution", 800,800)
-		plotPad = TPad("plotPad","plotPad",0,0,1,1)
-		
-		style=setTDRStyle()
-		plotPad.UseCurrentStyle()
-		plotPad.Draw()	
-		plotPad.cd()				
-		
-		plotPad.DrawFrame(plot.firstBin,0,plot.lastBin,5,"; %s ; %s" %(plot.xaxis,"r_{#mu e}"))			
-		latex = ROOT.TLatex()
-		latex.SetTextSize(0.04)
-		latex.SetNDC(True)
-
-		
-		if "Central" in selection.name:
-			centralName = "ZPeakControlCentral"
-		elif "Forward" in selection.name:
-			centralName = "ZPeakControlForward"
-		else:
-			centralName = "ZPeakControl"
-		
-		if os.path.isfile("shelves/rMuE_%s_%s.pkl"%(centralName,runRange.label)):
-			centralVals = pickle.load(open("shelves/rMuE_%s_%s.pkl"%(centralName,runRange.label),"rb"))
-		else:
-			centralVals = centralValues(path,getRegion(centralName),runRange,False,backgrounds)
-		
-		x= array("f",[plot.firstBin, plot.lastBin]) 
-		y= array("f", [centralVals["rMuE"],centralVals["rMuE"]]) 
-		ex= array("f", [0.,0.])
-		ey= array("f", [centralVals["rMuESystErr"],centralVals["rMuESystErr"]])
-		ge= ROOT.TGraphErrors(2, x, y, ex, ey)
-		ge.SetFillColor(ROOT.kOrange-9)
-		ge.SetFillStyle(1001)
-		ge.SetLineColor(ROOT.kWhite)
-		ge.Draw("SAME 3")
-		
-		rmueLine= ROOT.TF1("rmueline","%f"%centralVals["rMuE"],plot.firstBin,plot.lastBin)
-		rmueLine.SetLineColor(ROOT.kOrange+3)
-		rmueLine.SetLineWidth(3)
-		rmueLine.SetLineStyle(2)
-		rmueLine.Draw("SAME")	
-				
-		
-	
-		arrayRMuEHigh = array("f",rMuE["up"])
-		arrayRMuELow = array("f",rMuE["down"])
-		arrayRMuEMeasured = array("f",rMuEMeasured["vals"])
-		arrayRMuEHighUncert = array("f",rMuEUncert["up"])
-		arrayRMuELowUncert = array("f",rMuEUncert["down"])
-		arrayRMuEMeasuredUncert = array("f",rMuEMeasured["errs"])
-		xValues = []
-		xValuesUncert = []
-
-		for x in range(0,histEE.GetNbinsX()):	
-			xValues.append(plot.firstBin+ (plot.lastBin-plot.firstBin)/plot.nBins + x*((plot.lastBin-plot.firstBin)/plot.nBins))
-			xValuesUncert.append(0)
-
-		
-		arrayXValues = array("f",xValues)
-		arrayXValuesUncert = array("f",xValuesUncert)
-
-		
-		graphHigh = ROOT.TGraphErrors(histEE.GetNbinsX(),arrayXValues,arrayRMuEHigh,arrayXValuesUncert,arrayRMuEHighUncert)
-		graphLow = ROOT.TGraphErrors(histEE.GetNbinsX(),arrayXValues,arrayRMuELow,arrayXValuesUncert,arrayRMuEHighUncert)
-		graphMeasured = ROOT.TGraphErrors(histEE.GetNbinsX(),arrayXValues,arrayRMuEMeasured,arrayXValuesUncert,arrayRMuEMeasuredUncert)
-		
-		
-		graphHigh.SetMarkerStyle(21)
-		graphLow.SetMarkerStyle(22)
-		graphMeasured.SetMarkerStyle(23)
-		graphHigh.SetMarkerColor(ROOT.kRed)
-		graphLow.SetMarkerColor(ROOT.kBlue)
-		graphHigh.SetLineColor(ROOT.kRed)
-		graphLow.SetLineColor(ROOT.kBlue)
-		
-		graphHigh.Draw("sameEP0")
-		graphLow.Draw("sameEP0")
-		graphMeasured.Draw("sameEP0")
-		
-		
-		
-		
-		legend = TLegend(0.5, 0.6, 0.95, 0.95)
-		legend.SetFillStyle(0)
-		legend.SetBorderSize(0)
-		entryHist = TH1F()
-		entryHist.SetFillColor(ROOT.kWhite)
-		legend.AddEntry(entryHist,selection.latex,"h")
-		legend.AddEntry(graphHigh,"r_{#mu e} = N_{SF}/N_{OF} + #sqrt{(N_{SF}/N_{OF})^{2} -1}","p")
-		legend.AddEntry(graphLow,"r_{#mu e} = N_{SF}/N_{OF} - #sqrt{(N_{SF}/N_{OF})^{2} -1}","p")
-		legend.AddEntry(rmueLine,"r_{#mu e} from Z peak","l")
-		legend.AddEntry(ge,"Syst. Uncert. of r_{#mu e}","f")
-		legend.AddEntry(graphMeasured,"r_{#mu e} = #sqrt{N_{#mu#mu}/N_{ee}} in SF signal region","p")
-		
-		legend.Draw("same")
-	
-
-
-
-		latex = ROOT.TLatex()
-		latex.SetTextFont(42)
-		latex.SetNDC(True)
-		latex.SetTextAlign(31)
-		latex.SetTextSize(0.04)
-
-		latex.DrawLatex(0.95, 0.96, "%s fb^{-1} (8 TeV)"%runRange.printval)
-
-		latexCMS = ROOT.TLatex()
-		latexCMS.SetTextFont(61)
-		latexCMS.SetTextSize(0.06)
-		latexCMS.SetNDC(True)
-		latexCMSExtra = ROOT.TLatex()
-		latexCMSExtra.SetTextFont(52)
-		latexCMSExtra.SetTextSize(0.045)
-		latexCMSExtra.SetNDC(True)				
-
-		latexCMS.DrawLatex(0.19,0.88,"CMS")
-		if "Simulation" in cmsExtra:
-			yLabelPos = 0.81	
-		else:
-			yLabelPos = 0.84	
-
-		latexCMSExtra.DrawLatex(0.19,yLabelPos,"%s"%(cmsExtra))		
-		
-		plotPad.RedrawAxis()
-		if isMC:
-			hCanvas.Print("fig/rMuESignal_%s_%s_%s_%s_MC.pdf"%(selection.name,runRange.label,plot.variablePlotName,plot.additionalName))				
-		else:	
-			hCanvas.Print("fig/rMuESignal_%s_%s_%s_%s.pdf"%(selection.name,runRange.label,plot.variablePlotName,plot.additionalName))				
-	
 def main():
 
 
@@ -728,8 +572,6 @@ def main():
 						  help="backgrounds to plot.")
 	parser.add_argument("-d", "--dependencies", action="store_true", dest="dependencies", default= False,
 						  help="make dependency plots")	
-	parser.add_argument("-z", "--signalRegion", action="store_true", dest="signalRegion", default= False,
-						  help="make rMuE in signal region plot")	
 	parser.add_argument("-f", "--fit", action="store_true", dest="fit", default= False,
 						  help="do dependecy fit")	
 	parser.add_argument("-x", "--private", action="store_true", dest="private", default=False,
@@ -746,15 +588,9 @@ def main():
 	if len(args.plots) == 0:
 		args.plots = plotLists.rMuE
 	if len(args.selection) == 0:
-		
-		if args.signalRegion:
-			args.selection.append(regionsToUse.signal.central.name)	
-			args.selection.append(regionsToUse.signal.forward.name)	
-			args.selection.append(regionsToUse.signal.inclusive.name)		
-		else:
-			args.selection.append(regionsToUse.rMuE.central.name)	
-			args.selection.append(regionsToUse.rMuE.forward.name)	
-			args.selection.append(regionsToUse.rMuE.inclusive.name)
+		args.selection.append(regionsToUse.rMuE.central.name)	
+		args.selection.append(regionsToUse.rMuE.forward.name)	
+		args.selection.append(regionsToUse.rMuE.inclusive.name)
 			
 	if len(args.runRange) == 0:
 		args.runRange.append(runRanges.name)		
@@ -789,9 +625,7 @@ def main():
 				outFilePkl.close()
 				
 			if args.dependencies:
-				 dependencies(path,selection,args.plots,runRange,args.mc,args.backgrounds,cmsExtra,args.fit)		
-			if args.signalRegion:
-				 signalRegion(path,selection,args.plots,runRange,args.mc,args.backgrounds,cmsExtra)	
+				 dependencies(path,selection,args.plots,runRange,args.mc,args.backgrounds,cmsExtra,args.fit)
 				 
 			if args.write:
 				import subprocess

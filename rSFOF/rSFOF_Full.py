@@ -51,9 +51,7 @@ def dependencies(path,selection,plots,runRange,isMC,nonNormalized,backgrounds,cm
 		histEE, histMM, histEM = getHistograms(path,plot,runRange,isMC,nonNormalized, backgrounds,label)
 		histRSFOF = histEE.Clone("histRSFOF")
 		histRSFOF.Add(histMM.Clone())
-		histRSFOF.Divide(histEM)				
-		histEE.Divide(histEM)				
-		histMM.Divide(histEM)				
+		histRSFOF.Divide(histEM)			
 		
 		hCanvas = TCanvas("hCanvas", "Distribution", 800,300)
 		
@@ -91,12 +89,6 @@ def dependencies(path,selection,plots,runRange,isMC,nonNormalized,backgrounds,cm
 		histRSFOF.SetMarkerColor(ROOT.kBlack)
 		histRSFOF.SetMarkerStyle(20)
 		histRSFOF.Draw("sameE0")
-		histEE.SetLineColor(ROOT.kBlue)
-		histEE.SetMarkerColor(ROOT.kBlue)
-		histEE.SetMarkerStyle(20)
-		histMM.SetLineColor(ROOT.kRed)
-		histMM.SetMarkerColor(ROOT.kRed)
-		histMM.SetMarkerStyle(20)
 
 
 		legend.Draw("same")
@@ -133,7 +125,7 @@ def dependencies(path,selection,plots,runRange,isMC,nonNormalized,backgrounds,cm
 
 
 		if fit:
-			fit = TF1("dataFit","pol1",0,300)
+			fit = TF1("dataFit","pol1",0,plot.lastBin)
 			fit.SetLineColor(ROOT.kBlack)
 			histRSFOF.Fit("dataFit")		
 			
