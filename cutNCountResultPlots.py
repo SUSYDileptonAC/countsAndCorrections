@@ -48,28 +48,15 @@ def getSignalMCHistograms(path,plot,runRange,sampleName):
 
 	return histoEE , histoMM, histoEM
 	
-def getHistograms(path,plot,runRange,isMC,backgrounds):
+def getHistograms(path,plot,runRange):
 
 	treesEE = readTrees(path,"EE")
 	treesEM = readTrees(path,"EMu")
 	treesMM = readTrees(path,"MuMu")
 		
-	
-	
-	if isMC:
-		
-		eventCounts = totalNumberOfGeneratedEvents(path)	
-		processes = []
-		for background in backgrounds:
-			processes.append(Process(getattr(Backgrounds,background),eventCounts))
-		histoEE = TheStack(processes,runRange.lumi,plot,treesEE,"None",1.0,1.0,1.0).theHistogram		
-		histoMM = TheStack(processes,runRange.lumi,plot,treesMM,"None",1.0,1.0,1.0).theHistogram
-		histoEM = TheStack(processes,runRange.lumi,plot,treesEM,"None",1.0,1.0,1.0).theHistogram		
-		
-	else:
-		histoEE = getDataHist(plot,treesEE)
-		histoMM = getDataHist(plot,treesMM)
-		histoEM = getDataHist(plot,treesEM)
+	histoEE = getDataHist(plot,treesEE)
+	histoMM = getDataHist(plot,treesMM)
+	histoEM = getDataHist(plot,treesEM)
 	
 	return histoEE , histoMM, histoEM
 
@@ -695,15 +682,15 @@ def makeResultPlot(path,selection,runRange,cmsExtra,edgeShape=False,edgeShapeMC=
 		plotDYScale.cuts = plotDYScale.cuts % runRange.runCut		
 		
 		
-		histEE, histMM, histEM = getHistograms(path,plot,runRange,False,[])
+		histEE, histMM, histEM = getHistograms(path,plot,runRange)
 		histSF = histEE.Clone("histSF")
 		histSF.Add(histMM.Clone())
 
-		histEEDY, histMMDY, histEMDY = getHistograms(path,plotDY,runRange,False,[])
+		histEEDY, histMMDY, histEMDY = getHistograms(path,plotDY,runRange)
 		histSFDY = histEEDY.Clone("histSFDY")
 		histSFDY.Add(histMMDY.Clone())	
 
-		histEEDYScale, histMMDYScale, histEMDYScale = getHistograms(path,plotDY,runRange,False,[])
+		histEEDYScale, histMMDYScale, histEMDYScale = getHistograms(path,plotDY,runRange)
 		histSFDYScale = histEEDYScale.Clone("histSFDYScale")
 		histSFDYScale.Add(histMMDYScale.Clone())	
 		
@@ -753,16 +740,11 @@ def main():
 						  help="add 13 TeV MC signals")	
 	parser.add_argument("-D", "--differentEdgePositions", action="store_true", dest="differentEdgePositions", default=False,
 						  help="add 13 TeV MC signals at different edge positions")	
-	parser.add_argument("-b", "--backgrounds", dest="backgrounds", action="append", default=[],
-						  help="backgrounds to plot.")
 	parser.add_argument("-p", "--plot", dest="plots", action="append", default=[],
 						  help="select dependencies to study, default is all.")
 						  					
 	args = parser.parse_args()
 
-
-	if len(args.backgrounds) == 0:
-		args.backgrounds = backgroundLists.rSFOF
 	if len(args.plots) == 0:
 		args.plots = plotLists.default
 
