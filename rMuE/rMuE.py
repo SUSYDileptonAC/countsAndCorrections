@@ -327,7 +327,7 @@ def dependencies(path,selection,plots,runRange,isMC,backgrounds,cmsExtra,fit):
 		
 		rMuEMC.Draw("hist E1P SAME")
 			
-		leg = ROOT.TLegend(0.6,0.7,0.85,0.95)
+		leg = ROOT.TLegend(0.6,0.7,0.85,0.93)
 		if not isMC:
 			rMuE.Draw("hist E1P SAME")			
 			leg.AddEntry(rMuE, "Data", "p")
@@ -366,13 +366,13 @@ def dependencies(path,selection,plots,runRange,isMC,backgrounds,cmsExtra,fit):
 		# Pfeile
 		
 		if "eta" in plot.variable:
-			yMin = 0.8
-			yMax = 1.6
-			lineU1 = ROOT.TLine(1.4, yMin, 1.4, yMax-0.2)
+			yMin = 0.95
+			yMax = 1.2
+			lineU1 = ROOT.TLine(1.4, yMin, 1.4, yMax)
 			lineU1.SetLineColor(ROOT.kBlue-3)
 			lineU1.SetLineWidth(2)
 			lineU1.Draw("")
-			lineU2 = ROOT.TLine(1.6, yMin, 1.6, yMax-0.2)
+			lineU2 = ROOT.TLine(1.6, yMin, 1.6, yMax)
 			lineU2.SetLineColor(ROOT.kBlue-3)
 			lineU2.SetLineWidth(2)
 			lineU2.Draw("")
@@ -387,7 +387,7 @@ def dependencies(path,selection,plots,runRange,isMC,backgrounds,cmsExtra,fit):
 			arrow2.SetLineWidth(3)
 			arrow2.Draw("")
 
-			lineE = ROOT.TLine(2.4, yMin, 2.4, yMax-0.2) #3.5 -> 1.7
+			lineE = ROOT.TLine(2.4, yMin, 2.4, yMax) #3.5 -> 1.7
 			lineE.SetLineColor(ROOT.kRed-3)
 			lineE.SetLineWidth(2)
 			lineE.Draw("")
@@ -474,7 +474,7 @@ def dependencies(path,selection,plots,runRange,isMC,backgrounds,cmsExtra,fit):
 		
 		rMuEMC.Draw("hist E1P SAME")
 			
-		leg = ROOT.TLegend(0.6,0.7,0.85,0.95)
+		leg = ROOT.TLegend(0.6,0.7,0.85,0.93)
 		if not isMC:
 			rMuE.Draw("hist E1P SAME")			
 			leg.AddEntry(rMuE, "Data", "p")
@@ -513,13 +513,13 @@ def dependencies(path,selection,plots,runRange,isMC,backgrounds,cmsExtra,fit):
 		# Pfeile
 		
 		if "eta" in plot.variable:
-			yMin = 0.8
-			yMax = 1.6
-			lineU1 = ROOT.TLine(1.4, yMin, 1.4, yMax-0.2)
+			yMin = 0.95
+			yMax = 1.2
+			lineU1 = ROOT.TLine(1.4, yMin, 1.4, yMax)
 			lineU1.SetLineColor(ROOT.kBlue-3)
 			lineU1.SetLineWidth(2)
 			lineU1.Draw("")
-			lineU2 = ROOT.TLine(1.6, yMin, 1.6, yMax-0.2)
+			lineU2 = ROOT.TLine(1.6, yMin, 1.6, yMax)
 			lineU2.SetLineColor(ROOT.kBlue-3)
 			lineU2.SetLineWidth(2)
 			lineU2.Draw("")
@@ -534,7 +534,7 @@ def dependencies(path,selection,plots,runRange,isMC,backgrounds,cmsExtra,fit):
 			arrow2.SetLineWidth(3)
 			arrow2.Draw("")
 
-			lineE = ROOT.TLine(2.4, yMin, 2.4, yMax-0.2) #3.5 -> 1.7
+			lineE = ROOT.TLine(2.4, yMin, 2.4, yMax) #3.5 -> 1.7
 			lineE.SetLineColor(ROOT.kRed-3)
 			lineE.SetLineWidth(2)
 			lineE.Draw("")

@@ -625,7 +625,7 @@ def makePlot(sfHist,ofHist,selection,plot,runRange,region,cmsExtra,combination,b
 
 	ratioPad.cd()
 		
-	ratioGraphs =  ratios.RatioGraph(sfHist,bkgHist, xMin=plot.firstBin, xMax=plot.lastBin,title="#frac{Data}{Prediction}  ",yMin=0.0,yMax=2,ndivisions=10,color=ROOT.kBlack,adaptiveBinning=1000)
+	ratioGraphs =  ratios.RatioGraph(sfHist,bkgHist, xMin=plot.firstBin, xMax=plot.lastBin,title="#frac{Data}{Prediction}  ",yMin=0.0,yMax=2,color=ROOT.kBlack,adaptiveBinning=1000)
 	ratioGraphs.addErrorByHistograms( "rSFOF", histUp, histDown,color= myColors["MyBlue"],fillStyle=3001)			
 
 	ratioGraphs.draw(ROOT.gPad,True,False,True,chi2Pos=0.8)
@@ -769,7 +769,6 @@ def main():
 	if args.private:
 		cmsExtra = "Private Work"
 	else:
-		#~ cmsExtra = "Preliminary"
 		cmsExtra = ""
 
 	for runRangeName in args.runRange:
