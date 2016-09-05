@@ -619,8 +619,10 @@ def main():
 				centralVal = centralValues(path,selection,runRange,args.mc,args.backgrounds)
 				if args.mc:
 					outFilePkl = open("shelves/rMuE_%s_%s_MC.pkl"%(selection.name,runRange.label),"w")
+					print "shelves/rMuE_%s_%s_MC.pkl created"%(selection.name,runRange.label)
 				else:
 					outFilePkl = open("shelves/rMuE_%s_%s.pkl"%(selection.name,runRange.label),"w")
+					print "shelves/rMuE_%s_%s.pkl created"%(selection.name,runRange.label)
 				pickle.dump(centralVal, outFilePkl)
 				outFilePkl.close()
 				
@@ -630,9 +632,11 @@ def main():
 			if args.write:
 				import subprocess
 				if args.mc:
-					bashCommand = "cp shelves/rMuE_%s_%s_MC.pkl %s/shelves"%(selection.name,runRange.label,pathes.basePath)		
+					bashCommand = "cp shelves/rMuE_%s_%s_MC.pkl %s/shelves"%(selection.name,runRange.label,pathes.basePath)	
+					print "shelves/rMuE_%s_%s_MC.pkl copied to central repository"%(selection.name,runRange.label)	
 				else:	
-					bashCommand = "cp shelves//rMuE_%s_%s.pkl %s/shelves"%(selection.name,runRange.label,pathes.basePath)
+					bashCommand = "cp shelves//rMuE_%s_%s.pkl %s/shelves"%(selection.name,runRange.label,pathes.basePath)	
+					print "shelves/rMuE_%s_%s.pkl copied to central repository"%(selection.name,runRange.label)
 				process = subprocess.Popen(bashCommand.split())				 	
 
 main()

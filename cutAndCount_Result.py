@@ -201,6 +201,7 @@ def main():
 			
 			counts, eventLists = cutAndCountForRegion(path,selection,args.plots,runRange,args.mc,args.backgrounds,preselection)
 			outFile = open("shelves/cutAndCount_%s_%s.pkl"%(selection.name,runRange.label),"w")
+			print "shelves/cutAndCount_%s_%s.pkl created"%(selection.name,runRange.label)
 			pickle.dump(counts, outFile)
 			outFile.close()
 			if not args.mc:
@@ -211,6 +212,7 @@ def main():
 			import subprocess
 
 			bashCommand = "cp shelves/cutAndCount_%s_%s.pkl %s/shelves"%(selection.name,runRange.label,pathes.basePath)
+			print "shelves/cutAndCount_%s_%s.pkl copied to central repository"%(selection.name,runRange.label)
 			process = subprocess.Popen(bashCommand.split())
 			
 

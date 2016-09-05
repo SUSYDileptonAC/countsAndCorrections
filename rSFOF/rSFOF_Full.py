@@ -508,19 +508,23 @@ def main():
 				centralVal = centralValues(path,selection,runRange,args.mc,args.nonNormalized,args.backgrounds,cmsExtra)
 				if args.mc:
 					outFilePkl = open("shelves/rSFOF_%s_%s_MC.pkl"%(selection.name,runRange.label),"w")
+					print "shelves/rSFOF_%s_%s_MC.pkl created"%(selection.name,runRange.label)
 				else:
 					outFilePkl = open("shelves/rSFOF_%s_%s.pkl"%(selection.name,runRange.label),"w")
+					print "shelves/rSFOF_%s_%s.pkl created"%(selection.name,runRange.label)
 				pickle.dump(centralVal, outFilePkl)
 				outFilePkl.close()
 				
 			if args.dependencies:
-				 dependencies(path,selection,args.plots,runRange,args.mc,args.nonNormalized,args.backgrounds,cmsExtra,args.fit)		
+				 dependencies(path,selection,args.plots,runRange,args.mc,args.nonNormalized,args.backgrounds,cmsExtra)		
 				
 			if args.write:
 				import subprocess
 				if args.mc:
-					bashCommand = "cp shelves/rSFOF_%s_%s_MC.pkl %s/shelves"%(selection.name,runRange.label,pathes.basePath)		
+					bashCommand = "cp shelves/rSFOF_%s_%s_MC.pkl %s/shelves"%(selection.name,runRange.label,pathes.basePath)
+					print "shelves/rSFOF_%s_%s_MC.pkl copied to central repository"%(selection.name,runRange.label)		
 				else:	
-					bashCommand = "cp shelves//rSFOF_%s_%s.pkl %s/shelves"%(selection.name,runRange.label,pathes.basePath)
+					bashCommand = "cp shelves/rSFOF_%s_%s.pkl %s/shelves"%(selection.name,runRange.label,pathes.basePath)
+					print "shelves/rSFOF_%s_%s.pkl copied to central repository"%(selection.name,runRange.label)	
 				process = subprocess.Popen(bashCommand.split())					
 main()
