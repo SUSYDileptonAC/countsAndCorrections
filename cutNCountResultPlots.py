@@ -704,17 +704,11 @@ def makeResultPlot(path,selection,runRange,cmsExtra,edgeShape=False,edgeShapeMC=
 
 		if region == "inclusive":
 			histSFDY.Scale((getattr(zPredictions,bSelection).SF.central.val + getattr(zPredictions,bSelection).SF.forward.val) / histSFDYScale.Integral(histSFDYScale.FindBin(81),histSFDYScale.FindBin(101)))
-			histEEDY.Scale((getattr(zPredictions,bSelection).EE.central.val + getattr(zPredictions,bSelection).EE.forward.val) / histEEDYScale.Integral(histEEDYScale.FindBin(81),histEEDYScale.FindBin(101)))
-			histMMDY.Scale((getattr(zPredictions,bSelection).MM.central.val + getattr(zPredictions,bSelection).MM.forward.val) / histMMDYScale.Integral(histMMDYScale.FindBin(81),histMMDYScale.FindBin(101)))
 		else:
 			histSFDY.Scale(getattr(getattr(zPredictions,bSelection).SF,region).val / histSFDYScale.Integral(histSFDYScale.FindBin(81),histSFDYScale.FindBin(101)))
-			histEEDY.Scale(getattr(getattr(zPredictions,bSelection).EE,region).val / histEEDYScale.Integral(histEEDYScale.FindBin(81),histEEDYScale.FindBin(101)))
-			histMMDY.Scale(getattr(getattr(zPredictions,bSelection).MM,region).val / histMMDYScale.Integral(histMMDYScale.FindBin(81),histMMDYScale.FindBin(101)))
 		
 		makePlot(histSF,histOFSF,selection,plot,runRange,region,cmsExtra,"SF",bSelection,path,histSFDY,edgeShape=edgeShape,edgeShapeMC=edgeShapeMC,differentEdgePositions=differentEdgePositions)
-		makePlot(histEE,histOFEE,selection,plot,runRange,region,cmsExtra,"EE",bSelection,path,histEEDY,edgeShape=edgeShape,edgeShapeMC=edgeShapeMC,differentEdgePositions=differentEdgePositions)
-		makePlot(histMM,histOFMM,selection,plot,runRange,region,cmsExtra,"MM",bSelection,path,histMMDY,edgeShape=edgeShape,edgeShapeMC=edgeShapeMC,differentEdgePositions=differentEdgePositions)
-
+		
 
 
 
