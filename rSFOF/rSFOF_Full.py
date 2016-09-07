@@ -516,7 +516,7 @@ def main():
 				outFilePkl.close()
 				
 			if args.dependencies:
-				 dependencies(path,selection,args.plots,runRange,args.mc,args.nonNormalized,args.backgrounds,cmsExtra,fit)		
+				 dependencies(path,selection,args.plots,runRange,args.mc,args.nonNormalized,args.backgrounds,cmsExtra,args.fit)		
 				
 			if args.write:
 				import subprocess
