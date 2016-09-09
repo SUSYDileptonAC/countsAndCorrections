@@ -38,6 +38,8 @@ from locations import locations
 
 
 def getHistograms(path,plot,runRange,isMC,backgrounds):
+	
+	### Add code to take the flavor-symmetric background contribution into account
 
 	treesEE = readTrees(path,"EE")
 	treesMM = readTrees(path,"MuMu")
@@ -63,6 +65,7 @@ def getHistograms(path,plot,runRange,isMC,backgrounds):
 	
 def plotMllSpectra(SFhist,runRange,selection,suffix,cmsExtra,additionalLabel):
 
+	### Plot OF component in this routine as well
 		
 	SFhist.Rebin(5)
 
@@ -215,7 +218,7 @@ def plotMllSpectra(SFhist,runRange,selection,suffix,cmsExtra,additionalLabel):
 	else:
 		hCanvas.Print("fig/rOutIn_%s_%s_%s.pdf"%(suffix,selection.name,runRange.label))	
 	
-	
+### routine to make some more detailed dependency studies beside the standard mass plots	
 def dependencies(path,selection,plots,runRange,mc,backgrounds,cmsExtra):
 	hCanvas = TCanvas("hCanvas", "Distribution", 800,800)
 	legend = TLegend(0.6, 0.7, 0.9, 0.9)
@@ -402,6 +405,8 @@ def centralValues(path,selection,runRange,isMC,backgrounds,cmsExtra,additionalLa
 		region = "central"
 	else:		
 		region = "forward"
+		
+	### Take flavor-symmetric background into account and add the other mass regions
 
 	histEE, histMM = getHistograms(path,plot,runRange,isMC,backgrounds)
 	histSF = histEE.Clone("histSF")

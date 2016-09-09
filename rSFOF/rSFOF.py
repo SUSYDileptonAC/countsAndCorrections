@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 import sys
 sys.path.append('cfg/')
 from frameworkStructure import pathes
@@ -129,6 +131,9 @@ def centralValues(path,selection,runRange,isMC,nonNormalized,backgrounds,cmsExtr
 	result = {}
 	
 
+	### Add other regions beside the low mass region from here on
+	### Does it make sense to add all?
+	
 	lowMassLow = mllBins.lowMass.low
 	lowMassHigh = mllBins.lowMass.high
 	

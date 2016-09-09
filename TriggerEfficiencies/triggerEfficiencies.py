@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 ### Calculates efficiencies of DiLepton Triggers in HT of alphaT triggered events
 
 import sys

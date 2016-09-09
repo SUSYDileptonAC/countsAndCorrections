@@ -1,4 +1,7 @@
 #!/usr/bin/env python
+
+### routine to get the final results for the counting experiment
+
 import gc
 import sys
 sys.path.append('cfg/')
@@ -28,26 +31,7 @@ from centralConfig import regionsToUse, runRanges, backgroundLists, plotLists, s
 
 from locations import locations
 
-
-def getEventLists(trees, cut,isMC, colNames = ["eventNr","lumiSec","runNr"]):
-	result = {
-		"columns": colNames,
-		"cut": cut
-		}
-	if not isMC:	
-		for comb in trees:
-			subtree = trees[comb].CopyTree(cut)
-			result[comb] = set()
-			for ev in subtree:
-				
-				cols = []
-				for varName in colNames:
-					cols.append( getattr(ev, varName) )
-				result[comb].add(tuple(cols))
-			subtree.IsA().Destructor(subtree) ### ROOT destructor to really get the memeory released
-			gc.collect()
-	return result
-
+### Get the event counts from the trees
 def getCounts(trees, cut, isMC, backgrounds,plot,runRange,path):
 
 	if isMC:
@@ -95,16 +79,12 @@ def getCounts(trees, cut, isMC, backgrounds,plot,runRange,path):
 	n["cut"] = cut
 	return n
 	
-
-
-	
-	
-	
 	
 
-
+### fetch trees and loop over the different signal regions to get the results
 def cutAndCountForRegion(path,selection,plots,runRange,isMC,backgrounds,preselection):
 	
+	### get trees
 	if not isMC:
 		trees = getDataTrees(path)
 		for label, tree in trees.iteritems():
@@ -121,6 +101,7 @@ def cutAndCountForRegion(path,selection,plots,runRange,isMC,backgrounds,preselec
 		
 		
 
+	### loop over plots (usually only mll)
 	for plotName in plots:
 		plot = getPlot(plotName)
 		plot.addRegion(selection)
@@ -128,28 +109,25 @@ def cutAndCountForRegion(path,selection,plots,runRange,isMC,backgrounds,preselec
 		plot.cuts = plot.cuts % runRange.runCut	
 
 		counts = {}
-		eventLists = {}
 		massRanges = ["default","edgeMass","zMass","highMass","belowZ","aboveZ"]
 		counts["default"] = {}
-		eventLists["default"] = {}
+		### get the yields in each mass region without any additional cut on b-tagging (or anything else defined in centralConfig.cutNCountXChecks.cutList
 		for mllCut in massRanges:
-			counts["default"][getattr(theCuts.massCuts,mllCut).name] = getCounts(trees, plot.cuts+"*(%s)"%getattr(theCuts.massCuts,mllCut).cut,isMC,backgrounds,plot,runRange,path)
-			eventLists["default"][getattr(theCuts.massCuts,mllCut).name] = getEventLists(trees, plot.cuts+"*(%s)"%getattr(theCuts.massCuts,mllCut).cut,isMC)		
+			counts["default"][getattr(theCuts.massCuts,mllCut).name] = getCounts(trees, plot.cuts+"*(%s)"%getattr(theCuts.massCuts,mllCut).cut,isMC,backgrounds,plot,runRange,path)	
 
+		### get the subregions / cross checks
 		for categoryName, category in cutNCountXChecks.cutList.iteritems():
 				
 			for subcut in category:
-				counts[subcut] = {}
-				eventLists[subcut] = {}					
+				counts[subcut] = {}				
 				
 				for mllCut in massRanges:
 					cut = plot.cuts+"*(%s)"%getattr(getattr(theCuts,categoryName),subcut).cut
 					cut = cut + "*(%s)"%getattr(theCuts.massCuts,mllCut).cut
-					counts[subcut][getattr(theCuts.massCuts,mllCut).name] = getCounts(trees, cut,isMC,backgrounds,plot,runRange,path)
-					eventLists[subcut][getattr(theCuts.massCuts,mllCut).name] = getEventLists(trees, cut,isMC)				
+					counts[subcut][getattr(theCuts.massCuts,mllCut).name] = getCounts(trees, cut,isMC,backgrounds,plot,runRange,path)		
 
 		
-		return counts, eventLists
+		return counts
 
 
 def main():
@@ -186,6 +164,7 @@ def main():
 
 	path = locations.dataSetPath
 
+	### Basic preselection to make looping over the trees faster
 	preselection = "nJets >= 2 && deltaR > 0.3"
 	
 			
@@ -198,16 +177,14 @@ def main():
 			
 			selection = getRegion(selectionName)
 			
-			
-			counts, eventLists = cutAndCountForRegion(path,selection,args.plots,runRange,args.mc,args.backgrounds,preselection)
+			### get the results
+			counts = cutAndCountForRegion(path,selection,args.plots,runRange,args.mc,args.backgrounds,preselection)
 			outFile = open("shelves/cutAndCount_%s_%s.pkl"%(selection.name,runRange.label),"w")
 			print "shelves/cutAndCount_%s_%s.pkl created"%(selection.name,runRange.label)
 			pickle.dump(counts, outFile)
 			outFile.close()
-			if not args.mc:
-				outFile = open("shelves/eventLists_%s_%s.pkl"%(selection.name,runRange.label),"w")
-				pickle.dump(eventLists, outFile)
-				outFile.close()
+
+			### copy them to the central repository frameWorkBase/shelves
 				
 			import subprocess
 

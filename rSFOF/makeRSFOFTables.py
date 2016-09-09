@@ -6,8 +6,7 @@ def saveTable(table, name):
 	tabFile = open("tab/table_%s_Run2015_25ns.tex"%name, "w")
 	tabFile.write(table)
 	tabFile.close()
-
-	#~ print table
+	print "tab/table_%s_Run2015_25ns.tex created"%name 
 	
 def loadPickles(path):
 	from glob import glob
