@@ -35,8 +35,12 @@ import corrections
 
 from locations import locations
 
-def dependencies(path,selection,plots,runRange,isMC,nonNormalized,backgrounds,cmsExtra):
+
+### routine to make dependency plots
+def dependencies(path,selection,plots,runRange,isMC,nonNormalized,backgrounds,cmsExtra,verbose=True):
+	### loop over plots
 	for name in plots:
+		##fetch plot and region
 		plot = getPlot(name)
 		plot.addRegion(selection)
 		plot.cleanCuts()	
@@ -50,7 +54,7 @@ def dependencies(path,selection,plots,runRange,isMC,nonNormalized,backgrounds,cm
 			label = "inclusive"
 
 
-		histEE, histMM, histEM = getHistograms(path,plot,runRange,isMC,nonNormalized, backgrounds,label)
+		histEE, histMM, histEM = getHistograms(path,plot,runRange,isMC,nonNormalized, backgrounds,label,verbose=verbose)
 		
 		### Add code to make the dependency plots here
 
@@ -62,15 +66,15 @@ def dependencies(path,selection,plots,runRange,isMC,nonNormalized,backgrounds,cm
 
 
 
-
-def getHistograms(path,plot,runRange,isMC,nonNormalized,backgrounds,region=""):
+### get the histograms from the ntuples
+def getHistograms(path,plot,runRange,isMC,nonNormalized,backgrounds,region="",verbose=True):
 
 	treesEE = readTrees(path,"EE")
 	treesEM = readTrees(path,"EMu")
 	treesMM = readTrees(path,"MuMu")
 		
 	
-	
+	### make a stack for MC
 	if isMC:
 		eventCounts = totalNumberOfGeneratedEvents(path)	
 		processes = []
@@ -80,30 +84,32 @@ def getHistograms(path,plot,runRange,isMC,nonNormalized,backgrounds,region=""):
 			else:
 				processes.append(Process(getattr(Backgrounds,background),eventCounts))
 		
-		histoEE = TheStack(processes,runRange.lumi,plot,treesEE,"None",1.0,1.0,1.0).theHistogram		
-		histoMM = TheStack(processes,runRange.lumi,plot,treesMM,"None",1.0,1.0,1.0).theHistogram
-		histoEM = TheStack(processes,runRange.lumi,plot,treesEM,"None",1.0,1.0,1.0).theHistogram
+		histoEE = TheStack(processes,runRange.lumi,plot,treesEE,"None",1.0,1.0,1.0,verbose=verbose).theHistogram		
+		histoMM = TheStack(processes,runRange.lumi,plot,treesMM,"None",1.0,1.0,1.0,verbose=verbose).theHistogram
+		histoEM = TheStack(processes,runRange.lumi,plot,treesEM,"None",1.0,1.0,1.0,verbose=verbose).theHistogram
 			
 	else:
-		histoEE = getDataHist(plot,treesEE)
-		histoMM = getDataHist(plot,treesMM)
-		histoEM = getDataHist(plot,treesEM)
+		histoEE = getDataHist(plot,treesEE,verbose=verbose)
+		histoMM = getDataHist(plot,treesMM,verbose=verbose)
+		histoEM = getDataHist(plot,treesEM,verbose=verbose)
 	
 	return histoEE , histoMM, histoEM
 	
 	
 
 	
+### Routine to get the central values for R_SF/OF
+def centralValues(path,selection,runRange,isMC,nonNormalized,backgrounds,cmsExtra,verbose=True):
 
-def centralValues(path,selection,runRange,isMC,nonNormalized,backgrounds,cmsExtra):
 
-
+	### get plot and selection
 	plot = getPlot("mllPlotROutIn")
 	plot.addRegion(selection)
 	plot.cleanCuts()
 
 	plot.cuts = plot.cuts % runRange.runCut		
 
+	### Additional plot to look at the signal region in MC
 	plotSignal = getPlot("mllPlot")
 
 	
@@ -121,11 +127,12 @@ def centralValues(path,selection,runRange,isMC,nonNormalized,backgrounds,cmsExtr
 	plotSignal.cuts = plotSignal.cuts % runRange.runCut	
 
 
-	histEE, histMM, histEM = getHistograms(path,plot,runRange,isMC,nonNormalized,backgrounds,label)
+	### get the histograms
+	histEE, histMM, histEM = getHistograms(path,plot,runRange,isMC,nonNormalized,backgrounds,label,verbose=verbose)
 	histSF = histEE.Clone("histSF")
 	histSF.Add(histMM.Clone())
 
-	histEESignal, histMMSignal, histEMSignal = getHistograms(path,plotSignal,runRange,isMC,nonNormalized,backgrounds,label)
+	histEESignal, histMMSignal, histEMSignal = getHistograms(path,plotSignal,runRange,isMC,nonNormalized,backgrounds,label,verbose=verbose)
 	histSFSignal = histEESignal.Clone("histSFSignal")
 	histSFSignal.Add(histMMSignal.Clone())
 	result = {}
@@ -151,6 +158,7 @@ def centralValues(path,selection,runRange,isMC,nonNormalized,backgrounds,cmsExtr
 	sf = ee + mm 
 	sfErr = (eeErr**2 + mmErr**2)**0.5	
 	
+	### calculate R_SF/OF, R_ee/OF and R_mm/OF and the uncertainties
 	rsfof = float(sf)/float(of)
 	rsfofErr = rsfof*(sfErr**2/sf**2+ofErr**2/of**2)**0.5		
 		
@@ -175,6 +183,7 @@ def centralValues(path,selection,runRange,isMC,nonNormalized,backgrounds,cmsExtr
 	result["rMMOFErr"] = rMMOFErr
 
 	if isMC:
+		### for MC also store results in the signal region
 
 		eeErrSignal = ROOT.Double()
 		eeSignal = histEESignal.IntegralAndError(histEESignal.FindBin(lowMassLow+0.01),histEESignal.FindBin(lowMassHigh-0.01),eeErrSignal)
@@ -197,6 +206,8 @@ def centralValues(path,selection,runRange,isMC,nonNormalized,backgrounds,cmsExtr
 		rMMOFSignal = float(mmSignal)/float(ofSignal)
 		rMMOFErrSignal = rMMOFSignal * (mmErrSignal**2/mmSignal**2 + ofErrSignal**2/ofSignal**2)**0.5
 
+		### The transfer factor is the ratio of R_SFOF in signal and control region
+		### It is a test how the method works
 		transferFaktor = rsfofSignal/rsfof
 		transferFaktorErr = transferFaktor*((rsfofErr/rsfof)**2+(rsfofErrSignal/rsfofSignal)**2)**0.5
 		transferFaktor = rsfofSignal/rsfof
@@ -233,8 +244,8 @@ def main():
 
 	parser = argparse.ArgumentParser(description='rSFOF from control region.')
 	
-	parser.add_argument("-v", "--verbose", action="store_true", dest="verbose", default=False,
-						  help="Verbose mode.")
+	parser.add_argument("-q", "--quiet", action="store_true", dest="quiet", default=False,
+						  help="Switch verbose mode off. Do not show cut values and samples on the console whenever a histogram is created")
 	parser.add_argument("-m", "--mc", action="store_true", dest="mc", default=False,
 						  help="use MC, default is to use data.")
 	parser.add_argument("-s", "--selection", dest = "selection" , action="append", default=[],
@@ -267,7 +278,11 @@ def main():
 		args.selection.append(regionsToUse.rSFOF.inclusive.name)	
 	if len(args.runRange) == 0:
 		args.runRange.append(runRanges.name)	
-			
+		
+	if args.quiet:
+		verbose = False
+	else:
+		verbose = True		
 
 	path = locations.dataSetPath
 		
@@ -283,9 +298,10 @@ def main():
 			
 			selection = getRegion(selectionName)
 
+			### Calculate the central values for R_SF/OF and store the in shelves
 			if args.central:
 				
-				centralVal = centralValues(path,selection,runRange,args.mc,args.nonNormalized,args.backgrounds,cmsExtra)
+				centralVal = centralValues(path,selection,runRange,args.mc,args.nonNormalized,args.backgrounds,cmsExtra,verbose=verbose)
 				if args.mc:
 					outFilePkl = open("shelves/rSFOF_%s_%s_MC.pkl"%(selection.name,runRange.label),"w")
 					print "shelves/rSFOF_%s_%s_MC.pkl created"%(selection.name,runRange.label)
@@ -294,10 +310,12 @@ def main():
 					print "shelves/rSFOF_%s_%s.pkl created"%(selection.name,runRange.label)
 				pickle.dump(centralVal, outFilePkl)
 				outFilePkl.close()
-				
+			
+			### make dependency plots	
 			if args.dependencies:
-				 dependencies(path,selection,args.plots,runRange,args.mc,args.nonNormalized,args.backgrounds,cmsExtra)		
-				
+				 dependencies(path,selection,args.plots,runRange,args.mc,args.nonNormalized,args.backgrounds,cmsExtra,verbose=verbose)		
+			
+			### copy .pkl files to frameWorkBase/shelves to be used by other tools	
 			if args.write:
 				import subprocess
 				if args.mc:

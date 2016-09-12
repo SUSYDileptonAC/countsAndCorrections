@@ -32,6 +32,7 @@ from helpers import readTrees, createHistoFromTree, TheStack, totalNumberOfGener
 from centralConfig import regionsToUse, runRanges, backgroundLists, plotLists, systematics
 from locations import locations
 
+### Calculate efficiencies from the histograms
 def getEfficiency(nominatorHisto, denominatorHisto,cutString):
 	eff = TGraphAsymmErrors(nominatorHisto,denominatorHisto,"cp")
 	effValue = ROOT.Double(0.)
@@ -48,7 +49,8 @@ def getEfficiency(nominatorHisto, denominatorHisto,cutString):
 	#	print cut, n
 	n["cut"] = cutString
 	return n
-	
+
+### use geometric mean	
 def efficiencyRatioGeometricMean(eff1,eff2,eff3):
 	newEff = TGraphAsymmErrors(eff1.GetN())
 	for i in range(0,eff1.GetN()):
@@ -58,10 +60,7 @@ def efficiencyRatioGeometricMean(eff1,eff2,eff3):
 		pointY1 = ROOT.Double(0.)
 		pointY2 = ROOT.Double(0.)
 		pointY3 = ROOT.Double(0.)
-		
-		isSuccesful1 = eff1.GetPoint(i,pointX1,pointY1)
-		isSuccesful2 = eff2.GetPoint(i,pointX2,pointY2)
-		isSuccesful3 = eff3.GetPoint(i,pointX3,pointY3)
+	
 		errY1Up = eff1.GetErrorYhigh(i)
 		errY1Down = eff1.GetErrorYlow(i)
 		errY2Up = eff2.GetErrorYhigh(i)
@@ -89,9 +88,10 @@ def efficiencyRatioGeometricMean(eff1,eff2,eff3):
 		
 	return newEff
 
-
-def getHistograms(path,plot,runRange,isMC,backgrounds):
+### Get the histograms
+def getHistograms(path,plot,runRange,isMC,backgrounds,verbose=True):
 	
+	### use cuts on trigger bits for the uncertainties on data
 	baseCut = plot.cuts	
 	cutsEE = baseCut+"*( HLT_Ele17_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_v > 0 || HLT_DoubleEle33_CaloIdL_GsfTrkIdVL_v > 0)"
 	cutsEMu = baseCut+"*( HLT_Mu17_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL_v > 0 || HLT_Mu8_TrkIsoVVL_Ele17_CaloIdL_TrackIdL_IsoVL_v > 0 || HLT_Mu30_Ele30_CaloIdL_GsfTrkIdVL_v > 0)"
@@ -103,33 +103,36 @@ def getHistograms(path,plot,runRange,isMC,backgrounds):
 		treesMuMu = readTrees(path,"MuMu", modifier = "TriggerPFHT")
 		treesEMu = readTrees(path,"EMu", modifier = "TriggerPFHT")
 		
+		### default cuts for denumerator
 		denominatorHistoEE = TH1F("","",plot.nBins,plot.firstBin,plot.lastBin)
 		for name, tree in treesEE.iteritems():
 			if name == "MergedData":
-				denominatorHistoEE.Add(createHistoFromTree(tree,plot.variable,plot.cuts,plot.nBins,plot.firstBin,plot.lastBin,binning=plot.binning).Clone())
+				denominatorHistoEE.Add(createHistoFromTree(tree,plot.variable,plot.cuts,plot.nBins,plot.firstBin,plot.lastBin,binning=plot.binning,verbose=verbose).Clone())
 		denominatorHistoMuMu = TH1F("","",plot.nBins,plot.firstBin,plot.lastBin)
 		for name, tree in treesMuMu.iteritems():
 			if name == "MergedData":
-				denominatorHistoMuMu.Add(createHistoFromTree(tree,plot.variable,plot.cuts,plot.nBins,plot.firstBin,plot.lastBin,binning=plot.binning).Clone())		
+				denominatorHistoMuMu.Add(createHistoFromTree(tree,plot.variable,plot.cuts,plot.nBins,plot.firstBin,plot.lastBin,binning=plot.binning,verbose=verbose).Clone())		
 		denominatorHistoMuEG = TH1F("","",plot.nBins,plot.firstBin,plot.lastBin)
 		for name, tree in treesEMu.iteritems():
 			if name == "MergedData":
-				denominatorHistoMuEG.Add(createHistoFromTree(tree,plot.variable,plot.cuts,plot.nBins,plot.firstBin,plot.lastBin,binning=plot.binning).Clone())
+				denominatorHistoMuEG.Add(createHistoFromTree(tree,plot.variable,plot.cuts,plot.nBins,plot.firstBin,plot.lastBin,binning=plot.binning,verbose=verbose).Clone())
 
 
+		### trigger cuts for nominator
 		nominatorHistoEE = TH1F("","",plot.nBins,plot.firstBin,plot.lastBin)
 		for name, tree in treesEE.iteritems():
 			if name == "MergedData":
-				nominatorHistoEE.Add(createHistoFromTree(tree,plot.variable,cutsEE,plot.nBins,plot.firstBin,plot.lastBin,binning=plot.binning).Clone())
+				nominatorHistoEE.Add(createHistoFromTree(tree,plot.variable,cutsEE,plot.nBins,plot.firstBin,plot.lastBin,binning=plot.binning,verbose=verbose).Clone())
 		nominatorHistoMuMu = TH1F("","",plot.nBins,plot.firstBin,plot.lastBin)
 		for name, tree in treesMuMu.iteritems():
 			if name == "MergedData":
-				nominatorHistoMuMu.Add(createHistoFromTree(tree,plot.variable,cutsMuMu,plot.nBins,plot.firstBin,plot.lastBin,binning=plot.binning).Clone())
+				nominatorHistoMuMu.Add(createHistoFromTree(tree,plot.variable,cutsMuMu,plot.nBins,plot.firstBin,plot.lastBin,binning=plot.binning,verbose=verbose).Clone())
 		nominatorHistoMuEG = TH1F("","",plot.nBins,plot.firstBin,plot.lastBin)
 		for name, tree in treesEMu.iteritems():
 			if name == "MergedData":
-				nominatorHistoMuEG.Add(createHistoFromTree(tree,plot.variable,cutsEMu,plot.nBins,plot.firstBin,plot.lastBin,binning=plot.binning).Clone())
-	else:	
+				nominatorHistoMuEG.Add(createHistoFromTree(tree,plot.variable,cutsEMu,plot.nBins,plot.firstBin,plot.lastBin,binning=plot.binning,verbose=verbose).Clone())
+	else:
+		### use normal trees without trigger requirement for MC	
 		treesEE = readTrees(path,"EE")
 		treesMuMu = readTrees(path,"MuMu")
 		treesEMu = readTrees(path,"EMu")
@@ -139,16 +142,17 @@ def getHistograms(path,plot,runRange,isMC,backgrounds):
 		for background in backgrounds:
 			processes.append(Process(getattr(Backgrounds,background),eventCounts))
 		
-		denominatorStackEE = TheStack(processes,runRange.lumi,plot,treesEE,"None",1.0,1.0,1.0)		
-		denominatorStackMuMu = TheStack(processes,runRange.lumi,plot,treesMuMu,"None",1.0,1.0,1.0)	
-		denominatorStackMuEG = TheStack(processes,runRange.lumi,plot,treesEMu,"None",1.0,1.0,1.0)	
+		denominatorStackEE = TheStack(processes,runRange.lumi,plot,treesEE,"None",1.0,1.0,1.0,verbose=verbose)		
+		denominatorStackMuMu = TheStack(processes,runRange.lumi,plot,treesMuMu,"None",1.0,1.0,1.0,verbose=verbose)	
+		denominatorStackMuEG = TheStack(processes,runRange.lumi,plot,treesEMu,"None",1.0,1.0,1.0,verbose=verbose)	
 		
+		### again cut on the trigger bits
 		plot.cuts = cutsEE	
-		nominatorStackEE = TheStack(processes,runRange.lumi,plot,treesEE,"None",1.0,1.0,1.0)	
+		nominatorStackEE = TheStack(processes,runRange.lumi,plot,treesEE,"None",1.0,1.0,1.0,verbose=verbose)	
 		plot.cuts = cutsMuMu	
-		nominatorStackMuMu = TheStack(processes,runRange.lumi,plot,treesMuMu,"None",1.0,1.0,1.0)
+		nominatorStackMuMu = TheStack(processes,runRange.lumi,plot,treesMuMu,"None",1.0,1.0,1.0,verbose=verbose)
 		plot.cuts = cutsEMu		
-		nominatorStackMuEG = TheStack(processes,runRange.lumi,plot,treesEMu,"None",1.0,1.0,1.0)
+		nominatorStackMuEG = TheStack(processes,runRange.lumi,plot,treesEMu,"None",1.0,1.0,1.0,verbose=verbose)
 		
 		plot.cuts = baseCut
 			
@@ -162,7 +166,8 @@ def getHistograms(path,plot,runRange,isMC,backgrounds):
 	
 	return {"EE":denominatorHistoEE,"MuMu":denominatorHistoMuMu,"MuEG":denominatorHistoMuEG} , {"EE":nominatorHistoEE,"MuMu":nominatorHistoMuMu ,"MuEG":nominatorHistoMuEG}
 
-def centralValues(path,selection,runRange,isMC,backgrounds):
+### get the central effenciency and R_T values
+def centralValues(path,selection,runRange,isMC,backgrounds,verbose=True):
 	
 	
 	if "Central" in selection.name:
@@ -183,7 +188,7 @@ def centralValues(path,selection,runRange,isMC,backgrounds):
 	
 	counts = {runRange.label:{}}	
 								
-	denominators, nominators = getHistograms(path,plot,runRange,isMC,backgrounds)
+	denominators, nominators = getHistograms(path,plot,runRange,isMC,backgrounds,verbose=verbose)
 	
 	counts[runRange.label]["EE"] = getEfficiency(nominators["EE"], denominators["EE"],plot.cuts)
 	counts[runRange.label]["MuMu"] = getEfficiency(nominators["MuMu"], denominators["MuMu"],plot.cuts)
@@ -195,9 +200,10 @@ def centralValues(path,selection,runRange,isMC,backgrounds):
 	return counts
 
 
+### make dependency plots
+def dependencies(path,selection,plots,runRange,isMC,backgrounds,cmsExtra,verbose=True):
 
-def dependencies(path,selection,plots,runRange,isMC,backgrounds,cmsExtra):
-
+	### get canvas and style
 	hCanvas = TCanvas("hCanvas", "Distribution", 800,800)
 	
 	plotPad = ROOT.TPad("plotPad","plotPad",0,0,1,1)
@@ -244,7 +250,9 @@ def dependencies(path,selection,plots,runRange,isMC,backgrounds,cmsExtra):
 	intlumi = ROOT.TLatex()
 	intlumi.SetTextAlign(12)
 	intlumi.SetTextSize(0.03)
-	intlumi.SetNDC(True)		
+	intlumi.SetNDC(True)
+	
+	### get central values		
 	if isMC:	
 		if os.path.isfile("shelves/triggerEff_%s_%s_MC.pkl"%(selection.name,runRange.label)):
 			centralVals = pickle.load(open("shelves/triggerEff_%s_%s_MC.pkl"%(selection.name,runRange.label),"rb"))
@@ -278,12 +286,13 @@ def dependencies(path,selection,plots,runRange,isMC,backgrounds,cmsExtra):
 		if  "Forward" in selection.name:
 			plot.nBins = int(plot.nBins/2)
 			
-		denominators, nominators = getHistograms(path,plot,runRange,isMC,backgrounds)
+		denominators, nominators = getHistograms(path,plot,runRange,isMC,backgrounds,verbose=verbose)
 		if isMC: 
-			denominatorsData, nominatorsData = getHistograms(locations.triggerDataSetPath,plotData,runRange,False,backgrounds)
+			denominatorsData, nominatorsData = getHistograms(locations.triggerDataSetPath,plotData,runRange,False,backgrounds,verbose=verbose)
 				
 
 
+		### First plot the individual efficiencies
 		effEE = TGraphAsymmErrors(nominators["EE"],denominators["EE"],"cp")
 		effMuMu = TGraphAsymmErrors(nominators["MuMu"],denominators["MuMu"],"cp")
 
@@ -336,12 +345,12 @@ def dependencies(path,selection,plots,runRange,isMC,backgrounds,cmsExtra):
 		else:	
 			hCanvas.Print("fig/Triggereff_%s_%s_%s_%s.pdf"%(selection.name,runRange.label,plot.variablePlotName,plot.additionalName))
 		
+		### then combine EE and MuMu to SF
 		denominatorHistoSF = denominators["EE"].Clone()
 		denominatorHistoOF = denominators["MuEG"].Clone()
 		denominatorHistoSF.Add(denominators["MuMu"].Clone())
 		
 		nominatorHistoSF = nominators["EE"].Clone()
-		nominatorHistoSFNoTrack = nominators["EE"].Clone()
 		
 		nominatorHistoSF.Add(nominators["MuMu"].Clone())
 		
@@ -390,7 +399,7 @@ def dependencies(path,selection,plots,runRange,isMC,backgrounds,cmsExtra):
 
 		plotPad.DrawFrame(plot.firstBin,.6,plot.lastBin,1.4,"; %s ; R_{T}" %(plot.xaxis))
 
-		
+		### Now plot the ratio R_T
 		effSFvsOF = efficiencyRatioGeometricMean(effEE,effMuMu,effOF)
 		if isMC:
 			effSFvsOFData = efficiencyRatioGeometricMean(effEEData,effMuMuData,effOFData)
@@ -399,6 +408,7 @@ def dependencies(path,selection,plots,runRange,isMC,backgrounds,cmsExtra):
 
 		x= array("f",[plot.firstBin, plot.lastBin]) 
 		
+		### make a line and error band for the central value
 		if isMC:
 			yData= array("f", [float(centralValsData[runRange.label]["RT"]), float(centralValsData[runRange.label]["RT"])]) 
 			sfLineData= ROOT.TF1("sfLine",str(centralValsData[runRange.label]["RT"]),plot.firstBin, plot.lastBin)
@@ -475,6 +485,8 @@ def main():
 
 	parser = argparse.ArgumentParser(description='Trigger efficiency measurements.')
 	
+	parser.add_argument("-q", "--quiet", action="store_true", dest="quiet", default=False,
+						  help="Switch verbose mode off. Do not show cut values and samples on the console whenever a histogram is created")	
 	parser.add_argument("-m", "--mc", action="store_true", dest="mc", default=False,
 						  help="use MC, default is to use data.")
 	parser.add_argument("-s", "--selection", dest = "selection" , action="append", default=[],
@@ -515,7 +527,10 @@ def main():
 	if args.mc:
 		cmsExtra = "#splitline{Private Work}{Simulation}"
 	
-
+	if args.quiet:
+		verbose = False
+	else:
+		verbose = True	
 	
 	for runRangeName in args.runRange:
 		runRange = getRunRange(runRangeName)
@@ -525,9 +540,9 @@ def main():
 			selection = getRegion(selectionName)
 			
 
-			
+			### calculate central values and store them in a .pkl file
 			if args.central:
-				centralVal = centralValues(path,selection,runRange,args.mc,args.backgrounds)		
+				centralVal = centralValues(path,selection,runRange,args.mc,args.backgrounds,verbose=verbose)		
 				if args.mc:
 					outFilePkl = open("shelves/triggerEff_%s_%s_MC.pkl"%(selection.name,runRange.label),"w")
 					print "shelves/triggerEff_%s_%s_MC.pkl created"%(selection.name,runRange.label)
@@ -536,11 +551,12 @@ def main():
 					print "shelves/triggerEff_%s_%s.pkl created"%(selection.name,runRange.label)
 				pickle.dump(centralVal, outFilePkl)
 				outFilePkl.close()
-				
+			
+			### make dependency plots	
 			if args.dependencies:
-				 dependencies(path,selection,args.plots,runRange,args.mc,args.backgrounds,cmsExtra)	
+				 dependencies(path,selection,args.plots,runRange,args.mc,args.backgrounds,cmsExtra,verbose=verbose)	
 			
-			
+			### copy .pkl files to frameWorkBase/shelves to be used by other tools
 			if args.write:
 				import subprocess
 				if args.mc:

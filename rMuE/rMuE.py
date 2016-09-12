@@ -32,72 +32,17 @@ from centralConfig import regionsToUse, runRanges, backgroundLists, plotLists, s
 from locations import locations
 
 
-def rMuEMeasure(eeHist,mumuHist):
-	from math import sqrt
-	result = {"vals":[],"errs":[]}
-	for x in range(1,eeHist.GetNbinsX()+1):
-		if mumuHist.GetBinContent(x) > 0 and eeHist.GetBinContent(x) > 0:
-			val = sqrt(mumuHist.GetBinContent(x)/eeHist.GetBinContent(x))	
-			err = 0.5*val*sqrt(1./float(eeHist.GetBinContent(x)) + 1./float(mumuHist.GetBinContent(x)) )
-			result["vals"].append(val)
-			result["errs"].append(err)
-		else:
-			result["vals"].append(0)
-			result["errs"].append(0)
-	return result
+### get the histograms from the ntuples for data or MC
+def getHistograms(path,plot,runRange,isMC,backgrounds,region,verbose=True,EM=False):
 
 
-
-def rMuEFromSFOF(eeHist,mumuHist,emuHist,corr,corrErr):
-	from math import sqrt
-	result = {"up":[],"down":[]}
-	resultErr = {"up":[],"down":[]}
-	
-	for x in range(1,eeHist.GetNbinsX()+1):
-		sf = float(eeHist.GetBinContent(x) + mumuHist.GetBinContent(x))
-		of = emuHist.GetBinContent(x)*corr
-		if of > 0:
-			rSFOF = sf/of
-			if eeHist.GetBinContent(x) >0 or mumuHist.GetBinContent(x) >0:
-				eemmPart = 1./(eeHist.GetBinContent(x)+mumuHist.GetBinContent(x))
-			else: 
-				eemmPart = 0.
-			if emuHist.GetBinContent(x) >0:
-				emPart = 1./emuHist.GetBinContent(x)
-			else: 
-				emPart = 0.
-				
-			relErrRSFOF = sqrt(eemmPart + emPart)
-			if rSFOF >1.001:
-				result["up"].append(rSFOF + sqrt(rSFOF**2-1) )
-				result["down"].append(rSFOF - sqrt(rSFOF**2-1) )
-				
-				resultErr["up"].append(rSFOF*relErrRSFOF*(1+rSFOF/sqrt(rSFOF**2-1)))
-				resultErr["down"].append(rSFOF*relErrRSFOF*(1-rSFOF/sqrt(rSFOF**2-1)))
-			else:
-				result["up"].append(rSFOF)
-				result["down"].append(rSFOF)
-				
-				resultErr["up"].append(rSFOF*relErrRSFOF)
-				resultErr["down"].append(rSFOF*relErrRSFOF)				
-		else:
-			result["up"].append(0)
-			result["down"].append(0)
-			
-			resultErr["up"].append(0)
-			resultErr["down"].append(0)			
-		
-	return result, resultErr
-
-def getHistograms(path,plot,runRange,isMC,backgrounds,region,EM=False):
-
-
+	### fetch the trees
 	treesEE = readTrees(path,"EE")
 	treesEM = readTrees(path,"EMu")
 	treesMM = readTrees(path,"MuMu")
 		
 	
-	
+	### get the MC stack
 	if isMC:
 		
 		eventCounts = totalNumberOfGeneratedEvents(path)	
@@ -105,31 +50,34 @@ def getHistograms(path,plot,runRange,isMC,backgrounds,region,EM=False):
 		for background in backgrounds:
 			processes.append(Process(getattr(Backgrounds,background),eventCounts))
 		
-		histoEE = TheStack(processes,runRange.lumi,plot,treesEE,"None",1.0,1.0,1.0).theHistogram		
-		histoMM = TheStack(processes,runRange.lumi,plot,treesMM,"None",1.0,1.0,1.0).theHistogram
+		histoEE = TheStack(processes,runRange.lumi,plot,treesEE,"None",1.0,1.0,1.0,verbose=verbose).theHistogram		
+		histoMM = TheStack(processes,runRange.lumi,plot,treesMM,"None",1.0,1.0,1.0,verbose=verbose).theHistogram
 		
 		if EM:
-			histoEM = TheStack(processes,runRange.lumi,plot,treesEM,"None",1.0,1.0,1.0).theHistogram		
+			histoEM = TheStack(processes,runRange.lumi,plot,treesEM,"None",1.0,1.0,1.0,verbose=verbose).theHistogram		
 			
+	### or histogram
 	else:
-		histoEE = getDataHist(plot,treesEE)
-		histoMM = getDataHist(plot,treesMM)
+		histoEE = getDataHist(plot,treesEE,verbose=verbose)
+		histoMM = getDataHist(plot,treesMM,verbose=verbose)
 		if EM:
-			histoEM = getDataHist(plot,treesEM)
+			histoEM = getDataHist(plot,treesEM,verbose=verbose)
 	
 	if EM:
 		return histoEE , histoMM, histoEM
 	else:
 		return histoEE , histoMM
 
-def centralValues(path,selection,runRange,isMC,backgrounds):
+### calculate the central r_MuE values
+def centralValues(path,selection,runRange,isMC,backgrounds,verbose=True):
 
+	### get the plot and region selection
 	plot = getPlot("mllPlot")
 	plot.addRegion(selection)
 	plot.cuts = plot.cuts % runRange.runCut		
 
 
-	
+	### fetch the systematics
 	if not "Forward" in selection.name:
 		relSyst = systematics.rMuE.central.val
 		if "Central" in selection.name:
@@ -140,11 +88,13 @@ def centralValues(path,selection,runRange,isMC,backgrounds):
 		relSyst = systematics.rMuE.forward.val
 		region = "forward"
 	
-	histEE, histMM = getHistograms(path,plot,runRange,isMC, backgrounds,region)
+	### get the histograms
+	histEE, histMM = getHistograms(path,plot,runRange,isMC, backgrounds,region,verbose=verbose)
 	
 	nEE = histEE.Integral()
 	nMM = histMM.Integral()
 	
+	###calculate the ratio and the uncertainties
 	rMuE= pow(nMM/nEE,0.5)
 
 	rMuEStatErr = 0.5*rMuE*(1./nMM + 1./nEE)**0.5
@@ -161,17 +111,22 @@ def centralValues(path,selection,runRange,isMC,backgrounds):
 	return result
 	
 	
-def dependencies(path,selection,plots,runRange,isMC,backgrounds,cmsExtra,fit):
+def dependencies(path,selection,plots,runRange,isMC,backgrounds,cmsExtra,fit,verbose=True):
 	
+	### make dependency plots, use ttbar MC for comparison both when plotting
+	### data and all MC
 
 	backgroundsTT = ["TT_Powheg"]
 	
+	### loop over the plots
 	for name in plots:
+		### Get plot and region
 		plot = getPlot(name)
 		plot.addRegion(selection)
 		plot.cleanCuts()	
 		plot.cuts = plot.cuts % runRange.runCut	
 
+		### get systematics
 		if not "Forward" in selection.name:
 			relSyst = systematics.rMuE.central.val
 			if "Central" in selection.name:
@@ -182,13 +137,14 @@ def dependencies(path,selection,plots,runRange,isMC,backgrounds,cmsExtra,fit):
 			relSyst = systematics.rMuE.forward.val
 			region = "forward"
 
+		### fetch histograms
 		if isMC:
-			histEE, histMM = getHistograms(path,plot,runRange,True, backgrounds,region)	
+			histEE, histMM = getHistograms(path,plot,runRange,True, backgrounds,region,verbose=verbose)	
 		else:
-			histEE, histMM = getHistograms(path,plot,runRange,False, backgrounds,region)	
-		histEEMC, histMMMC = getHistograms(path,plot,runRange,True, backgroundsTT,region)	
+			histEE, histMM = getHistograms(path,plot,runRange,False, backgrounds,region,verbose=verbose)	
+		histEEMC, histMMMC = getHistograms(path,plot,runRange,True, backgroundsTT,region,verbose=verbose)	
 			
-		
+		### create canvas, pad, set style, latex labels ...
 		hCanvas = TCanvas("hCanvas", "Distribution", 800,800)
 		
 		plotPad = ROOT.TPad("plotPad","plotPad",0,0,1,1)
@@ -221,11 +177,14 @@ def dependencies(path,selection,plots,runRange,isMC,backgrounds,cmsExtra,fit):
 
 
 
+		### make ratio histogram
 		rMuE = histMM.Clone("rMuE")
 		rMuE.Divide(histEE)
 		rMuEMC = histMMMC.Clone("rMuEMC")
 		rMuEMC.Divide(histEEMC)
 		
+		### take the square root (since r_mu = sqrt(N_mumu/N_ee)
+		### and propagate the uncertainties
 		for i in range(1, rMuE.GetNbinsX()+1):
 			if rMuE.GetBinContent(i) > 0:
 				rMuE.SetBinContent(i, pow(rMuE.GetBinContent(i),0.5))
@@ -247,6 +206,7 @@ def dependencies(path,selection,plots,runRange,isMC,backgrounds,cmsExtra,fit):
 
 
 
+		### make a plot of the input (ee and mumu events)
 		plotPad.DrawFrame(plot.firstBin,1,plot.lastBin,histMM.GetBinContent(histMM.GetMaximumBin())*10,"; %s; N_{Events}" %plot.xaxis)
 		
 		legend = ROOT.TLegend(0.65,0.7,0.9,0.9)
@@ -272,12 +232,12 @@ def dependencies(path,selection,plots,runRange,isMC,backgrounds,cmsExtra,fit):
 		else:
 			yLabelPos = 0.84	
 
-		latexCMSExtra.DrawLatex(0.19,yLabelPos,"%s"%(cmsExtra))
+		latexCMSExtra.DrawLatex(0.19,yLabelPos,"%s"%(cmsExtra))		
 		
+		hCanvas.Print("fig/rMuE_%s_%s_%s_%s_RawInputs.pdf"%(selection.name,runRange.label,plot.variablePlotName,plot.additionalName))
 		
-		
-		hCanvas.Print("fig/rMuE_%s_%s_%s_%s_RawInputs.pdf"%(selection.name,runRange.label,plot.variablePlotName,plot.additionalName))	
-		
+			
+		### Plot r_MuE
 		hCanvas.Clear()
 		ROOT.gPad.SetLogy(0)
 
@@ -301,13 +261,13 @@ def dependencies(path,selection,plots,runRange,isMC,backgrounds,cmsExtra,fit):
 
 		latexCMSExtra.DrawLatex(0.19,yLabelPos,"%s"%(cmsExtra))
 
-		
-
+		### fetch the central value from existing file or calculate it if non-existent
 		if os.path.isfile("shelves/rMuE_%s_%s.pkl"%(selection.name,runRange.label)):
 			centralVals = pickle.load(open("shelves/rMuE_%s_%s.pkl"%(selection.name,runRange.label),"rb"))
 		else:
 			centralVals = centralValues(path,selection,runRange,isMC,backgrounds)
 
+		### draw a line for the central value and an error band around it
 		x= array("f",[plot.firstBin, plot.lastBin]) 
 		y= array("f", [centralVals["rMuE"],centralVals["rMuE"]]) 
 		ex= array("f", [0.,0.])
@@ -324,7 +284,7 @@ def dependencies(path,selection,plots,runRange,isMC,backgrounds,cmsExtra,fit):
 		rmueLine.SetLineStyle(2)
 		rmueLine.Draw("SAME")
 		
-		
+		### Draw ratio and legend
 		rMuEMC.Draw("hist E1P SAME")
 			
 		leg = ROOT.TLegend(0.6,0.7,0.85,0.93)
@@ -348,6 +308,9 @@ def dependencies(path,selection,plots,runRange,isMC,backgrounds,cmsExtra,fit):
 		leg.SetTextAlign(22)
 		
 	
+		### Try a fit if there seems to be a linear dependency on mll
+		### Rewrite this part if you see any dependency on another variable
+		### and want to correct it
 		if fit:
 			fit = TF1("dataFit","pol1",0,300)
 			fit.SetLineColor(ROOT.kGreen+3)
@@ -363,7 +326,7 @@ def dependencies(path,selection,plots,runRange,isMC,backgrounds,cmsExtra,fit):
 			latex.DrawLatex(0.2, 0.20, "Fit on MC:   %.2f #pm %.2f %.5f #pm %.5f * m_{ll}"%(fitMC.GetParameter(0),fitMC.GetParError(0),fitMC.GetParameter(1),fitMC.GetParError(1)))			
 	
 		
-		# Pfeile
+		# Draw arrows for the gap in eta between 1.4 and 1.6
 		
 		if "eta" in plot.variable:
 			yMin = 0.95
@@ -395,14 +358,14 @@ def dependencies(path,selection,plots,runRange,isMC,backgrounds,cmsExtra,fit):
 		hCanvas.RedrawAxis()
 		leg.Draw("SAME")
 		ROOT.gPad.RedrawAxis()
-		hCanvas.Update()	
-		
-				
+		hCanvas.Update()		
 
 
 		hCanvas.Print("fig/rMuE_%s_%s_%s_%s.pdf"%(selection.name,runRange.label,plot.variablePlotName,plot.additionalName))	
 	
 
+		### Calculate 0.5*(rMuE + rMuE^-1) which is the quantity that goes into R_SFOF
+		### and the corresponding uncertainty
 		for i in range(1, rMuE.GetNbinsX()+1):
 			if rMuE.GetBinContent(i) > 0:
 				rMuE.SetBinError(i, 0.5*(1. - (1./rMuE.GetBinContent(i)**2))*rMuE.GetBinError(i))
@@ -447,14 +410,8 @@ def dependencies(path,selection,plots,runRange,isMC,backgrounds,cmsExtra,fit):
 
 		latexCMSExtra.DrawLatex(0.19,yLabelPos,"%s"%(cmsExtra))
 
-		
 
-		if os.path.isfile("shelves/rMuE_%s_%s.pkl"%(selection.name,runRange.label)):
-			centralVals = pickle.load(open("shelves/rMuE_%s_%s.pkl"%(selection.name,runRange.label),"rb"))
-		else:
-			centralVals = centralValues(path,selection,runRange,isMC,backgrounds)
-
-
+		### Draw line and uncertainty band again
 		x= array("f",[plot.firstBin, plot.lastBin]) 
 		y= array("f", [0.5*(centralVals["rMuE"]+1./centralVals["rMuE"]),0.5*(centralVals["rMuE"]+1./centralVals["rMuE"])]) 
 		ex= array("f", [0.,0.])
@@ -495,6 +452,8 @@ def dependencies(path,selection,plots,runRange,isMC,backgrounds,cmsExtra,fit):
 		leg.SetTextAlign(22)
 		
 	
+		
+		### fit dependency on mll, or change for other variables
 		if fit:
 			fit = TF1("dataFit","pol1",0,300)
 			fit.SetLineColor(ROOT.kGreen+3)
@@ -510,7 +469,7 @@ def dependencies(path,selection,plots,runRange,isMC,backgrounds,cmsExtra,fit):
 			latex.DrawLatex(0.2, 0.20, "Fit on MC:   %.2f #pm %.2f %.5f #pm %.5f * m_{ll}"%(fitMC.GetParameter(0),fitMC.GetParError(0),fitMC.GetParameter(1),fitMC.GetParError(1)))			
 	
 		
-		# Pfeile
+		# Gap in eta again
 		
 		if "eta" in plot.variable:
 			yMin = 0.95
@@ -556,8 +515,8 @@ def main():
 
 	parser = argparse.ArgumentParser(description='rMuE measurements.')
 	
-	parser.add_argument("-v", "--verbose", action="store_true", dest="verbose", default=False,
-						  help="Verbose mode.")
+	parser.add_argument("-q", "--quiet", action="store_true", dest="quiet", default=False,
+						  help="Switch verbose mode off. Do not show cut values and samples on the console whenever a histogram is created")
 	parser.add_argument("-m", "--mc", action="store_true", dest="mc", default=False,
 						  help="use MC, default is to use data.")
 	parser.add_argument("-s", "--selection", dest = "selection" , action="append", default=[],
@@ -595,9 +554,12 @@ def main():
 	if len(args.runRange) == 0:
 		args.runRange.append(runRanges.name)		
 
-	path = locations.dataSetPath	
-
+	path = locations.dataSetPath
 	
+	if args.quiet:
+		verbose = False
+	else:
+		verbose = True		
 
 	cmsExtra = ""
 	if args.private:
@@ -615,8 +577,9 @@ def main():
 			
 			selection = getRegion(selectionName)
 
+			### calculate central values for r_MuE and store them in a .pkl file
 			if args.central:
-				centralVal = centralValues(path,selection,runRange,args.mc,args.backgrounds)
+				centralVal = centralValues(path,selection,runRange,args.mc,args.backgrounds,verbose=verbose)
 				if args.mc:
 					outFilePkl = open("shelves/rMuE_%s_%s_MC.pkl"%(selection.name,runRange.label),"w")
 					print "shelves/rMuE_%s_%s_MC.pkl created"%(selection.name,runRange.label)
@@ -625,10 +588,12 @@ def main():
 					print "shelves/rMuE_%s_%s.pkl created"%(selection.name,runRange.label)
 				pickle.dump(centralVal, outFilePkl)
 				outFilePkl.close()
-				
+			
+			### plot dependencies	
 			if args.dependencies:
-				 dependencies(path,selection,args.plots,runRange,args.mc,args.backgrounds,cmsExtra,args.fit)
-				 
+				 dependencies(path,selection,args.plots,runRange,args.mc,args.backgrounds,cmsExtra,args.fit,verbose=verbose)
+			
+			### copy .pkl file to frameWorkBase/shelves	 to be used later on by other tools
 			if args.write:
 				import subprocess
 				if args.mc:

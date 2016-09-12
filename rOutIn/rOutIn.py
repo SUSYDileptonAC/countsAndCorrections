@@ -36,39 +36,41 @@ import corrections
 
 from locations import locations
 
-
-def getHistograms(path,plot,runRange,isMC,backgrounds):
+### get the histograms from the ntuples for data or MC
+def getHistograms(path,plot,runRange,isMC,backgrounds,verbose=True):
 	
 	### Add code to take the flavor-symmetric background contribution into account
 
+	### fetch the trees
 	treesEE = readTrees(path,"EE")
 	treesMM = readTrees(path,"MuMu")
 		
 	
-	
+	### get the MC stack
 	if isMC:
 		
 		eventCounts = totalNumberOfGeneratedEvents(path)	
 		processes = []
 		for background in backgrounds:
 			processes.append(Process(getattr(Backgrounds,background),eventCounts))
-		histoEE = TheStack(processes,runRange.lumi,plot,treesEE,"None",1.0,1.0,1.0).theHistogram		
-		histoMM = TheStack(processes,runRange.lumi,plot,treesMM,"None",1.0,1.0,1.0).theHistogram
+		histoEE = TheStack(processes,runRange.lumi,plot,treesEE,"None",1.0,1.0,1.0,verbose=verbose).theHistogram		
+		histoMM = TheStack(processes,runRange.lumi,plot,treesMM,"None",1.0,1.0,1.0,verbose=verbose).theHistogram
 		
 	else:
-		histoEE = getDataHist(plot,treesEE)
-		histoMM = getDataHist(plot,treesMM)
+		histoEE = getDataHist(plot,treesEE,verbose=verbose)
+		histoMM = getDataHist(plot,treesMM,verbose=verbose)
 	
 	return histoEE , histoMM
 
 
-	
+### Routine to make the mass spectrum	
 def plotMllSpectra(SFhist,runRange,selection,suffix,cmsExtra,additionalLabel):
 
 	### Plot OF component in this routine as well
 		
 	SFhist.Rebin(5)
-
+	
+	### get canvas, pad and style
 	hCanvas = TCanvas("hCanvas", "Distribution", 800,800)
 	plotPad = TPad("plotPad","plotPad",0,0,1,1)
 	
@@ -95,7 +97,7 @@ def plotMllSpectra(SFhist,runRange,selection,suffix,cmsExtra,additionalLabel):
 	legend.AddEntry(SFhist,"%s events"%suffix,"p")
 	legend.Draw("same")
 
-	
+	### make lines between the different regions
 	line1 = ROOT.TLine(mllBins.lowMass.low,0,mllBins.lowMass.low,SFhist.GetBinContent(SFhist.GetMaximumBin()))
 	line2 = ROOT.TLine(mllBins.lowMass.high,0,mllBins.lowMass.high,SFhist.GetBinContent(SFhist.GetMaximumBin()))
 	line3 = ROOT.TLine(mllBins.onZ.low,0,mllBins.onZ.low,SFhist.GetBinContent(SFhist.GetMaximumBin()))
@@ -117,6 +119,7 @@ def plotMllSpectra(SFhist,runRange,selection,suffix,cmsExtra,additionalLabel):
 	line4.Draw("same")
 	line5.Draw("same")
 
+	### Label in and out part
 	Labelin = ROOT.TLatex()
 	Labelin.SetTextAlign(12)
 	Labelin.SetTextSize(0.04)
@@ -164,7 +167,7 @@ def plotMllSpectra(SFhist,runRange,selection,suffix,cmsExtra,additionalLabel):
 			
 	
 	
-	
+	### same in log plot
 	hCanvas.Clear()
 	
 	plotPad = TPad("plotPad","plotPad",0,0,1,1)
@@ -218,8 +221,9 @@ def plotMllSpectra(SFhist,runRange,selection,suffix,cmsExtra,additionalLabel):
 	else:
 		hCanvas.Print("fig/rOutIn_%s_%s_%s.pdf"%(suffix,selection.name,runRange.label))	
 	
-### routine to make some more detailed dependency studies beside the standard mass plots	
-def dependencies(path,selection,plots,runRange,mc,backgrounds,cmsExtra):
+### routine to make some more detailed dependency studies beside the standard mass plots
+### not very often used since the DY background outside the Z window is a minor background contribution	
+def dependencies(path,selection,plots,runRange,mc,backgrounds,cmsExtra,verbose=True):
 	hCanvas = TCanvas("hCanvas", "Distribution", 800,800)
 	legend = TLegend(0.6, 0.7, 0.9, 0.9)
 	legend.SetFillStyle(0)
@@ -282,7 +286,7 @@ def dependencies(path,selection,plots,runRange,mc,backgrounds,cmsExtra):
 			selection.cut = selection.cut + " && %s > %f && %s < %f"%(plot.variable,bins[i],plot.variable,bins[i+1]) + " && %s"%runRange.runCut
 				
 			additionalLabel = "%s_%.2f_%.2f"%(plot.variable,bins[i],bins[i+1])
-			centralVal = centralValues(path,selection,runRange,mc,backgrounds,cmsExtra,additionalLabel)
+			centralVal = centralValues(path,selection,runRange,mc,backgrounds,cmsExtra,additionalLabel,verbose=verbose)
 			for combination in ["EE","MM","SF"]:
 				for region in ["LowMass","HighMass","BelowZ","AboveZ"]:
 					rOutIn[region][combination].append(centralVal["rOutIn%s%s"%(region,combination)])
@@ -295,12 +299,12 @@ def dependencies(path,selection,plots,runRange,mc,backgrounds,cmsExtra):
 			if os.path.isfile("shelves/rOutIn_%s_%s_MC.pkl"%(selection.name,runRange.label)):
 				centralVals = pickle.load(open("shelves/rOutIn_%s_%s_MC.pkl"%(selection.name,runRange.label),"rb"))
 			else:
-				centralVals = centralValues(path,selection,runRange,mc,backgrounds,cmsExtra)					
+				centralVals = centralValues(path,selection,runRange,mc,backgrounds,cmsExtra,verbose=verbose)					
 		else:
 			if os.path.isfile("shelves/rOutIn_%s_%s.pkl"%(selection.name,runRange.label)):
 				centralVals = pickle.load(open("shelves/rOutIn_%s_%s.pkl"%(selection.name,runRange.label),"rb"))
 			else:
-				centralVals = centralValues(path,selection,runRange,mc,backgrounds,cmsExtra)		
+				centralVals = centralValues(path,selection,runRange,mc,backgrounds,cmsExtra,verbose=verbose)		
 		
 		for combination in ["EE","MM","SF"]:
 			relSystSave = relSyst
@@ -391,8 +395,8 @@ def dependencies(path,selection,plots,runRange,mc,backgrounds,cmsExtra):
 	
 
 	
-	
-def centralValues(path,selection,runRange,isMC,backgrounds,cmsExtra,additionalLabel=""):			
+### routine to get the central values	
+def centralValues(path,selection,runRange,isMC,backgrounds,cmsExtra,additionalLabel="",verbose=True):			
 			
 
 	plot = getPlot("mllPlotROutIn")
@@ -408,24 +412,29 @@ def centralValues(path,selection,runRange,isMC,backgrounds,cmsExtra,additionalLa
 		
 	### Take flavor-symmetric background into account and add the other mass regions
 
-	histEE, histMM = getHistograms(path,plot,runRange,isMC,backgrounds)
+	histEE, histMM = getHistograms(path,plot,runRange,isMC,backgrounds,verbose=verbose)
 	histSF = histEE.Clone("histSF")
 	histSF.Add(histMM.Clone())
-
+	
+	### mass bins
 	result = {}
 	lowMassLow = mllBins.lowMass.low
 	lowMassHigh = mllBins.lowMass.high
 	peakLow = mllBins.onZ.low
 	peakHigh = mllBins.onZ.high
 
-		
+	
+	### results at the Z peak	
 	result["peakEE"] = histEE.Integral(histEE.FindBin(peakLow+0.01),histEE.FindBin(peakHigh-0.01))
 	result["peakMM"] = histMM.Integral(histMM.FindBin(peakLow+0.01),histMM.FindBin(peakHigh-0.01))
 	result["peakSF"] = result["peakEE"] + result["peakMM"]
 
+	### At low mass
 	result["lowMassEE"] = histEE.Integral(histEE.FindBin(lowMassLow+0.01),histEE.FindBin(lowMassHigh-0.01))
 	result["lowMassMM"] = histMM.Integral(histMM.FindBin(lowMassLow+0.01),histMM.FindBin(lowMassHigh-0.01))
 	result["lowMassSF"] = result["lowMassEE"] + result["lowMassMM"]
+	
+	### Add other regions here
 
 	for combination in ["EE","MM","SF"]:
 		peak = result["peak%s"%combination]		
@@ -476,8 +485,8 @@ def main():
 
 	parser = argparse.ArgumentParser(description='R(out/in) measurements.')
 	
-	parser.add_argument("-v", "--verbose", action="store_true", dest="verbose", default=False,
-						  help="Verbose mode.")
+	parser.add_argument("-q", "--quiet", action="store_true", dest="quiet", default=False,
+						  help="Switch verbose mode off. Do not show cut values and samples on the console whenever a histogram is created")
 	parser.add_argument("-m", "--mc", action="store_true", dest="mc", default=False,
 						  help="use MC, default is to use data.")
 	parser.add_argument("-s", "--selection", dest = "selection" , action="append", default=[],
@@ -512,6 +521,11 @@ def main():
 
 
 	path = locations.dataSetPath
+	
+	if args.quiet:
+		verbose = False
+	else:
+		verbose = True
 
 
 	cmsExtra = "Private Work"
@@ -526,8 +540,9 @@ def main():
 			selection = getRegion(selectionName)
 
 
+			### Calculate central values for r_Out/In and store them in .pkl files
 			if args.central:
-				centralVal = centralValues(path,selection,runRange,args.mc,args.backgrounds,cmsExtra)
+				centralVal = centralValues(path,selection,runRange,args.mc,args.backgrounds,cmsExtra,verbose=verbose)
 				if args.mc:
 					outFilePkl = open("shelves/rOutIn_%s_%s_MC.pkl"%(selection.name,runRange.label),"w")
 					print "shelves/rOutIn_%s_%s_MC.pkl created"%(selection.name,runRange.label)
@@ -536,10 +551,12 @@ def main():
 					print "shelves/rOutIn_%s_%s.pkl created"%(selection.name,runRange.label)
 				pickle.dump(centralVal, outFilePkl)
 				outFilePkl.close()
-				
+			
+			### make more detailed dependency plots	
 			if args.dependencies:
-				 dependencies(path,selection,args.plots,runRange,args.mc,args.backgrounds,cmsExtra)	
-				 
+				 dependencies(path,selection,args.plots,runRange,args.mc,args.backgrounds,cmsExtra,verbose=verbose)	
+			
+			### copy .pkl files to frameWorkBase/shelves to be used by other tools	 
 			if args.write:
 				import subprocess
 				if args.mc:
