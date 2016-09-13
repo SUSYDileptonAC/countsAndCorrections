@@ -32,7 +32,7 @@ from centralConfig import regionsToUse, runRanges, backgroundLists, plotLists, s
 from locations import locations
 
 ### Get the event counts from the trees
-def getCounts(trees, cut, isMC, backgrounds,plot,runRange,path):
+def getCounts(trees, cut, isMC, backgrounds,plot,runRange,path,verbose=True):
 
 	if isMC:
 		tmpCut = plot.cuts
@@ -42,9 +42,9 @@ def getCounts(trees, cut, isMC, backgrounds,plot,runRange,path):
 		for background in backgrounds:
 			processes.append(Process(getattr(Backgrounds,background),eventCounts))
 		
-		histEE = TheStack(processes,runRange.lumi,plot,trees["EE"],"None",1.0,1.0,1.0).theHistogram		
-		histMM = TheStack(processes,runRange.lumi,plot,trees["MM"],"None",1.0,1.0,1.0).theHistogram
-		histEM = TheStack(processes,runRange.lumi,plot,trees["EM"],"None",1.0,1.0,1.0).theHistogram
+		histEE = TheStack(processes,runRange.lumi,plot,trees["EE"],"None",1.0,1.0,1.0,verbose=verbose).theHistogram		
+		histMM = TheStack(processes,runRange.lumi,plot,trees["MM"],"None",1.0,1.0,1.0,verbose=verbose).theHistogram
+		histEM = TheStack(processes,runRange.lumi,plot,trees["EM"],"None",1.0,1.0,1.0,verbose=verbose).theHistogram
 							
 		
 		eeErr = ROOT.Double()
@@ -82,7 +82,7 @@ def getCounts(trees, cut, isMC, backgrounds,plot,runRange,path):
 	
 
 ### fetch trees and loop over the different signal regions to get the results
-def cutAndCountForRegion(path,selection,plots,runRange,isMC,backgrounds,preselection):
+def cutAndCountForRegion(path,selection,plots,runRange,isMC,backgrounds,preselection,verbose=True):
 	
 	### get trees
 	if not isMC:
@@ -113,7 +113,7 @@ def cutAndCountForRegion(path,selection,plots,runRange,isMC,backgrounds,preselec
 		counts["default"] = {}
 		### get the yields in each mass region without any additional cut on b-tagging (or anything else defined in centralConfig.cutNCountXChecks.cutList
 		for mllCut in massRanges:
-			counts["default"][getattr(theCuts.massCuts,mllCut).name] = getCounts(trees, plot.cuts+"*(%s)"%getattr(theCuts.massCuts,mllCut).cut,isMC,backgrounds,plot,runRange,path)	
+			counts["default"][getattr(theCuts.massCuts,mllCut).name] = getCounts(trees, plot.cuts+"*(%s)"%getattr(theCuts.massCuts,mllCut).cut,isMC,backgrounds,plot,runRange,path,verbose=verbose)	
 
 		### get the subregions / cross checks
 		for categoryName, category in cutNCountXChecks.cutList.iteritems():
@@ -133,8 +133,8 @@ def cutAndCountForRegion(path,selection,plots,runRange,isMC,backgrounds,preselec
 def main():
 	parser = argparse.ArgumentParser(description='produce cut & count event yields.')
 	
-	parser.add_argument("-v", "--verbose", action="store_true", dest="verbose", default=False,
-						  help="Verbose mode.")
+	parser.add_argument("-q", "--quiet", action="store_true", dest="quiet", default=False,
+						  help="Switch verbose mode off. Do not show cut values and samples on the console whenever a histogram is created")
 	parser.add_argument("-m", "--mc", action="store_true", dest="mc", default=False,
 						  help="use MC, default is to use data.")
 	parser.add_argument("-s", "--selection", dest = "selection" , action="append", default=[],
@@ -161,7 +161,11 @@ def main():
 	if len(args.runRange) == 0:
 		args.runRange.append(runRanges.name)	
 
-
+	if args.quiet:
+		verbose = False
+	else:
+		verbose = True
+	
 	path = locations.dataSetPath
 
 	### Basic preselection to make looping over the trees faster
@@ -178,7 +182,7 @@ def main():
 			selection = getRegion(selectionName)
 			
 			### get the results
-			counts = cutAndCountForRegion(path,selection,args.plots,runRange,args.mc,args.backgrounds,preselection)
+			counts = cutAndCountForRegion(path,selection,args.plots,runRange,args.mc,args.backgrounds,preselection,verbose=verbose)
 			outFile = open("shelves/cutAndCount_%s_%s.pkl"%(selection.name,runRange.label),"w")
 			print "shelves/cutAndCount_%s_%s.pkl created"%(selection.name,runRange.label)
 			pickle.dump(counts, outFile)
