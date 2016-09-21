@@ -406,10 +406,12 @@ def centralValues(path,selection,runRange,isMC,backgrounds,cmsExtra,additionalLa
 	plot.cuts = plot.cuts % runRange.runCut		
 
 	
-	if not "Forward" in selection.name:
+	if "Central" in selection.name:
 		region = "central"
-	else:		
+	elif "Forward" in selection.name:		
 		region = "forward"
+	else:		
+		region = "inclusive"
 
 	histEE, histMM, histEM = getHistograms(path,plot,runRange,isMC,backgrounds)
 	histSF = histEE.Clone("histSF")
@@ -455,11 +457,12 @@ def centralValues(path,selection,runRange,isMC,backgrounds,cmsExtra,additionalLa
 	
 
 	for combination in ["EE","MM","SF"]:
-		corr = getattr(corrections,"r%sOF"%combination).central.val
-		corrErr = getattr(corrections,"r%sOF"%combination).central.err
+		corr = getattr(getattr(corrections,"r%sOF"%combination),region).val
+		corrErr = getattr(getattr(corrections,"r%sOF"%combination),region).err
 		if isMC:
-			corr = getattr(corrections,"r%sOF"%combination).central.valMC
-			corrErr = getattr(corrections,"r%sOF"%combination).central.errMC
+			corr = getattr(getattr(corrections,"r%sOF"%combination),region).valMC
+			corrErr = getattr(getattr(corrections,"r%sOF"%combination),region).errMC
+			
 		peak = result["peak%s"%combination] - result["peakOF"]*corr			
 		peakErr = sqrt(result["peak%s"%combination] + (sqrt(result["peakOF"])*corr)**2 + (sqrt(result["peakOF"])*corr*corrErr)**2)
 
