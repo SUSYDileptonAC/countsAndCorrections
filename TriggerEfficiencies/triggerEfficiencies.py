@@ -61,6 +61,9 @@ def efficiencyRatioGeometricMean(eff1,eff2,eff3):
 		pointY2 = ROOT.Double(0.)
 		pointY3 = ROOT.Double(0.)
 	
+		isSuccesful1 = eff1.GetPoint(i,pointX1,pointY1)
+		isSuccesful2 = eff2.GetPoint(i,pointX2,pointY2)
+		isSuccesful3 = eff3.GetPoint(i,pointX3,pointY3)
 		errY1Up = eff1.GetErrorYhigh(i)
 		errY1Down = eff1.GetErrorYlow(i)
 		errY2Up = eff2.GetErrorYhigh(i)
