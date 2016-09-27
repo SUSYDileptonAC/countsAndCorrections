@@ -89,46 +89,17 @@ def getErrHist(plot,combination,region,ofHist,dyHist,rSFOFErr):
 	histUp = TH1F("errHist","errHist",plot.nBins,plot.firstBin,plot.lastBin)
 	histDown = TH1F("errHist","errHist",plot.nBins,plot.firstBin,plot.lastBin)
 	graph = TGraphAsymmErrors()
-	for i in range(5,hist.GetNbinsX()+1):
+	for i in range(0,hist.GetNbinsX()+1):
 		hist.SetBinContent(i,1)
 		hist.SetBinError(i,ofHist.GetBinContent(i)*rSFOFErr)
-	#~ if dyHist is not None:
-		#~ for i in range(hist.FindBin(mllBins.edgeMass.low+0.01),hist.FindBin(mllBins.edgeMass.high-0.01)):
-			#~ 
-			#~ if region == "inclusive":
-				#~ zErrCentral = (((localZPred.central.err*localROutIn.lowMass.central.val)**2 + (localZPred.central.val*localROutIn.lowMass.central.err)**2)**0.5) / (localZPred.central.val*localROutIn.lowMass.central.val) * dyHist.GetBinContent(i)
-				#~ zErrForward = (((localZPred.forward.err*localROutIn.lowMass.forward.val)**2 + (localZPred.forward.val*localROutIn.lowMass.forward.err)**2)**0.5) / (localZPred.forward.val*localROutIn.lowMass.forward.val) * dyHist.GetBinContent(i)
-				#~ 
-				#~ zErr = zErrCentral + zErrForward
-			#~ else:
-				#~ zErr = (((getattr(localZPred,region).err*getattr(localROutIn.lowMass,region).val)**2 + (getattr(localZPred,region).val*getattr(localROutIn.lowMass,region).err)**2)**0.5) / ((getattr(localZPred,region).val*getattr(localROutIn.lowMass,region).val)) * dyHist.GetBinContent(i)
-							#~ 
-			#~ hist.SetBinError(i,(hist.GetBinError(i)**2 + zErr**2)**0.5) 
+	if dyHist is not None:
+		for i in range(hist.FindBin(mllBins.edgeMass.low+0.01),hist.FindBin(mllBins.edgeMass.high-0.01)):
+			zErr = (((getattr(localZPred,region).err*getattr(localROutIn.lowMass,region).val)**2 + (getattr(localZPred,region).val*getattr(localROutIn.lowMass,region).err)**2)**0.5) / ((getattr(localZPred,region).val*getattr(localROutIn.lowMass,region).val)) * dyHist.GetBinContent(i)
 			
-		#~ for i in range(hist.FindBin(mllBins.highMass.low+0.01),hist.FindBin(plot.lastBin-0.01)+1):
-			#~ if region == "inclusive":
-				#~ zErrCentral = (((localZPred.central.err*localROutIn.highMass.central.val)**2 + (localZPred.central.val*localROutIn.highMass.central.err)**2)**0.5) / (localZPred.central.val*localROutIn.highMass.central.val) * dyHist.GetBinContent(i)
-				#~ zErrForward = (((localZPred.forward.err*localROutIn.highMass.forward.val)**2 + (localZPred.forward.val*localROutIn.highMass.forward.err)**2)**0.5) / (localZPred.forward.val*localROutIn.highMass.forward.val) * dyHist.GetBinContent(i)
-				#~ 
-				#~ zErr = zErrCentral + zErrForward		
-			#~ 
-			#~ else:
-				#~ zErr = (((getattr(localZPred,region).err*getattr(localROutIn.highMass,region).val)**2 + (getattr(localZPred,region).val*getattr(localROutIn.highMass,region).err)**2)**0.5) / ((getattr(localZPred,region).val*getattr(localROutIn.highMass,region).val)) * dyHist.GetBinContent(i)
-			#~ 
-			#~ hist.SetBinError(i,(hist.GetBinError(i)**2 + zErr**2)**0.5) 
-			#~ 
-		#~ for i in range(hist.FindBin(mllBins.onZ.low+0.01),hist.FindBin(mllBins.onZ.high-0.01)):
-			#~ if region == "inclusive":
-				#~ zErrCentral = (localZPred.central.err / localZPred.central.val) * dyHist.GetBinContent(i)
-				#~ zErrForward = (localZPred.forward.err / localZPred.forward.val) * dyHist.GetBinContent(i)
-				#~ 
-				#~ zErr = zErrCentral + zErrForward
-#~ 
-#~ 
-			#~ 
-			#~ else:
-				#~ zErr = (getattr(localZPred,region).err / getattr(localZPred,region).val) * dyHist.GetBinContent(i) 
-			#~ hist.SetBinError(i,(hist.GetBinError(i)**2 + zErr**2)**0.5) 
+			if hist.GetBinError(i) > 0:				
+				hist.SetBinError(i,(hist.GetBinError(i)**2 + zErr**2)**0.5) 
+			
+		
 
 		#~ for i in range(hist.FindBin(mllBins.edgeMass.low+0.01),hist.FindBin(mllBins.edgeMass.high-0.01)):
 			#~ graph.SetPoint(i,plot.firstBin - ((plot.lastBin-plot.firstBin)/plot.nBins)*0.5 +(i)*((plot.lastBin-plot.firstBin)/plot.nBins),dyHist.GetBinContent(i) + ofHist.GetBinContent(i))
@@ -142,13 +113,21 @@ def getErrHist(plot,combination,region,ofHist,dyHist,rSFOFErr):
 				#~ hist.SetBinError(i,1.2)
 	#~ else:
 	for i in range(0,hist.GetNbinsX()+1):
-		graph.SetPoint(i,plot.firstBin - ((plot.lastBin-plot.firstBin)/plot.nBins)*0.5 +(i)*((plot.lastBin-plot.firstBin)/plot.nBins),ofHist.GetBinContent(i))
-		graph.SetPointError(i,((plot.firstBin-plot.lastBin)/plot.nBins)*0.5,((plot.firstBin-plot.lastBin)/plot.nBins)*0.5,(hist.GetBinError(i)**2 + ofHist.GetBinContent(i))**0.5,(hist.GetBinError(i)**2 + ofHist.GetBinContent(i))**0.5)	
-	for i in range(1,hist.GetNbinsX()+1):
-		histUp.SetBinContent(i,ofHist.GetBinContent(i) + hist.GetBinError(i))
-		histDown.SetBinContent(i,ofHist.GetBinContent(i) - hist.GetBinError(i))			
 		if ofHist.GetBinContent(i) > 0:
-			hist.SetBinError(i,hist.GetBinError(i) / (ofHist.GetBinContent(i)))
+			graph.SetPoint(i,plot.firstBin - ((plot.lastBin-plot.firstBin)/plot.nBins)*0.5 +(i)*((plot.lastBin-plot.firstBin)/plot.nBins),ofHist.GetBinContent(i)+dyHist.GetBinContent(i))
+			graph.SetPointError(i,((plot.firstBin-plot.lastBin)/plot.nBins)*0.5,((plot.firstBin-plot.lastBin)/plot.nBins)*0.5,(hist.GetBinError(i)**2 + dyHist.GetBinContent(i) + ofHist.GetBinContent(i))**0.5,(hist.GetBinError(i)**2 + dyHist.GetBinContent(i) +  ofHist.GetBinContent(i))**0.5)	
+		else:
+			graph.SetPoint(i,plot.firstBin - ((plot.lastBin-plot.firstBin)/plot.nBins)*0.5 +(i)*((plot.lastBin-plot.firstBin)/plot.nBins),ofHist.GetBinContent(i))
+			graph.SetPointError(i,((plot.firstBin-plot.lastBin)/plot.nBins)*0.5,((plot.firstBin-plot.lastBin)/plot.nBins)*0.5,(hist.GetBinError(i)**2 + ofHist.GetBinContent(i))**0.5,(hist.GetBinError(i)**2 + ofHist.GetBinContent(i))**0.5)	
+	for i in range(1,hist.GetNbinsX()+1):
+		if ofHist.GetBinContent(i) > 0:
+			histUp.SetBinContent(i,dyHist.GetBinContent(i) + ofHist.GetBinContent(i) + hist.GetBinError(i))
+			histDown.SetBinContent(i,dyHist.GetBinContent(i) + ofHist.GetBinContent(i) - hist.GetBinError(i))			
+		else:
+			histUp.SetBinContent(i,ofHist.GetBinContent(i) + hist.GetBinError(i))
+			histDown.SetBinContent(i,ofHist.GetBinContent(i) - hist.GetBinError(i))			
+		if ofHist.GetBinContent(i) > 0:
+			hist.SetBinError(i,hist.GetBinError(i) / (dyHist.GetBinContent(i) + ofHist.GetBinContent(i)))
 		else:
 			hist.SetBinError(i,0)
 	return graph, histUp, histDown
@@ -251,11 +230,11 @@ def makePlot(sfHist,ofHist,selection,plot,runRange,region,cmsExtra,combination,d
 	latex.SetNDC(True)
 	latexCMS = ROOT.TLatex()
 	latexCMS.SetTextFont(61)
-	latexCMS.SetTextSize(0.055)
+	latexCMS.SetTextSize(0.05)
 	latexCMS.SetNDC(True)
 	latexCMSExtra = ROOT.TLatex()
 	latexCMSExtra.SetTextFont(52)
-	latexCMSExtra.SetTextSize(0.03)
+	latexCMSExtra.SetTextSize(0.0375)
 	latexCMSExtra.SetNDC(True) 
 		
 	latex.DrawLatex(0.93, 0.942, "%s fb^{-1} (13 TeV)"%runRange.printval)
@@ -265,7 +244,7 @@ def makePlot(sfHist,ofHist,selection,plot,runRange,region,cmsExtra,combination,d
 	if "Simulation" in cmsExtra:
 		yLabelPos = 0.81	
 	else:
-		yLabelPos = 0.84	
+		yLabelPos = 0.81	
 
 	latexCMSExtra.DrawLatex(0.19,yLabelPos,"%s"%(cmsExtra))
 	
@@ -1014,8 +993,8 @@ def main():
 	if args.private:
 		cmsExtra = "Private Work"
 	else:
-		#~ cmsExtra = "Preliminary"
-		cmsExtra = ""
+		cmsExtra = "Preliminary"
+		#~ cmsExtra = ""
 
 	for runRangeName in args.runRange:
 		runRange = getRunRange(runRangeName)

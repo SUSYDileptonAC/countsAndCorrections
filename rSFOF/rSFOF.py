@@ -167,14 +167,14 @@ def dependencies(source,modifier,path,selection,plots,runRange,isMC,nonNormalize
 		histEE.Divide(histEM)				
 		histMM.Divide(histEM)				
 		
-		hCanvas = TCanvas("hCanvas", "Distribution", 800,300)
+		hCanvas = TCanvas("hCanvas", "Distribution", 800,500)
 		
 		plotPad = ROOT.TPad("plotPad","plotPad",0,0,1,1)
 		style = setTDRStyle()
 		#~ style.SetTitleYOffset(0.70)
-		style.SetTitleSize(0.1, "XYZ")
-		style.SetTitleYOffset(0.35)
-		style.SetTitleXOffset(0.7)
+		style.SetTitleSize(0.07, "XYZ")
+		style.SetTitleYOffset(0.55)
+		style.SetTitleXOffset(0.8)
 		style.SetPadLeftMargin(0.1)
 		style.SetPadTopMargin(0.12)
 		style.SetPadBottomMargin(0.17)
@@ -183,7 +183,7 @@ def dependencies(source,modifier,path,selection,plots,runRange,isMC,nonNormalize
 		plotPad.cd()	
 					
 	
-		plotPad.DrawFrame(plot.firstBin,0,plot.lastBin,3,"; %s ; %s" %(plot.xaxis,"SF/OF"))
+		plotPad.DrawFrame(plot.firstBin,0,plot.lastBin,2.5,"; %s ; %s" %(plot.xaxis,"SF/OF"))
 		
 		
 		from ROOT import TH1F,kWhite
@@ -225,22 +225,22 @@ def dependencies(source,modifier,path,selection,plots,runRange,isMC,nonNormalize
 		latex = ROOT.TLatex()
 		latex.SetTextFont(42)
 		latex.SetTextAlign(11)
-		latex.SetTextSize(0.04)
+		latex.SetTextSize(0.035)
 		latex.SetNDC(True)
 		latexLumi = ROOT.TLatex()
 		latexLumi.SetTextFont(42)
 		latexLumi.SetTextAlign(31)
-		latexLumi.SetTextSize(0.1)
+		latexLumi.SetTextSize(0.06)
 		latexLumi.SetNDC(True)
 		latexCMS = ROOT.TLatex()
 		latexCMS.SetTextFont(61)
 		#latexCMS.SetTextAlign(31)
-		latexCMS.SetTextSize(0.12)
+		latexCMS.SetTextSize(0.09)
 		latexCMS.SetNDC(True)
 		latexCMSExtra = ROOT.TLatex()
 		latexCMSExtra.SetTextFont(52)
 		#latexCMSExtra.SetTextAlign(31)
-		latexCMSExtra.SetTextSize(0.1)
+		latexCMSExtra.SetTextSize(0.07)
 		latexCMSExtra.SetNDC(True)	
 		latexLumi.DrawLatex(0.95, 0.91, "%s fb^{-1} (13 TeV)"%runRange.printval)
 		#~ latexLumi.DrawLatex(0.95, 0.96, "(13 TeV)")
@@ -310,6 +310,10 @@ def getHistograms(path,source,modifier,plot,runRange,isMC,nonNormalized,backgrou
 		histoEE = getDataHist(plot,treesEE)
 		histoMM = getDataHist(plot,treesMM)
 		histoEM = getDataHist(plot,treesEM)
+		
+		print histoEE.Integral()
+		print histoEM.Integral()
+		print histoMM.Integral()
 	
 	return histoEE , histoMM, histoEM
 	
@@ -432,9 +436,9 @@ def centralValues(source,modifier,path,selection,runRange,isMC,nonNormalized,bac
 	rsfof = float(sf)/float(of)
 	rsfofErr = rsfof*(sfErr**2/sf**2+ofErr**2/of**2)**0.5
 	rsfofLowMass = float(sfLowMass)/float(ofLowMass)
-	rsfofLowMassErr = rsfof*(sfLowMassErr**2/sfLowMass**2+ofLowMassErr**2/ofLowMass**2)**0.5
+	rsfofLowMassErr = rsfofLowMass*(sfLowMassErr**2/sfLowMass**2+ofLowMassErr**2/ofLowMass**2)**0.5
 	rsfofHighMass = float(sfHighMass)/float(ofHighMass)
-	rsfofHighMassErr = rsfof*(sfHighMassErr**2/sf**2+ofHighMassErr**2/of**2)**0.5
+	rsfofHighMassErr = rsfofHighMass*(sfHighMassErr**2/sf**2+ofHighMassErr**2/of**2)**0.5
 	
 	rsfofSignal = float(sfSignal)/float(ofSignal)	
 	rsfofErrSignal = rsfofSignal*(sfErrSignal**2/sfSignal**2+ofErrSignal**2/ofSignal**2)**0.5
@@ -682,8 +686,8 @@ def main():
 	if len(args.plots) == 0:
 		args.plots = plotLists.rSFOF
 	if len(args.selection) == 0:
-		#~ args.selection.append(regionsToUse.rSFOF.central.name)	
-		#~ args.selection.append(regionsToUse.rSFOF.forward.name)	
+		args.selection.append(regionsToUse.rSFOF.central.name)	
+		args.selection.append(regionsToUse.rSFOF.forward.name)	
 		args.selection.append(regionsToUse.rSFOF.inclusive.name)	
 	if len(args.runRange) == 0:
 		args.runRange.append(runRanges.name)	

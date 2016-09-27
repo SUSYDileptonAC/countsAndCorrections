@@ -21,10 +21,11 @@ import argparse
 from defs import getRegion, getPlot, getRunRange, Backgrounds, theCuts
 
 from setTDRStyle import setTDRStyle
-from helpers import getDataTrees, TheStack, totalNumberOfGeneratedEvents, Process, readTrees
+from helpers import getDataTrees, TheStack, totalNumberOfGeneratedEvents, Process, readTrees, createHistoFromTree
 
 
 from centralConfig import regionsToUse, runRanges, backgroundLists, plotLists, systematics, mllBins, cutNCountXChecks
+from corrections import rMuELeptonPt
 
 from locations import locations
 
@@ -50,7 +51,7 @@ def getEventLists(trees, cut,isMC, colNames = ["eventNr","lumiSec","runNr"]):
 			gc.collect()
 	return result
 
-def getCounts(trees, cut, isMC, backgrounds,plot,runRange,path):
+def getCounts(trees, cut, isMC, backgrounds,plot,runRange,path,region):
 
 	if isMC:
 		tmpCut = plot.cuts
@@ -65,11 +66,18 @@ def getCounts(trees, cut, isMC, backgrounds,plot,runRange,path):
 		histEE = TheStack(processes,runRange.lumi,plot,trees["EE"],"None",1.0,1.0,1.0).theHistogram		
 		histMM = TheStack(processes,runRange.lumi,plot,trees["MM"],"None",1.0,1.0,1.0).theHistogram
 		histEM = TheStack(processes,runRange.lumi,plot,trees["EM"],"None",1.0,1.0,1.0).theHistogram
-						
-		#~ histoEE.Scale(getattr(triggerEffs,region).effEE.val)
-		#~ histoEE.Scale(getattr(triggerEffs,region).effMM.val)	
-		#~ histoEM.Scale(getattr(triggerEffs,region).effEM.val)	
 		
+		cutRMuEScaled = "(%s)*0.5*((%s+%s*pow(((pt1 > pt2)*pt2 + (pt2 > pt1)*pt1),-1.))+ pow((%s+%s*pow(((pt1 > pt2)*pt2 + (pt2 > pt1)*pt1),-1.)),-1))"%(cut,getattr(rMuELeptonPt,region).offsetMC,getattr(rMuELeptonPt,region).fallingMC,getattr(rMuELeptonPt,region).offsetMC,getattr(rMuELeptonPt,region).fallingMC)
+		cutRMuEScaledUp = "(%s)*0.5*((%s+%s*pow(((pt1 > pt2)*pt2 + (pt2 > pt1)*pt1),-1.))+ pow((%s+%s*pow(((pt1 > pt2)*pt2 + (pt2 > pt1)*pt1),-1.)),-1))"%(cut,getattr(rMuELeptonPt,region).offsetMC+getattr(rMuELeptonPt,region).offsetErrMC,getattr(rMuELeptonPt,region).fallingMC+getattr(rMuELeptonPt,region).fallingErrMC,getattr(rMuELeptonPt,region).offsetMC+getattr(rMuELeptonPt,region).offsetErrMC,getattr(rMuELeptonPt,region).fallingMC+getattr(rMuELeptonPt,region).fallingErrMC)
+		cutRMuEScaledDown = "(%s)*0.5*((%s+%s*pow(((pt1 > pt2)*pt2 + (pt2 > pt1)*pt1),-1.))+ pow((%s+%s*pow(((pt1 > pt2)*pt2 + (pt2 > pt1)*pt1),-1.)),-1))"%(cut,getattr(rMuELeptonPt,region).offsetMC-getattr(rMuELeptonPt,region).offsetErrMC,getattr(rMuELeptonPt,region).fallingMC-getattr(rMuELeptonPt,region).fallingErrMC,getattr(rMuELeptonPt,region).offsetMC-getattr(rMuELeptonPt,region).offsetErrMC,getattr(rMuELeptonPt,region).fallingMC-getattr(rMuELeptonPt,region).fallingErrMC)
+		
+		plot.cuts = cutRMuEScaled
+		histEMRMuEScaled = TheStack(processes,runRange.lumi,plot,trees["EM"],"None",1.0,1.0,1.0).theHistogram				
+		plot.cuts = cutRMuEScaledUp
+		histEMRMuEScaledUp = TheStack(processes,runRange.lumi,plot,trees["EM"],"None",1.0,1.0,1.0).theHistogram				
+		plot.cuts = cutRMuEScaledDown
+		histEMRMuEScaledDown = TheStack(processes,runRange.lumi,plot,trees["EM"],"None",1.0,1.0,1.0).theHistogram				
+				
 		
 		eeErr = ROOT.Double()
 		ee = histEE.IntegralAndError(1,histEE.GetNbinsX(),eeErr)
@@ -78,28 +86,51 @@ def getCounts(trees, cut, isMC, backgrounds,plot,runRange,path):
 		emErr = ROOT.Double()
 		em = histEM.IntegralAndError(1,histEM.GetNbinsX(),emErr)
 		
+		emRMuEScaledErr = ROOT.Double()
+		emRMuEScaled = histEMRMuEScaled.IntegralAndError(1,histEMRMuEScaled.GetNbinsX(),emRMuEScaledErr)
+		emRMuEScaledUpErr = ROOT.Double()
+		emRMuEScaledUp = histEMRMuEScaledUp.IntegralAndError(1,histEMRMuEScaledUp.GetNbinsX(),emRMuEScaledUpErr)
+		emRMuEScaledDownErr = ROOT.Double()
+		emRMuEScaledDown = histEMRMuEScaledDown.IntegralAndError(1,histEMRMuEScaledDown.GetNbinsX(),emRMuEScaledDownErr)
+		
 		
 		
 		n= {
 			"MM": ee,
 			"EE": mm,
 			"EM": em,
+			"EMRMuEScaled": emRMuEScaled,
+			"EMRMuEScaledUp": emRMuEScaledUp,
+			"EMRMuEScaledDown": emRMuEScaledDown,
 			}
 		n["MMStatErr"] = float(eeErr)	
 		n["EEStatErr"] = float(mmErr)	
 		n["EMStatErr"] = float(emErr)		
+		n["EMRMuEScaledStatErr"] = float(emRMuEScaledErr)		
+		n["EMRMuEScaledUpStatErr"] = float(emRMuEScaledUpErr)		
+		n["EMRMuEScaledDownStatErr"] = float(emRMuEScaledDownErr)		
 		
 		plot.cuts = tmpCut
 		
-	else:		
+	else:
+		cutRMuEScaled = "(%s)*0.5*((%s+%s*pow(((pt1 > pt2)*pt2 + (pt2 > pt1)*pt1),-1.))+ pow((%s+%s*pow(((pt1 > pt2)*pt2 + (pt2 > pt1)*pt1),-1.)),-1))"%(cut,getattr(rMuELeptonPt,region).offset,getattr(rMuELeptonPt,region).falling,getattr(rMuELeptonPt,region).offset,getattr(rMuELeptonPt,region).falling)
+		cutRMuEScaledUp = "(%s)*0.5*((%s+%s*pow(((pt1 > pt2)*pt2 + (pt2 > pt1)*pt1),-1.))+ pow((%s+%s*pow(((pt1 > pt2)*pt2 + (pt2 > pt1)*pt1),-1.)),-1))"%(cut,getattr(rMuELeptonPt,region).offset+getattr(rMuELeptonPt,region).offsetErr,getattr(rMuELeptonPt,region).falling+getattr(rMuELeptonPt,region).fallingErr,getattr(rMuELeptonPt,region).offset+getattr(rMuELeptonPt,region).offsetErr,getattr(rMuELeptonPt,region).falling+getattr(rMuELeptonPt,region).fallingErr)
+		cutRMuEScaledDown = "(%s)*0.5*((%s+%s*pow(((pt1 > pt2)*pt2 + (pt2 > pt1)*pt1),-1.))+ pow((%s+%s*pow(((pt1 > pt2)*pt2 + (pt2 > pt1)*pt1),-1.)),-1))"%(cut,getattr(rMuELeptonPt,region).offset-getattr(rMuELeptonPt,region).offsetErr,getattr(rMuELeptonPt,region).falling-getattr(rMuELeptonPt,region).fallingErr,getattr(rMuELeptonPt,region).offset-getattr(rMuELeptonPt,region).offsetErr,getattr(rMuELeptonPt,region).falling-getattr(rMuELeptonPt,region).fallingErr)
+		
 		n= {
 			"MM": trees["MM"].GetEntries(cut),
 			"EE": trees["EE"].GetEntries(cut),
 			"EM": trees["EM"].GetEntries(cut),
+			"EMRMuEScaled": createHistoFromTree(trees["EM"],"p4.M()",cutRMuEScaled,100,0,500).Integral(),
+			"EMRMuEScaledUp": createHistoFromTree(trees["EM"],"p4.M()",cutRMuEScaledUp,100,0,500).Integral(),
+			"EMRMuEScaledDown": createHistoFromTree(trees["EM"],"p4.M()",cutRMuEScaledDown,100,0,500).Integral(),
 			}
 		n["MMStatErr"] = n["MM"]**0.5	
 		n["EEStatErr"] = n["EE"]**0.5	
 		n["EMStatErr"] = n["EM"]**0.5	
+		n["EMRMuEScaledStatErr"] = n["EMRMuEScaled"]**0.5	
+		n["EMRMuEScaledUpStatErr"] = n["EMRMuEScaledUp"]**0.5	
+		n["EMRMuEScaledDownStatErr"] = n["EMRMuEScaledDown"]**0.5	
 		#~ print cut, n
 	n["cut"] = cut
 	return n
@@ -112,7 +143,7 @@ def getCounts(trees, cut, isMC, backgrounds,plot,runRange,path):
 	
 
 
-def cutAndCountForRegion(path,selection,plots,runRange,isMC,backgrounds,preselection,samesign):
+def cutAndCountForRegion(path,selection,plots,runRange,isMC,backgrounds,preselection):
 	
 	#~ path = "/home/jan/Trees/sw7412v2000Trigger/"
 	
@@ -129,8 +160,16 @@ def cutAndCountForRegion(path,selection,plots,runRange,isMC,backgrounds,preselec
 				"MM":treesMM,
 				"EM":treesEM,
 		}
-		
-		
+	
+	if "Central" in selection.name:
+		region = "central"	
+	elif "Forward" in selection.name:
+		region = "forward"	
+	else:
+		region = "inclusive"	
+	
+	print selection.name
+	print region	
 
 	for plotName in plots:
 		plot = getPlot(plotName)
@@ -138,8 +177,6 @@ def cutAndCountForRegion(path,selection,plots,runRange,isMC,backgrounds,preselec
 		plot.cleanCuts()
 		plot.cuts = plot.cuts % runRange.runCut	
 
-		if samesign:
-			plot.cuts = plot.cuts.replace("chargeProduct < 0","chargeProduct > 0")
 
 		counts = {}
 		eventLists = {}
@@ -148,41 +185,41 @@ def cutAndCountForRegion(path,selection,plots,runRange,isMC,backgrounds,preselec
 		counts["default"] = {}
 		eventLists["default"] = {}
 		for mllCut in massRanges:
-			counts["default"][getattr(theCuts.massCuts,mllCut).name] = getCounts(trees, plot.cuts+"*(%s)"%getattr(theCuts.massCuts,mllCut).cut,isMC,backgrounds,plot,runRange,path)
+			counts["default"][getattr(theCuts.massCuts,mllCut).name] = getCounts(trees, plot.cuts+"*(%s)"%getattr(theCuts.massCuts,mllCut).cut,isMC,backgrounds,plot,runRange,path,region)
 			eventLists["default"][getattr(theCuts.massCuts,mllCut).name] = getEventLists(trees, plot.cuts+"*(%s)"%getattr(theCuts.massCuts,mllCut).cut,isMC)		
 
-		for categoryName, category in cutNCountXChecks.cutList.iteritems():
-			if categoryName == "leptonPt":
-				for subcut in category:
-					counts[subcut] = {}
-					eventLists[subcut] = {}
-					
-					for mllCut in massRanges:
-						cut = plot.cuts.replace("pt1 > 20 && pt2 > 20 &&","")
-						cut = cut+"*(%s)"%getattr(theCuts.ptCuts,subcut).cut + "*(%s)"%getattr(theCuts.massCuts,mllCut).cut
-						counts[getattr(theCuts.ptCuts,subcut).name][getattr(theCuts.massCuts,mllCut).name] = getCounts(trees, cut,isMC,backgrounds,plot,runRange,path)
-						eventLists[getattr(theCuts.ptCuts,subcut).name][getattr(theCuts.massCuts,mllCut).name] = getEventLists(trees, cut,isMC)
-			elif categoryName == "mets":
-				for subcut in category:
-					counts[subcut] = {}
-					eventLists[subcut] = {}					
-					
-					for mllCut in massRanges:
-						cut = plot.cuts.replace("met",subcut)
-						cut = cut + "*(%s)"%getattr(theCuts.massCuts,mllCut).cut
-						counts[subcut][getattr(theCuts.massCuts,mllCut).name] = getCounts(trees, cut,isMC,backgrounds,plot,runRange,path)
-						eventLists[subcut][getattr(theCuts.massCuts,mllCut).name] = getEventLists(trees, cut,isMC)			
-				
-			else:
-				for subcut in category:
-					counts[subcut] = {}
-					eventLists[subcut] = {}					
-					
-					for mllCut in massRanges:
-						cut = plot.cuts+"*(%s)"%getattr(getattr(theCuts,categoryName),subcut).cut
-						cut = cut + "*(%s)"%getattr(theCuts.massCuts,mllCut).cut
-						counts[subcut][getattr(theCuts.massCuts,mllCut).name] = getCounts(trees, cut,isMC,backgrounds,plot,runRange,path)
-						eventLists[subcut][getattr(theCuts.massCuts,mllCut).name] = getEventLists(trees, cut,isMC)				
+		#~ for categoryName, category in cutNCountXChecks.cutList.iteritems():
+			#~ if categoryName == "leptonPt":
+				#~ for subcut in category:
+					#~ counts[subcut] = {}
+					#~ eventLists[subcut] = {}
+					#~ 
+					#~ for mllCut in massRanges:
+						#~ cut = plot.cuts.replace("pt1 > 20 && pt2 > 20 &&","")
+						#~ cut = cut+"*(%s)"%getattr(theCuts.ptCuts,subcut).cut + "*(%s)"%getattr(theCuts.massCuts,mllCut).cut
+						#~ counts[getattr(theCuts.ptCuts,subcut).name][getattr(theCuts.massCuts,mllCut).name] = getCounts(trees, cut,isMC,backgrounds,plot,runRange,path,region)
+						#~ eventLists[getattr(theCuts.ptCuts,subcut).name][getattr(theCuts.massCuts,mllCut).name] = getEventLists(trees, cut,isMC)
+			#~ elif categoryName == "mets":
+				#~ for subcut in category:
+					#~ counts[subcut] = {}
+					#~ eventLists[subcut] = {}					
+					#~ 
+					#~ for mllCut in massRanges:
+						#~ cut = plot.cuts.replace("met",subcut)
+						#~ cut = cut + "*(%s)"%getattr(theCuts.massCuts,mllCut).cut
+						#~ counts[subcut][getattr(theCuts.massCuts,mllCut).name] = getCounts(trees, cut,isMC,backgrounds,plot,runRange,path,region)
+						#~ eventLists[subcut][getattr(theCuts.massCuts,mllCut).name] = getEventLists(trees, cut,isMC)			
+				#~ 
+			#~ else:
+				#~ for subcut in category:
+					#~ counts[subcut] = {}
+					#~ eventLists[subcut] = {}					
+					#~ 
+					#~ for mllCut in massRanges:
+						#~ cut = plot.cuts+"*(%s)"%getattr(getattr(theCuts,categoryName),subcut).cut
+						#~ cut = cut + "*(%s)"%getattr(theCuts.massCuts,mllCut).cut
+						#~ counts[subcut][getattr(theCuts.massCuts,mllCut).name] = getCounts(trees, cut,isMC,backgrounds,plot,runRange,path,region)
+						#~ eventLists[subcut][getattr(theCuts.massCuts,mllCut).name] = getEventLists(trees, cut,isMC)				
 
 		
 		return counts, eventLists
@@ -205,8 +242,6 @@ def main():
 						  help="backgrounds to plot.")	
 	parser.add_argument("-w", "--write", action="store_true", dest="write", default=False,
 						  help="write results to central repository")	
-	parser.add_argument("-S", "--samesign", action="store_true", dest="samesign", default=False,
-						  help="use same-sign leptons")	
 					
 	args = parser.parse_args()
 
@@ -238,9 +273,6 @@ def main():
 			
 			selection = getRegion(selectionName)
 			
-			if args.samesign:
-				selection.name += "_samesign"
-			
 			
 			if args.write:
 
@@ -250,7 +282,7 @@ def main():
 				process = subprocess.Popen(bashCommand.split())		
 			
 			else:
-				counts, eventLists = cutAndCountForRegion(path,selection,args.plots,runRange,args.mc,args.backgrounds,preselection,args.samesign)
+				counts, eventLists = cutAndCountForRegion(path,selection,args.plots,runRange,args.mc,args.backgrounds,preselection)
 				outFile = open("shelves/cutAndCount_%s_%s.pkl"%(selection.name,runRange.label),"w")
 				pickle.dump(counts, outFile)
 				outFile.close()

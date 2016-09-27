@@ -21,10 +21,11 @@ import argparse
 from defs import getRegion, getPlot, getRunRange, Backgrounds, theCuts
 
 from setTDRStyle import setTDRStyle
-from helpers import getDataTrees, TheStack, totalNumberOfGeneratedEvents, Process, readTrees
+from helpers import getDataTrees, TheStack, totalNumberOfGeneratedEvents, Process, readTrees, createHistoFromTree
 
 
 from centralConfig import regionsToUse, runRanges, backgroundLists, plotLists, systematics, mllBins, cutNCountXChecks
+from corrections import rMuELeptonPt
 
 from locations import locations
 
@@ -71,6 +72,18 @@ def getCounts(trees, cut, isMC, backgrounds,plot,runRange,baseTreePath):
 		#~ histoEM.Scale(getattr(triggerEffs,region).effEM.val)	
 		
 		
+		cutRMuEScaled = "(%s)*0.5*((%s+%s*pow(((pt1 > pt2)*pt2 + (pt2 > pt1)*pt1),-1.))+ pow((%s+%s*pow(((pt1 > pt2)*pt2 + (pt2 > pt1)*pt1),-1.)),-1))"%(cut,rMuELeptonPt.inclusive.offsetMC,rMuELeptonPt.inclusive.fallingMC,rMuELeptonPt.inclusive.offsetMC,rMuELeptonPt.inclusive.fallingMC)
+		cutRMuEScaledUp = "(%s)*0.5*((%s+%s*pow(((pt1 > pt2)*pt2 + (pt2 > pt1)*pt1),-1.))+ pow((%s+%s*pow(((pt1 > pt2)*pt2 + (pt2 > pt1)*pt1),-1.)),-1))"%(cut,rMuELeptonPt.inclusive.offsetMC+rMuELeptonPt.inclusive.offsetErrMC,rMuELeptonPt.inclusive.fallingMC+rMuELeptonPt.inclusive.fallingErrMC,rMuELeptonPt.inclusive.offsetMC+rMuELeptonPt.inclusive.offsetErrMC,rMuELeptonPt.inclusive.fallingMC+rMuELeptonPt.inclusive.fallingErrMC)
+		cutRMuEScaledDown = "(%s)*0.5*((%s+%s*pow(((pt1 > pt2)*pt2 + (pt2 > pt1)*pt1),-1.))+ pow((%s+%s*pow(((pt1 > pt2)*pt2 + (pt2 > pt1)*pt1),-1.)),-1))"%(cut,rMuELeptonPt.inclusive.offsetMC-rMuELeptonPt.inclusive.offsetErrMC,rMuELeptonPt.inclusive.fallingMC-rMuELeptonPt.inclusive.fallingErrMC,rMuELeptonPt.inclusive.offsetMC-rMuELeptonPt.inclusive.offsetErrMC,rMuELeptonPt.inclusive.fallingMC-rMuELeptonPt.inclusive.fallingErrMC)
+		
+		plot.cuts = cutRMuEScaled
+		histEMRMuEScaled = TheStack(processes,runRange.lumi,plot,trees["EM"],"None",1.0,1.0,1.0).theHistogram				
+		plot.cuts = cutRMuEScaledUp
+		histEMRMuEScaledUp = TheStack(processes,runRange.lumi,plot,trees["EM"],"None",1.0,1.0,1.0).theHistogram				
+		plot.cuts = cutRMuEScaledDown
+		histEMRMuEScaledDown = TheStack(processes,runRange.lumi,plot,trees["EM"],"None",1.0,1.0,1.0).theHistogram				
+				
+		
 		eeErr = ROOT.Double()
 		ee = histEE.IntegralAndError(1,histEE.GetNbinsX(),eeErr)
 		mmErr = ROOT.Double()
@@ -78,28 +91,51 @@ def getCounts(trees, cut, isMC, backgrounds,plot,runRange,baseTreePath):
 		emErr = ROOT.Double()
 		em = histEM.IntegralAndError(1,histEM.GetNbinsX(),emErr)
 		
+		emRMuEScaledErr = ROOT.Double()
+		emRMuEScaled = histEMRMuEScaled.IntegralAndError(1,histEMRMuEScaled.GetNbinsX(),emRMuEScaledErr)
+		emRMuEScaledUpErr = ROOT.Double()
+		emRMuEScaledUp = histEMRMuEScaledUp.IntegralAndError(1,histEMRMuEScaledUp.GetNbinsX(),emRMuEScaledUpErr)
+		emRMuEScaledDownErr = ROOT.Double()
+		emRMuEScaledDown = histEMRMuEScaledDown.IntegralAndError(1,histEMRMuEScaledDown.GetNbinsX(),emRMuEScaledDownErr)
+		
 		
 		
 		n= {
 			"MM": ee,
 			"EE": mm,
 			"EM": em,
+			"EMRMuEScaled": emRMuEScaled,
+			"EMRMuEScaledUp": emRMuEScaledUp,
+			"EMRMuEScaledDown": emRMuEScaledDown,
 			}
 		n["MMStatErr"] = float(eeErr)	
 		n["EEStatErr"] = float(mmErr)	
 		n["EMStatErr"] = float(emErr)		
+		n["EMRMuEScaledStatErr"] = float(emRMuEScaledErr)		
+		n["EMRMuEScaledUpStatErr"] = float(emRMuEScaledUpErr)		
+		n["EMRMuEScaledDownStatErr"] = float(emRMuEScaledDownErr)		
 		
 		plot.cuts = tmpCut
 		
 	else:		
+		cutRMuEScaled = "(%s)*0.5*((%s+%s*pow(((pt1 > pt2)*pt2 + (pt2 > pt1)*pt1),-1.))+ pow((%s+%s*pow(((pt1 > pt2)*pt2 + (pt2 > pt1)*pt1),-1.)),-1))"%(cut,rMuELeptonPt.inclusive.offset,rMuELeptonPt.inclusive.falling,rMuELeptonPt.inclusive.offset,rMuELeptonPt.inclusive.falling)
+		cutRMuEScaledUp = "(%s)*0.5*((%s+%s*pow(((pt1 > pt2)*pt2 + (pt2 > pt1)*pt1),-1.))+ pow((%s+%s*pow(((pt1 > pt2)*pt2 + (pt2 > pt1)*pt1),-1.)),-1))"%(cut,rMuELeptonPt.inclusive.offset+rMuELeptonPt.inclusive.offsetErr,rMuELeptonPt.inclusive.falling+rMuELeptonPt.inclusive.fallingErr,rMuELeptonPt.inclusive.offset+rMuELeptonPt.inclusive.offsetErr,rMuELeptonPt.inclusive.falling+rMuELeptonPt.inclusive.fallingErr)
+		cutRMuEScaledDown = "(%s)*0.5*((%s+%s*pow(((pt1 > pt2)*pt2 + (pt2 > pt1)*pt1),-1.))+ pow((%s+%s*pow(((pt1 > pt2)*pt2 + (pt2 > pt1)*pt1),-1.)),-1))"%(cut,rMuELeptonPt.inclusive.offset-rMuELeptonPt.inclusive.offsetErr,rMuELeptonPt.inclusive.falling-rMuELeptonPt.inclusive.fallingErr,rMuELeptonPt.inclusive.offset-rMuELeptonPt.inclusive.offsetErr,rMuELeptonPt.inclusive.falling-rMuELeptonPt.inclusive.fallingErr)
+		
 		n= {
 			"MM": trees["MM"].GetEntries(cut),
 			"EE": trees["EE"].GetEntries(cut),
 			"EM": trees["EM"].GetEntries(cut),
+			"EMRMuEScaled": createHistoFromTree(trees["EM"],"mll",cutRMuEScaled,100,0,500).Integral(),
+			"EMRMuEScaledUp": createHistoFromTree(trees["EM"],"mll",cutRMuEScaledUp,100,0,500).Integral(),
+			"EMRMuEScaledDown": createHistoFromTree(trees["EM"],"mll",cutRMuEScaledDown,100,0,500).Integral(),
 			}
 		n["MMStatErr"] = n["MM"]**0.5	
 		n["EEStatErr"] = n["EE"]**0.5	
 		n["EMStatErr"] = n["EM"]**0.5	
+		n["EMRMuEScaledStatErr"] = n["EMRMuEScaled"]**0.5	
+		n["EMRMuEScaledUpStatErr"] = n["EMRMuEScaledUp"]**0.5	
+		n["EMRMuEScaledDownStatErr"] = n["EMRMuEScaledDown"]**0.5	
 		#~ print cut, n
 	n["cut"] = cut
 	return n
@@ -114,7 +150,6 @@ def getCounts(trees, cut, isMC, backgrounds,plot,runRange,baseTreePath):
 
 def cutAndCountForRegion(path,baseTreePath,selection,plots,runRange,isMC,backgrounds):
 	
-	#~ path = "/home/jan/Trees/sw7412v2000Trigger/"
 	
 	if not isMC:
 		trees = getDataTrees(path)

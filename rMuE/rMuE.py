@@ -90,12 +90,15 @@ def rMuEFromSFOF(eeHist,mumuHist,emuHist,corr,corrErr):
 		
 	return result, resultErr
 
-def getHistograms(path,plot,runRange,isMC,backgrounds,region,EM=False):
+def getHistograms(path,plot,runRange,isMC,backgrounds,region,selection,corrected,EM=False):
 
 
 	treesEE = readTrees(path,"EE")
 	treesEM = readTrees(path,"EMu")
 	treesMM = readTrees(path,"MuMu")
+	
+		
+	baseCuts = plot.cuts
 		
 	
 	
@@ -106,7 +109,18 @@ def getHistograms(path,plot,runRange,isMC,backgrounds,region,EM=False):
 		for background in backgrounds:
 			processes.append(Process(getattr(Backgrounds,background),eventCounts))
 		
-		histoEE = TheStack(processes,runRange.lumi,plot,treesEE,"None",1.0,1.0,1.0).theHistogram		
+		### Change the ee cut if the pt correction is used
+		if corrected:
+			if os.path.isfile("shelves/rMuE_correctionParameters_ZPeakControl_%s_MC.pkl"%(runRange.label)):
+				correctionParameters = pickle.load(open("shelves/rMuE_correctionParameters_ZPeakControl_%s_MC.pkl"%(runRange.label),"rb"))
+			else:
+				print "shelves/rMuE_correctionParameters_ZPeakControl_%s_MC.pkl does not exist"%(runRange.label)
+				print "Need to run with options -f and -m on trailingPt plot first"
+				sys.exit()
+			plot.cuts = "(%s)*pow((%s+%s*pow(((pt1 > pt2)*pt2 + (pt2 > pt1)*pt1),-1.)),2)"%(baseCuts,correctionParameters["offset"],correctionParameters["falling"])
+			
+		histoEE = TheStack(processes,runRange.lumi,plot,treesEE,"None",1.0,1.0,1.0).theHistogram
+		plot.cuts = baseCuts		
 		histoMM = TheStack(processes,runRange.lumi,plot,treesMM,"None",1.0,1.0,1.0).theHistogram
 		histoEE.Scale(getattr(triggerEffs,region).effEE.val)
 		histoMM.Scale(getattr(triggerEffs,region).effMM.val)
@@ -116,7 +130,18 @@ def getHistograms(path,plot,runRange,isMC,backgrounds,region,EM=False):
 			histoEM.Scale(getattr(triggerEffs,region).effEM.val)
 		
 	else:
+		### Change the ee cut if the pt correction is used
+		if corrected:
+			if os.path.isfile("shelves/rMuE_correctionParameters_ZPeakControl_%s.pkl"%(runRange.label)):
+				correctionParameters = pickle.load(open("shelves/rMuE_correctionParameters_ZPeakControl_%s.pkl"%(runRange.label),"rb"))
+			else:
+				print "shelves/rMuE_correctionParameters_ZPeakControl_%s.pkl does not exist"%(runRange.label)
+				print "Need to run with options -f on trailingPt plot first"
+				sys.exit()
+			plot.cuts = "(%s)*pow((%s+%s*pow(((pt1 > pt2)*pt2 + (pt2 > pt1)*pt1),-1.)),2)"%(baseCuts,correctionParameters["offset"],correctionParameters["falling"])
+			
 		histoEE = getDataHist(plot,treesEE)
+		plot.cuts = baseCuts
 		histoMM = getDataHist(plot,treesMM)
 		if EM:
 			histoEM = getDataHist(plot,treesEM)
@@ -126,13 +151,12 @@ def getHistograms(path,plot,runRange,isMC,backgrounds,region,EM=False):
 	else:
 		return histoEE , histoMM
 
-def centralValues(path,selection,runRange,isMC,backgrounds):
+def centralValues(path,selection,runRange,isMC,backgrounds,corrected):
 
 	plot = getPlot("mllPlot")
 	plot.addRegion(selection)
 	#~ plot.cleanCuts()
-	plot.cuts = plot.cuts % runRange.runCut		
-
+	plot.cuts = plot.cuts % runRange.runCut	
 
 	
 	if not "Forward" in selection.name:
@@ -145,7 +169,7 @@ def centralValues(path,selection,runRange,isMC,backgrounds):
 		relSyst = systematics.rMuE.forward.val
 		region = "forward"
 	
-	histEE, histMM = getHistograms(path,plot,runRange,isMC, backgrounds,region)
+	histEE, histMM = getHistograms(path,plot,runRange,isMC, backgrounds,region,selection,corrected)
 	
 	nEE = histEE.Integral()
 	nMM = histMM.Integral()
@@ -166,13 +190,13 @@ def centralValues(path,selection,runRange,isMC,backgrounds):
 	return result
 	
 	
-def dependencies(path,selection,plots,runRange,isMC,backgrounds,cmsExtra,fit):
+def dependencies(path,selection,plots,runRange,isMC,backgrounds,cmsExtra,fit,corrected):
 	
 
 	pathMC = locations.dataSetPathMC
 	#~ backgroundsTT = ["TT_Powheg"]
-	#~ backgroundsMC = ["TT_Powheg","DrellYan"]
-	backgroundsMC = ["Rare","SingleTop","TT_Powheg","Diboson","DrellYanTauTau","DrellYan"]
+	backgroundsMC = ["TT_Powheg","DrellYan"]
+	#~ backgroundsMC = ["Rare","SingleTop","TT_Powheg","Diboson","DrellYanTauTau","DrellYan"]
 	
 	for name in plots:
 		plot = getPlot(name)
@@ -191,11 +215,13 @@ def dependencies(path,selection,plots,runRange,isMC,backgrounds,cmsExtra,fit):
 			region = "forward"
 
 		if isMC:
-			histEE, histMM = getHistograms(pathMC,plot,runRange,True, backgrounds,region)	
+			histEE, histMM = getHistograms(pathMC,plot,runRange,True, backgrounds,region,selection,corrected)	
 		else:
-			histEE, histMM = getHistograms(path,plot,runRange,False, backgrounds,region)	
-		#~ histEEMC, histMMMC = getHistograms(pathMC,plot,runRange,True, backgroundsTT,region)	
-		histEEMC, histMMMC = getHistograms(pathMC,plot,runRange,True, backgroundsMC,region)	
+			histEE, histMM = getHistograms(path,plot,runRange,False, backgrounds,region,selection,corrected)	
+		histEEMC, histMMMC = getHistograms(pathMC,plot,runRange,True, backgroundsMC,region,selection,corrected)	
+		
+		if corrected:
+			plot.additionalName = "corrected"
 			
 		
 		hCanvas = TCanvas("hCanvas", "Distribution", 800,800)
@@ -225,7 +251,11 @@ def dependencies(path,selection,plots,runRange,isMC,backgrounds,cmsExtra,fit):
 		intlumi = ROOT.TLatex()
 		intlumi.SetTextAlign(12)
 		intlumi.SetTextSize(0.03)
-		intlumi.SetNDC(True)					
+		intlumi.SetNDC(True)
+		
+		latexLabel = ROOT.TLatex()
+		latexLabel.SetTextSize(0.03)	
+		latexLabel.SetNDC()					
 		
 
 
@@ -279,6 +309,10 @@ def dependencies(path,selection,plots,runRange,isMC,backgrounds,cmsExtra,fit):
 		
 		latex.DrawLatex(0.95, 0.96, "%s fb^{-1} (13 TeV)"%runRange.printval)
 		
+		latexLabel.DrawLatex(0.2, 0.3, selection.labelSubRegion)
+		if corrected:
+			latexLabel.DrawLatex(0.2, 0.23, "lepton p_{T} corrected")
+		
 
 		latexCMS.DrawLatex(0.19,0.88,"CMS")
 		if "Simulation" in cmsExtra:
@@ -289,8 +323,10 @@ def dependencies(path,selection,plots,runRange,isMC,backgrounds,cmsExtra,fit):
 		latexCMSExtra.DrawLatex(0.19,yLabelPos,"%s"%(cmsExtra))
 		
 		
-		
-		hCanvas.Print("fig/rMuE_%s_%s_%s_%s_RawInputs.pdf"%(selection.name,runRange.label,plot.variablePlotName,plot.additionalName))	
+		if isMC:
+			hCanvas.Print("fig/rMuE_%s_%s_%s_%s_RawInputs_MC.pdf"%(selection.name,runRange.label,plot.variablePlotName,plot.additionalName))	
+		else:
+			hCanvas.Print("fig/rMuE_%s_%s_%s_%s_RawInputs.pdf"%(selection.name,runRange.label,plot.variablePlotName,plot.additionalName))	
 		
 		hCanvas.Clear()
 		ROOT.gPad.SetLogy(0)
@@ -315,12 +351,10 @@ def dependencies(path,selection,plots,runRange,isMC,backgrounds,cmsExtra,fit):
 
 		latexCMSExtra.DrawLatex(0.19,yLabelPos,"%s"%(cmsExtra))
 
-		
-
-		if os.path.isfile("shelves/rMuE_%s_%s.pkl"%(selection.name,runRange.label)):
-			centralVals = pickle.load(open("shelves/rMuE_%s_%s.pkl"%(selection.name,runRange.label),"rb"))
+		if os.path.isfile("shelves/rMuE_%s_%s_%s.pkl"%(selection.name,runRange.label,plot.additionalName)):
+			centralVals = pickle.load(open("shelves/rMuE_%s_%s_%s.pkl"%(selection.name,runRange.label,plot.additionalName),"rb"))
 		else:
-			centralVals = centralValues(path,selection,runRange,isMC,backgrounds)
+			centralVals = centralValues(path,selection,runRange,isMC,backgrounds,corrected)
 
 		x= array("f",[plot.firstBin, plot.lastBin]) 
 		y= array("f", [centralVals["rMuE"],centralVals["rMuE"]]) 
@@ -362,20 +396,65 @@ def dependencies(path,selection,plots,runRange,isMC,backgrounds,cmsExtra,fit):
 		leg.SetLineWidth(2)
 		leg.SetTextAlign(22)
 		
+		latexLabel.DrawLatex(0.2, 0.3, selection.labelSubRegion)
+		if corrected:
+			latexLabel.DrawLatex(0.2, 0.23, "lepton p_{T} corrected")
+			
+		
 	
 		if fit:
-			fit = TF1("dataFit","pol1",0,300)
-			fit.SetLineColor(ROOT.kGreen+3)
-			fitMC = TF1("mcFit","pol1",0,300)
-			fitMC.SetLineColor(ROOT.kBlue+3)
-			rMuE.Fit("dataFit")
-			rMuEMC.Fit("mcFit")			
-			
-			latex = ROOT.TLatex()
-			latex.SetTextSize(0.035)	
-			latex.SetNDC()	
-			latex.DrawLatex(0.2, 0.25, "Fit on data: %.2f #pm %.2f %.5f #pm %.5f * m_{ll}"%(fit.GetParameter(0),fit.GetParError(0),fit.GetParameter(1),fit.GetParError(1)))
-			latex.DrawLatex(0.2, 0.20, "Fit on MC:   %.2f #pm %.2f %.5f #pm %.5f * m_{ll}"%(fitMC.GetParameter(0),fitMC.GetParError(0),fitMC.GetParameter(1),fitMC.GetParError(1)))			
+			if "trailingPt" in name:
+				#~ fit = TF1("dataFit","pol1",0,300)
+				#~ fit = TF1("dataFit","[0]+[1]*pow(x,[2])",20,120)
+				fit = TF1("dataFit","[0]+[1]*pow(x,-1)",20,120)
+				fit.SetParameter(0,1)
+				fit.SetParLimits(0,0.8,1.2)
+				fit.SetParameter(1,0)
+				fit.SetParLimits(1,-10,10)
+				fit.SetParameter(2,0)
+				fit.SetParLimits(2,-10,10)
+				fit.SetLineColor(ROOT.kBlack)
+				#~ fitMC = TF1("mcFit","pol1",0,300)
+				#~ fitMC = TF1("mcFit","[0]+[1]*pow(x,[2])",20,120)
+				fitMC = TF1("mcFit","[0]+[1]*pow(x,-1)",20,120)
+				fitMC.SetLineColor(ROOT.kGreen-2)
+				fitMC.SetParameter(0,1)
+				fitMC.SetParLimits(0,0.5,2)
+				fitMC.SetParameter(1,0)
+				fitMC.SetParLimits(1,-10,10)
+				fitMC.SetParameter(2,0)
+				fitMC.SetParLimits(2,-10,10)
+				rMuE.Fit("dataFit")
+				rMuEMC.Fit("mcFit")
+				
+				fit.Draw("same l")		
+				fitMC.Draw("same l")			
+				
+				latex = ROOT.TLatex()
+				latex.SetTextSize(0.025)	
+				latex.SetNDC()	
+				#~ latex.DrawLatex(0.2, 0.25, "Fit on data: %.2f #pm %.2f %.5f #pm %.5f * m_{ll}"%(fit.GetParameter(0),fit.GetParError(0),fit.GetParameter(1),fit.GetParError(1)))
+				#~ latex.DrawLatex(0.2, 0.20, "Fit on MC:   %.2f #pm %.2f %.5f #pm %.5f * m_{ll}"%(fitMC.GetParameter(0),fitMC.GetParError(0),fitMC.GetParameter(1),fitMC.GetParError(1)))			
+				#~ latex.DrawLatex(0.2, 0.25, "Fit on data: (%.2f #pm %.2f) + (%.2f #pm %.2f) * p_{T}^{(%.5f #pm %.5f)})"%(fit.GetParameter(0),fit.GetParError(0),fit.GetParameter(1),fit.GetParError(1),fit.GetParameter(2),fit.GetParError(2)))
+				#~ latex.DrawLatex(0.2, 0.20, "Fit on MC:   (%.2f #pm %.2f) + (%.2f #pm %.2f) * p_{T}^{(%.5f #pm %.5f)})"%(fitMC.GetParameter(0),fitMC.GetParError(0),fitMC.GetParameter(1),fitMC.GetParError(1),fitMC.GetParameter(2),fitMC.GetParError(2)))			
+				latex.DrawLatex(0.2, 0.23, "Fit on data: (%.2f #pm %.2f) + (%.2f #pm %.2f) * p_{T}^{-1})"%(fit.GetParameter(0),fit.GetParError(0),fit.GetParameter(1),fit.GetParError(1)))
+				latex.DrawLatex(0.2, 0.18, "Fit on MC:   (%.2f #pm %.2f) + (%.2f #pm %.2f) * p_{T}^{-1})"%(fitMC.GetParameter(0),fitMC.GetParError(0),fitMC.GetParameter(1),fitMC.GetParError(1)))
+				
+				
+				### Only store the fit parameters when not using the pt corrected cuts
+				### Otherwise things get screwed up
+				if not corrected:
+					correctionParameters = {}
+					correctionParameters["offset"] = fit.GetParameter(0)
+					correctionParameters["offsetErr"] = fit.GetParError(0)
+					correctionParameters["falling"] = fit.GetParameter(1)
+					correctionParameters["fallingErr"] = fit.GetParError(1)
+				
+					if isMC:
+						outFilePkl = open("shelves/rMuE_correctionParameters_%s_%s_MC.pkl"%(selection.name,runRange.label),"w")
+					else:
+						outFilePkl = open("shelves/rMuE_correctionParameters_%s_%s.pkl"%(selection.name,runRange.label),"w")
+					pickle.dump(correctionParameters, outFilePkl)			
 	
 		
 		# Pfeile
@@ -413,9 +492,10 @@ def dependencies(path,selection,plots,runRange,isMC,backgrounds,cmsExtra,fit):
 		hCanvas.Update()	
 		
 				
-
-
-		hCanvas.Print("fig/rMuE_%s_%s_%s_%s.pdf"%(selection.name,runRange.label,plot.variablePlotName,plot.additionalName))	
+		if isMC:
+			hCanvas.Print("fig/rMuE_%s_%s_%s_%s_MC.pdf"%(selection.name,runRange.label,plot.variablePlotName,plot.additionalName))
+		else:	
+			hCanvas.Print("fig/rMuE_%s_%s_%s_%s.pdf"%(selection.name,runRange.label,plot.variablePlotName,plot.additionalName))	
 	
 
 		for i in range(1, rMuE.GetNbinsX()+1):
@@ -447,8 +527,11 @@ def dependencies(path,selection,plots,runRange,isMC,backgrounds,cmsExtra,fit):
 		plotPad.UseCurrentStyle()
 		
 		plotPad.Draw()	
-		plotPad.cd()	
-		plotPad.DrawFrame(plot.firstBin,0.95,plot.lastBin,1.2,"; %s; 0.5(r_{#mue} + 1/r_{#mue})" %plot.xaxis)
+		plotPad.cd()
+		if corrected:	
+			plotPad.DrawFrame(plot.firstBin,0.975,plot.lastBin,1.1,"; %s; 0.5(r_{#mue} + 1/r_{#mue})" %plot.xaxis)
+		else:
+			plotPad.DrawFrame(plot.firstBin,0.95,plot.lastBin,1.2,"; %s; 0.5(r_{#mue} + 1/r_{#mue})" %plot.xaxis)
 		gStyle.SetErrorX(0.5)
 
 		latex.DrawLatex(0.95, 0.96, "%s fb^{-1} (13 TeV)"%runRange.printval)
@@ -461,13 +544,10 @@ def dependencies(path,selection,plots,runRange,isMC,backgrounds,cmsExtra,fit):
 			yLabelPos = 0.84	
 
 		latexCMSExtra.DrawLatex(0.19,yLabelPos,"%s"%(cmsExtra))
-
 		
-
-		if os.path.isfile("shelves/rMuE_%s_%s.pkl"%(selection.name,runRange.label)):
-			centralVals = pickle.load(open("shelves/rMuE_%s_%s.pkl"%(selection.name,runRange.label),"rb"))
-		else:
-			centralVals = centralValues(path,selection,runRange,isMC,backgrounds)
+		latexLabel.DrawLatex(0.2, 0.65, selection.labelSubRegion)
+		if corrected:
+			latexLabel.DrawLatex(0.2, 0.58, "lepton p_{T} corrected")
 
 
 		x= array("f",[plot.firstBin, plot.lastBin]) 
@@ -510,21 +590,6 @@ def dependencies(path,selection,plots,runRange,isMC,backgrounds,cmsExtra,fit):
 		leg.SetLineWidth(2)
 		leg.SetTextAlign(22)
 		
-	
-		if fit:
-			fit = TF1("dataFit","pol1",0,300)
-			fit.SetLineColor(ROOT.kGreen+3)
-			fitMC = TF1("mcFit","pol1",0,300)
-			fitMC.SetLineColor(ROOT.kBlue+3)
-			rMuE.Fit("dataFit")
-			rMuEMC.Fit("mcFit")			
-			
-			latex = ROOT.TLatex()
-			latex.SetTextSize(0.035)	
-			latex.SetNDC()	
-			latex.DrawLatex(0.2, 0.25, "Fit on data: %.2f #pm %.2f %.5f #pm %.5f * m_{ll}"%(fit.GetParameter(0),fit.GetParError(0),fit.GetParameter(1),fit.GetParError(1)))
-			latex.DrawLatex(0.2, 0.20, "Fit on MC:   %.2f #pm %.2f %.5f #pm %.5f * m_{ll}"%(fitMC.GetParameter(0),fitMC.GetParError(0),fitMC.GetParameter(1),fitMC.GetParError(1)))			
-	
 		
 		# Pfeile
 		
@@ -561,12 +626,13 @@ def dependencies(path,selection,plots,runRange,isMC,backgrounds,cmsExtra,fit):
 		hCanvas.Update()	
 		
 				
-
-
-		hCanvas.Print("fig/rSFOFFromRMuE_%s_%s_%s_%s.pdf"%(selection.name,runRange.label,plot.variablePlotName,plot.additionalName))	
+		if isMC:
+			hCanvas.Print("fig/rSFOFFromRMuE_%s_%s_%s_%s_MC.pdf"%(selection.name,runRange.label,plot.variablePlotName,plot.additionalName))
+		else:	
+			hCanvas.Print("fig/rSFOFFromRMuE_%s_%s_%s_%s.pdf"%(selection.name,runRange.label,plot.variablePlotName,plot.additionalName))	
 	
 	
-def signalRegion(path,selection,plots,runRange,isMC,backgrounds,cmsExtra):
+def signalRegion(path,selection,plots,runRange,isMC,backgrounds,cmsExtra,corrected):
 	plots = ["mllPlotRMuESignal"]
 	for name in plots:
 		plot = getPlot(name)
@@ -587,7 +653,7 @@ def signalRegion(path,selection,plots,runRange,isMC,backgrounds,cmsExtra):
 			region = "forward"
 
 		
-		histEE, histMM, histEM = getHistograms(path,plot,runRange,isMC, backgrounds,region,EM=True)	
+		histEE, histMM, histEM = getHistograms(path,plot,runRange,isMC, backgrounds,region,selection,corrected,EM=True)	
 
 		rMuEMeasured = rMuEMeasure(histEE,histMM)	
 		rMuE, rMuEUncert = rMuEFromSFOF(histEE,histMM,histEM,corr,corrErr)
@@ -740,6 +806,8 @@ def main():
 						  help="name of run range.")
 	parser.add_argument("-c", "--centralValues", action="store_true", dest="central", default=False,
 						  help="calculate effinciecy central values")
+	parser.add_argument("-C", "--corrected", action="store_true", dest="corrected", default=False,
+						  help="Use cuts corrected for rMuE dependency on trailing lepton pt")
 	parser.add_argument("-b", "--backgrounds", dest="backgrounds", action="append", default=[],
 						  help="backgrounds to plot.")
 	parser.add_argument("-d", "--dependencies", action="store_true", dest="dependencies", default= False,
@@ -768,8 +836,8 @@ def main():
 			#~ args.selection.append(regionsToUse.signal.forward.name)	
 			args.selection.append(regionsToUse.signal.inclusive.name)		
 		else:
-			#~ args.selection.append(regionsToUse.rMuE.central.name)	
-			#~ args.selection.append(regionsToUse.rMuE.forward.name)	
+			args.selection.append(regionsToUse.rMuE.central.name)	
+			args.selection.append(regionsToUse.rMuE.forward.name)	
 			args.selection.append(regionsToUse.rMuE.inclusive.name)
 			
 	if len(args.runRange) == 0:
@@ -796,25 +864,37 @@ def main():
 			selection = getRegion(selectionName)
 
 			if args.central:
-				centralVal = centralValues(path,selection,runRange,args.mc,args.backgrounds)
+				centralVal = centralValues(path,selection,runRange,args.mc,args.backgrounds,args.corrected)
 				if args.mc:
-					outFilePkl = open("shelves/rMuE_%s_%s_MC.pkl"%(selection.name,runRange.label),"w")
+					if args.corrected:
+						outFilePkl = open("shelves/rMuE_%s_%s_MC_corrected.pkl"%(selection.name,runRange.label),"w")
+					else:
+						outFilePkl = open("shelves/rMuE_%s_%s_MC.pkl"%(selection.name,runRange.label),"w")
 				else:
-					outFilePkl = open("shelves/rMuE_%s_%s.pkl"%(selection.name,runRange.label),"w")
+					if args.corrected:
+						outFilePkl = open("shelves/rMuE_%s_%s_corrected.pkl"%(selection.name,runRange.label),"w")
+					else:
+						outFilePkl = open("shelves/rMuE_%s_%s.pkl"%(selection.name,runRange.label),"w")
 				pickle.dump(centralVal, outFilePkl)
 				outFilePkl.close()
 				
 			if args.dependencies:
-				 dependencies(path,selection,args.plots,runRange,args.mc,args.backgrounds,cmsExtra,args.fit)		
+				 dependencies(path,selection,args.plots,runRange,args.mc,args.backgrounds,cmsExtra,args.fit,args.corrected)		
 			if args.signalRegion:
-				 signalRegion(path,selection,args.plots,runRange,args.mc,args.backgrounds,cmsExtra)	
+				 signalRegion(path,selection,args.plots,runRange,args.mc,args.backgrounds,cmsExtra,args.corrected)	
 				 
 			if args.write:
 				import subprocess
 				if args.mc:
-					bashCommand = "cp shelves/rMuE_%s_%s_MC.pkl %s/shelves"%(selection.name,runRange.label,pathes.basePath)		
-				else:	
-					bashCommand = "cp shelves//rMuE_%s_%s.pkl %s/shelves"%(selection.name,runRange.label,pathes.basePath)
+					if args.corrected:
+						bashCommand = "cp shelves/rMuE_correctionParameters_%s_%s_MC.pkl %s/shelves"%(selection.name,runRange.label,pathes.basePath)
+					else:		
+						bashCommand = "cp shelves/rMuE_%s_%s_MC.pkl %s/shelves"%(selection.name,runRange.label,pathes.basePath)		
+				else:
+					if args.corrected:	
+						bashCommand = "cp shelves/rMuE_correctionParameters_%s_%s.pkl %s/shelves"%(selection.name,runRange.label,pathes.basePath)
+					else:
+						bashCommand = "cp shelves/rMuE_%s_%s.pkl %s/shelves"%(selection.name,runRange.label,pathes.basePath)
 				process = subprocess.Popen(bashCommand.split())				 	
 
 main()
