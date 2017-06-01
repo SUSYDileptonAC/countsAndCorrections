@@ -90,9 +90,47 @@ def rMuEFromSFOF(eeHist,mumuHist,emuHist,corr,corrErr):
 		
 	return result, resultErr
 
-def getHistograms(path,plot,runRange,isMC,backgrounds,region,selection,corrected,EM=False):
-
-
+def getHistograms(path,plot,runRange,isMC,backgrounds,region,selection,EM=False):
+	
+	treesEE = readTrees(path,"EE")
+	treesEM = readTrees(path,"EMu")
+	treesMM = readTrees(path,"MuMu")	
+	
+	
+	if isMC:
+		
+		eventCounts = totalNumberOfGeneratedEvents(path)	
+		processes = []
+		for background in backgrounds:
+			processes.append(Process(getattr(Backgrounds,background),eventCounts))
+			
+		histoEE = TheStack(processes,runRange.lumi,plot,treesEE,"None",1.0,1.0,1.0,useTriggerEmulation=True).theHistogram	
+		histoMM = TheStack(processes,runRange.lumi,plot,treesMM,"None",1.0,1.0,1.0,useTriggerEmulation=True).theHistogram
+		
+		#~ histoEE = TheStack(processes,runRange.lumi,plot,treesEE,"None",1.0,1.0,1.0).theHistogram	
+		#~ histoMM = TheStack(processes,runRange.lumi,plot,treesMM,"None",1.0,1.0,1.0).theHistogram
+		#~ histoEE.Scale(getattr(triggerEffs,region).effEE.val)
+		#~ histoMM.Scale(getattr(triggerEffs,region).effMM.val)
+		
+		if EM:
+			histoEM = TheStack(processes,runRange.lumi,plot,treesEM,"None",1.0,1.0,1.0,useTriggerEmulation=True).theHistogram		
+			
+			#~ histoEM = TheStack(processes,runRange.lumi,plot,treesEM,"None",1.0,1.0,1.0).theHistogram		
+			#~ histoEM.Scale(getattr(triggerEffs,region).effEM.val)
+		
+	else:
+		histoEE = getDataHist(plot,treesEE)
+		histoMM = getDataHist(plot,treesMM)
+		if EM:
+			histoEM = getDataHist(plot,treesEM)
+	
+	if EM:
+		return histoEE , histoMM, histoEM
+	else:
+		return histoEE , histoMM
+		
+def getHistogramsCorrected(path,plot,runRange,isMC,backgrounds,region,selection,EM=False):
+	
 	treesEE = readTrees(path,"EE")
 	treesEM = readTrees(path,"EMu")
 	treesMM = readTrees(path,"MuMu")
@@ -109,47 +147,131 @@ def getHistograms(path,plot,runRange,isMC,backgrounds,region,selection,corrected
 		for background in backgrounds:
 			processes.append(Process(getattr(Backgrounds,background),eventCounts))
 		
-		### Change the ee cut if the pt correction is used
-		if corrected:
-			if os.path.isfile("shelves/rMuE_correctionParameters_ZPeakControl_%s_MC.pkl"%(runRange.label)):
-				correctionParameters = pickle.load(open("shelves/rMuE_correctionParameters_ZPeakControl_%s_MC.pkl"%(runRange.label),"rb"))
-			else:
-				print "shelves/rMuE_correctionParameters_ZPeakControl_%s_MC.pkl does not exist"%(runRange.label)
-				print "Need to run with options -f and -m on trailingPt plot first"
-				sys.exit()
-			plot.cuts = "(%s)*pow((%s+%s*pow(((pt1 > pt2)*pt2 + (pt2 > pt1)*pt1),-1.)),2)"%(baseCuts,correctionParameters["offset"],correctionParameters["falling"])
-			
-		histoEE = TheStack(processes,runRange.lumi,plot,treesEE,"None",1.0,1.0,1.0).theHistogram
+		if os.path.isfile("shelves/rMuE_correctionParameters_ZPeakControl_%s_MC.pkl"%(runRange.label)):
+			correctionParameters = pickle.load(open("shelves/rMuE_correctionParameters_ZPeakControl_%s_MC.pkl"%(runRange.label),"rb"))
+		else:
+			print "shelves/rMuE_correctionParameters_ZPeakControl_%s_MC.pkl does not exist"%(runRange.label)
+			print "Need to run with options -f and -m on trailingPt plot first"
+			sys.exit()
+		
+		print correctionParameters["offset"]	
+		print correctionParameters["falling"]	
+		plot.cuts = "(%s)*pow((%s+%s*pow(((pt1 > pt2)*pt2 + (pt2 > pt1)*pt1),-1.)),2)"%(baseCuts,correctionParameters["offset"],correctionParameters["falling"])	
+		histoEE = TheStack(processes,runRange.lumi,plot,treesEE,"None",1.0,1.0,1.0,useTriggerEmulation=True).theHistogram
+		
 		plot.cuts = baseCuts		
-		histoMM = TheStack(processes,runRange.lumi,plot,treesMM,"None",1.0,1.0,1.0).theHistogram
-		histoEE.Scale(getattr(triggerEffs,region).effEE.val)
-		histoMM.Scale(getattr(triggerEffs,region).effMM.val)
+		histoMM = TheStack(processes,runRange.lumi,plot,treesMM,"None",1.0,1.0,1.0,useTriggerEmulation=True).theHistogram
+		#~ histoEE.Scale(getattr(triggerEffs,region).effEE.val)
+		#~ histoMM.Scale(getattr(triggerEffs,region).effMM.val)
 		
 		if EM:
-			histoEM = TheStack(processes,runRange.lumi,plot,treesEM,"None",1.0,1.0,1.0).theHistogram		
-			histoEM.Scale(getattr(triggerEffs,region).effEM.val)
-		
+			plot.cuts = "(%s)*(%s+%s*pow(((pt1 > pt2)*pt2 + (pt2 > pt1)*pt1),-1.))"%(baseCuts,correctionParameters["offset"],correctionParameters["falling"])	
+			histoEM = TheStack(processes,runRange.lumi,plot,treesEM,"None",1.0,1.0,1.0,useTriggerEmulation=True).theHistogram
+					
+			#~ histoEM.Scale(getattr(triggerEffs,region).effEM.val)
+			
 	else:
 		### Change the ee cut if the pt correction is used
-		if corrected:
-			if os.path.isfile("shelves/rMuE_correctionParameters_ZPeakControl_%s.pkl"%(runRange.label)):
-				correctionParameters = pickle.load(open("shelves/rMuE_correctionParameters_ZPeakControl_%s.pkl"%(runRange.label),"rb"))
-			else:
-				print "shelves/rMuE_correctionParameters_ZPeakControl_%s.pkl does not exist"%(runRange.label)
-				print "Need to run with options -f on trailingPt plot first"
-				sys.exit()
-			plot.cuts = "(%s)*pow((%s+%s*pow(((pt1 > pt2)*pt2 + (pt2 > pt1)*pt1),-1.)),2)"%(baseCuts,correctionParameters["offset"],correctionParameters["falling"])
+		if os.path.isfile("shelves/rMuE_correctionParameters_ZPeakControl_%s.pkl"%(runRange.label)):
+			correctionParameters = pickle.load(open("shelves/rMuE_correctionParameters_ZPeakControl_%s.pkl"%(runRange.label),"rb"))
+		else:
+			print "shelves/rMuE_correctionParameters_ZPeakControl_%s.pkl does not exist"%(runRange.label)
+			print "Need to run with options -f on trailingPt plot first"
+			sys.exit()
+		plot.cuts = "(%s)*pow((%s+%s*pow(((pt1 > pt2)*pt2 + (pt2 > pt1)*pt1),-1.)),2)"%(baseCuts,correctionParameters["offset"],correctionParameters["falling"])
 			
 		histoEE = getDataHist(plot,treesEE)
+		
 		plot.cuts = baseCuts
 		histoMM = getDataHist(plot,treesMM)
 		if EM:
+			plot.cuts = "(%s)*(%s+%s*pow(((pt1 > pt2)*pt2 + (pt2 > pt1)*pt1),-1.))"%(baseCuts,correctionParameters["offset"],correctionParameters["falling"])	
 			histoEM = getDataHist(plot,treesEM)
-	
+			
 	if EM:
-		return histoEE , histoMM, histoEM
+		return histoEE ,histoMM, histoEM
 	else:
 		return histoEE , histoMM
+
+def getHistogramsCorrectedShifted(path,plot,runRange,isMC,backgrounds,region,selection,EM=False):
+
+
+	treesEE = readTrees(path,"EE")
+	treesEM = readTrees(path,"EMu")	
+		
+	baseCuts = plot.cuts		
+	
+	
+	if isMC:
+		
+		eventCounts = totalNumberOfGeneratedEvents(path)	
+		processes = []
+		for background in backgrounds:
+			processes.append(Process(getattr(Backgrounds,background),eventCounts))
+		
+		if os.path.isfile("shelves/rMuE_correctionParameters_ZPeakControl_%s_MC.pkl"%(runRange.label)):
+			correctionParameters = pickle.load(open("shelves/rMuE_correctionParameters_ZPeakControl_%s_MC.pkl"%(runRange.label),"rb"))
+		else:
+			print "shelves/rMuE_correctionParameters_ZPeakControl_%s_MC.pkl does not exist"%(runRange.label)
+			print "Need to run with options -f and -m on trailingPt plot first"
+			sys.exit()
+		
+		offsetError = (systematics.rMuE.inclusive.val**2 + (correctionParameters["offsetErr"]/correctionParameters["offset"])**2)**0.5
+		fallingError = (systematics.rMuE.inclusive.val**2 + (correctionParameters["fallingErr"]/correctionParameters["falling"])**2)**0.5
+		
+		plot.cuts = "(%s)*pow((%s+%s*pow(((pt1 > pt2)*pt2 + (pt2 > pt1)*pt1),-1.)),2)"%(baseCuts,correctionParameters["offset"]*(1+offsetError),correctionParameters["falling"]*(1+fallingError))
+		histoEEUp = TheStack(processes,runRange.lumi,plot,treesEE,"None",1.0,1.0,1.0,useTriggerEmulation=True).theHistogram
+		
+		plot.cuts = "(%s)*pow((%s+%s*pow(((pt1 > pt2)*pt2 + (pt2 > pt1)*pt1),-1.)),2)"%(baseCuts,correctionParameters["offset"]*(1-offsetError),correctionParameters["falling"]*(1-fallingError))			
+		histoEEDown = TheStack(processes,runRange.lumi,plot,treesEE,"None",1.0,1.0,1.0,useTriggerEmulation=True).theHistogram
+		
+		#~ histoEEUp.Scale(getattr(triggerEffs,region).effEE.val)
+		#~ histoEEDown.Scale(getattr(triggerEffs,region).effEE.val)
+		
+		if EM:
+			plot.cuts = baseCuts
+			plot.cuts = "(%s)*(%s+%s*pow(((pt1 > pt2)*pt2 + (pt2 > pt1)*pt1),-1.))"%(baseCuts,correctionParameters["offset"]*(1+offsetError),correctionParameters["falling"]*(1+fallingErr))	
+			histoEMUp = TheStack(processes,runRange.lumi,plot,treesEM,"None",1.0,1.0,1.0,useTriggerEmulation=True).theHistogram
+
+			plot.cuts = baseCuts
+			plot.cuts = "(%s)*(%s+%s*pow(((pt1 > pt2)*pt2 + (pt2 > pt1)*pt1),-1.))"%(baseCuts,correctionParameters["offset"]*(1-offsetError),correctionParameters["falling"]*(1-fallingError))	
+			histoEMDown = TheStack(processes,runRange.lumi,plot,treesEM,"None",1.0,1.0,1.0,useTriggerEmulation=True).theHistogram
+		
+			#~ histoEMUp.Scale(getattr(triggerEffs,region).effEM.val)
+			#~ histoEMDown.Scale(getattr(triggerEffs,region).effEM.val)
+		
+	else:
+		### Change the ee cut if the pt correction is used
+		if os.path.isfile("shelves/rMuE_correctionParameters_ZPeakControl_%s.pkl"%(runRange.label)):
+			correctionParameters = pickle.load(open("shelves/rMuE_correctionParameters_ZPeakControl_%s.pkl"%(runRange.label),"rb"))
+		else:
+			print "shelves/rMuE_correctionParameters_ZPeakControl_%s.pkl does not exist"%(runRange.label)
+			print "Need to run with options -f on trailingPt plot first"
+			sys.exit()
+			
+		offsetError = (systematics.rMuE.inclusive.val**2 + (correctionParameters["offsetErr"]/correctionParameters["offset"])**2)**0.5
+		fallingError = (systematics.rMuE.inclusive.val**2 + (correctionParameters["fallingErr"]/correctionParameters["falling"])**2)**0.5
+		
+		plot.cuts = "(%s)*pow((%s+%s*pow(((pt1 > pt2)*pt2 + (pt2 > pt1)*pt1),-1.)),2)"%(baseCuts,correctionParameters["offset"]*(1+offsetError),correctionParameters["falling"]*(1+fallingError))	
+		histoEEUp = getDataHist(plot,treesEE)
+		
+		plot.cuts = baseCuts
+		plot.cuts = "(%s)*pow((%s+%s*pow(((pt1 > pt2)*pt2 + (pt2 > pt1)*pt1),-1.)),2)"%(baseCuts,correctionParameters["offset"]*(1-offsetError),correctionParameters["falling"]*(1-fallingError))	
+		histoEEDown = getDataHist(plot,treesEE)
+		
+		if EM:
+			plot.cuts = baseCuts
+			plot.cuts = "(%s)*(%s+%s*pow(((pt1 > pt2)*pt2 + (pt2 > pt1)*pt1),-1.))"%(baseCuts,correctionParameters["offset"]*(1+offsetError),correctionParameters["falling"]*(1+fallingError))	
+			histoEMUp = getDataHist(plot,treesEM)
+	
+			plot.cuts = baseCuts
+			plot.cuts = "(%s)*(%s+%s*pow(((pt1 > pt2)*pt2 + (pt2 > pt1)*pt1),-1.))"%(baseCuts,correctionParameters["offset"]*(1-offsetError),correctionParameters["falling"]*(1-fallingError))	
+			histoEMDown = getDataHist(plot,treesEM)
+	
+	if EM:
+		return histoEEUp ,histoEEDown , histoEMUp, histoEMDown
+	else:
+		return histoEEUp ,histoEEDown
 
 def centralValues(path,selection,runRange,isMC,backgrounds,corrected):
 
@@ -157,6 +279,15 @@ def centralValues(path,selection,runRange,isMC,backgrounds,corrected):
 	plot.addRegion(selection)
 	#~ plot.cleanCuts()
 	plot.cuts = plot.cuts % runRange.runCut	
+	plot.cuts = plot.cuts.replace("mll","p4.M()")
+	plot.variable = plot.variable.replace("mll","p4.M()")
+	plot.cuts = plot.cuts.replace("pt > 25","p4.Pt() > 25")	
+	if 	plot.variable == "pt":
+		plot.variable = plot.variable.replace("pt","p4.Pt()")
+	#~ plot.cuts = plot.cuts.replace("genWeight*weight*","")
+	#~ plot.cuts = plot.cuts.replace("leptonFullSimScaleFactor1*leptonFullSimScaleFactor2*","")
+	#~ plot.cuts = plot.cuts.replace("weight*","")
+	#~ plot.cuts = plot.cuts.replace("pt","p4.Pt()")
 
 	
 	if not "Forward" in selection.name:
@@ -169,15 +300,28 @@ def centralValues(path,selection,runRange,isMC,backgrounds,corrected):
 		relSyst = systematics.rMuE.forward.val
 		region = "forward"
 	
-	histEE, histMM = getHistograms(path,plot,runRange,isMC, backgrounds,region,selection,corrected)
+	if corrected:
+		histEE , histMM = getHistogramsCorrected(path,plot,runRange,isMC, backgrounds,region,selection)
+		histEEUp, histEEDown = getHistogramsCorrectedShifted(path,plot,runRange,isMC, backgrounds,region,selection)
+	else:
+		histEE , histMM = getHistograms(path,plot,runRange,isMC, backgrounds,region,selection)
 	
 	nEE = histEE.Integral()
 	nMM = histMM.Integral()
 	
 	rMuE= pow(nMM/nEE,0.5)
+	
+	if corrected:
+		nEEUp = histEEUp.Integral()
+		nEEDown = histEEDown.Integral()
+		rMuEUp= pow(nMM/nEEUp,0.5)
+		rMuEDown= pow(nMM/nEEDown,0.5)
+		rMuESystErrUp= abs(rMuE-rMuEUp)
+		rMuESystErrDown= abs(rMuE-rMuEDown)
 
 	rMuEStatErr = 0.5*rMuE*(1./nMM + 1./nEE)**0.5
 	rMuESystErr= rMuE*relSyst
+	
 	
 
 	result = {}
@@ -185,8 +329,15 @@ def centralValues(path,selection,runRange,isMC,backgrounds,corrected):
 	result["nMM"] = nMM
 	result["rMuE"] = rMuE
 	result["rMuEStatErr"] = rMuEStatErr
-	result["rMuESystErr"] = rMuESystErr
-	
+	result["rMuESystErrOld"] = rMuESystErr
+	if corrected:
+		result["nEEUp"] = nEEUp
+		result["nEEDown"] = nEEDown
+		result["rMuEUp"] = rMuEUp
+		result["rMuEDown"] = rMuEDown
+		result["rMuESystErrUp"] = rMuESystErrUp
+		result["rMuESystErrDown"] = rMuESystErrDown
+		
 	return result
 	
 	
@@ -194,15 +345,28 @@ def dependencies(path,selection,plots,runRange,isMC,backgrounds,cmsExtra,fit,cor
 	
 
 	pathMC = locations.dataSetPathMC
-	#~ backgroundsTT = ["TT_Powheg"]
-	backgroundsMC = ["TT_Powheg","DrellYan"]
-	#~ backgroundsMC = ["Rare","SingleTop","TT_Powheg","Diboson","DrellYanTauTau","DrellYan"]
+	if isMC:
+		backgroundsMC = ["TT_Powheg"]
+	else:
+		#~ backgroundsMC = ["TT_Powheg","DrellYan"]
+		backgroundsMC = ["Rare","SingleTop","TT_Powheg","Diboson","DrellYanTauTau","DrellYan"]
 	
 	for name in plots:
 		plot = getPlot(name)
 		plot.addRegion(selection)
+		print plot.cuts
 		plot.cleanCuts()	
 		plot.cuts = plot.cuts % runRange.runCut	
+		plot.cuts = plot.cuts.replace("mll","p4.M()")
+		plot.cuts = plot.cuts.replace("pt > 25","p4.Pt() > 25")
+		plot.variable = plot.variable.replace("mll","p4.M()")
+		if 	plot.variable == "pt":
+			plot.variable = plot.variable.replace("pt","p4.Pt()")
+		
+		#~ plot.cuts = plot.cuts.replace("genWeight*weight*","")
+		#~ plot.cuts = plot.cuts.replace("leptonScaleFactor1*leptonFullSimScaleFactor2*","")
+		#~ plot.cuts = plot.cuts.replace("weight*","")
+		print plot.cuts
 
 		if not "Forward" in selection.name:
 			relSyst = systematics.rMuE.central.val
@@ -214,11 +378,18 @@ def dependencies(path,selection,plots,runRange,isMC,backgrounds,cmsExtra,fit,cor
 			relSyst = systematics.rMuE.forward.val
 			region = "forward"
 
-		if isMC:
-			histEE, histMM = getHistograms(pathMC,plot,runRange,True, backgrounds,region,selection,corrected)	
+		if corrected:
+			if isMC:
+				histEE, histMM = getHistogramsCorrected(pathMC,plot,runRange,True, backgrounds,region,selection)	
+			else:
+				histEE, histMM = getHistogramsCorrected(path,plot,runRange,False, backgrounds,region,selection)		
+			histEEMC, histMMMC = getHistogramsCorrected(pathMC,plot,runRange,True, backgroundsMC,region,selection)	
 		else:
-			histEE, histMM = getHistograms(path,plot,runRange,False, backgrounds,region,selection,corrected)	
-		histEEMC, histMMMC = getHistograms(pathMC,plot,runRange,True, backgroundsMC,region,selection,corrected)	
+			if isMC:
+				histEE, histMM = getHistograms(pathMC,plot,runRange,True, backgrounds,region,selection)	
+			else:
+				histEE, histMM = getHistograms(path,plot,runRange,False, backgrounds,region,selection)	
+			histEEMC, histMMMC = getHistograms(pathMC,plot,runRange,True, backgroundsMC,region,selection)	
 		
 		if corrected:
 			plot.additionalName = "corrected"
@@ -263,7 +434,8 @@ def dependencies(path,selection,plots,runRange,isMC,backgrounds,cmsExtra,fit,cor
 		rMuE = histMM.Clone("rMuE")
 		rMuE.Divide(histEE)
 		rMuEMC = histMMMC.Clone("rMuEMC")
-		rMuEMC.Divide(histEEMC)
+		rMuEMC.Divide(histEEMC)			
+		
 		
 		for i in range(1, rMuE.GetNbinsX()+1):
 			if rMuE.GetBinContent(i) > 0:
@@ -271,15 +443,12 @@ def dependencies(path,selection,plots,runRange,isMC,backgrounds,cmsExtra,fit,cor
 			if rMuEMC.GetBinContent(i) > 0:
 				rMuEMC.SetBinContent(i, pow(rMuEMC.GetBinContent(i),0.5))
 			if rMuE.GetBinContent(i) > 0:
-				#~ rMuE.SetBinError(i, 0.5*rMuE.GetBinContent(i)*pow(1./abs(histMM.GetBinContent(i)) + 1./abs(histEE.GetBinContent(i)), 0.5))
 				rMuE.SetBinError(i, 0.5*pow( histMM.GetBinError(i)**2/(abs(histEE.GetBinContent(i))*abs(histMM.GetBinContent(i))) + histEE.GetBinError(i)**2*abs(histMM.GetBinContent(i))/abs(histEE.GetBinContent(i)**3), 0.5))
-				#~ rMuE.SetBinError(i, 0.5*rMuE.GetBinError(i))
 			if rMuEMC.GetBinContent(i) > 0:
-				#~ rMuEMC.SetBinError(i, 0.5*rMuEMC.GetBinContent(i)*pow(1./abs(histMMMC.GetBinContent(i)) + 1./abs(histEEMC.GetBinContent(i)), 0.5))
-				#~ rMuEMC.SetBinError(i, pow( pow(histMMMC.GetBinError(i)/histEEMC.GetBinContent(i),2) + pow(histEEMC.GetBinError(i)*histMMMC.GetBinContent(i)/(histEEMC.GetBinContent(i)**2),2), 0.5))
 				rMuEMC.SetBinError(i, 0.5*pow( histMMMC.GetBinError(i)**2/(abs(histEEMC.GetBinContent(i))*abs(histMMMC.GetBinContent(i))) + histEEMC.GetBinError(i)**2*abs(histMMMC.GetBinContent(i))/abs(histEEMC.GetBinContent(i)**3), 0.5))
-				#~ rMuEMC.SetBinError(i, 0.5*rMuEMC.GetBinError(i))
+								
 
+		
 		rMuEMC.SetMarkerStyle(21)
 		rMuEMC.SetLineColor(ROOT.kGreen-2) 
 		rMuEMC.SetMarkerColor(ROOT.kGreen-2) 
@@ -315,10 +484,11 @@ def dependencies(path,selection,plots,runRange,isMC,backgrounds,cmsExtra,fit,cor
 		
 
 		latexCMS.DrawLatex(0.19,0.88,"CMS")
-		if "Simulation" in cmsExtra:
-			yLabelPos = 0.81	
-		else:
-			yLabelPos = 0.84	
+		#~ if "Simulation" in cmsExtra:
+			#~ yLabelPos = 0.81	
+		#~ else:
+			#~ yLabelPos = 0.84	
+		yLabelPos = 0.84	
 
 		latexCMSExtra.DrawLatex(0.19,yLabelPos,"%s"%(cmsExtra))
 		
@@ -336,18 +506,22 @@ def dependencies(path,selection,plots,runRange,isMC,backgrounds,cmsExtra,fit,cor
 		plotPad.UseCurrentStyle()
 		
 		plotPad.Draw()	
-		plotPad.cd()	
-		plotPad.DrawFrame(plot.firstBin,0.,plot.lastBin,2.5,"; %s; r_{#mue}" %plot.xaxis)
+		plotPad.cd()
+		if corrected:	
+			plotPad.DrawFrame(plot.firstBin,0.25,plot.lastBin,2.,"; %s; r_{#mu/e}^{corr.}" %plot.xaxis)
+		else:	
+			plotPad.DrawFrame(plot.firstBin,0.,plot.lastBin,2.5,"; %s; r_{#mu/e}" %plot.xaxis)
 		gStyle.SetErrorX(0.5)
 
 		latex.DrawLatex(0.95, 0.96, "%s fb^{-1} (13 TeV)"%runRange.printval)
 		
 
 		latexCMS.DrawLatex(0.19,0.88,"CMS")
-		if "Simulation" in cmsExtra:
-			yLabelPos = 0.81	
-		else:
-			yLabelPos = 0.84	
+		#~ if "Simulation" in cmsExtra:
+			#~ yLabelPos = 0.81	
+		#~ else:
+			#~ yLabelPos = 0.84	
+		yLabelPos = 0.84	
 
 		latexCMSExtra.DrawLatex(0.19,yLabelPos,"%s"%(cmsExtra))
 
@@ -359,12 +533,13 @@ def dependencies(path,selection,plots,runRange,isMC,backgrounds,cmsExtra,fit,cor
 		x= array("f",[plot.firstBin, plot.lastBin]) 
 		y= array("f", [centralVals["rMuE"],centralVals["rMuE"]]) 
 		ex= array("f", [0.,0.])
-		ey= array("f", [centralVals["rMuESystErr"],centralVals["rMuESystErr"]])
+		ey= array("f", [centralVals["rMuE"]*systematics.rMuE.inclusive.val,centralVals["rMuE"]*systematics.rMuE.inclusive.val])
 		ge= ROOT.TGraphErrors(2, x, y, ex, ey)
 		ge.SetFillColor(ROOT.kOrange-9)
 		ge.SetFillStyle(1001)
 		ge.SetLineColor(ROOT.kWhite)
-		ge.Draw("SAME 3")
+		if not fit:
+			ge.Draw("SAME 3")
 		
 		rmueLine= ROOT.TF1("rmueline","%f"%centralVals["rMuE"],plot.firstBin,plot.lastBin)
 		rmueLine.SetLineColor(ROOT.kOrange+3)
@@ -379,18 +554,26 @@ def dependencies(path,selection,plots,runRange,isMC,backgrounds,cmsExtra,fit,cor
 		if not isMC:
 			rMuE.Draw("hist E1P SAME")			
 			leg.AddEntry(rMuE, "Data", "p")
-			#~ leg.AddEntry(rMuEMC,"t#bar{t} MC","p")
 			leg.AddEntry(rMuEMC,"MC","p")
+			if corrected:
+				leg.AddEntry(rmueLine, "r^{corr.}_{#mu/e} central value", "l")
+			else:
+				leg.AddEntry(rmueLine, "r_{#mu/e} central value", "l")
 			
 		else:
 			rMuE.Draw("hist E1P SAME")			
 			leg.AddEntry(rMuE, "all MC", "p")
 			leg.AddEntry(rMuEMC,"t#bar{t} MC","p")
-		if not isMC: 
-			leg.AddEntry(rmueLine, "r_{#mu e} central value", "l")
-		else:
-			leg.AddEntry(rmueLine, "r_{#mu e} central value on MC", "l") 
-		leg.AddEntry(ge,"syst. unc. of r_{#mu e}","f")
+			if corrected:
+				leg.AddEntry(rmueLine, "r^{corr.}_{#mu/e} central value on MC", "l") 
+			else:
+				leg.AddEntry(rmueLine, "r_{#mu/e} central value on MC", "l") 
+			
+		if not fit:
+			if corrected:
+				leg.AddEntry(ge,"syst. unc. of r^{corr.}_{#mu/e}","f")
+			else:
+				leg.AddEntry(ge,"syst. unc. of r_{#mu/e}","f")
 
 		leg.SetBorderSize(0)
 		leg.SetLineWidth(2)
@@ -404,42 +587,35 @@ def dependencies(path,selection,plots,runRange,isMC,backgrounds,cmsExtra,fit,cor
 	
 		if fit:
 			if "trailingPt" in name:
-				#~ fit = TF1("dataFit","pol1",0,300)
-				#~ fit = TF1("dataFit","[0]+[1]*pow(x,[2])",20,120)
-				fit = TF1("dataFit","[0]+[1]*pow(x,-1)",20,120)
+			#~ if "leadingPt" in name:
+				fit = TF1("dataFit","[0]+[1]*pow(x,-1)",20,200)
 				fit.SetParameter(0,1)
-				fit.SetParLimits(0,0.8,1.2)
-				fit.SetParameter(1,0)
-				fit.SetParLimits(1,-10,10)
-				fit.SetParameter(2,0)
-				fit.SetParLimits(2,-10,10)
+				fit.SetParLimits(0,0.8,1.5)
+				fit.SetParameter(1,10)
+				fit.SetParLimits(1,0,1000)
 				fit.SetLineColor(ROOT.kBlack)
-				#~ fitMC = TF1("mcFit","pol1",0,300)
-				#~ fitMC = TF1("mcFit","[0]+[1]*pow(x,[2])",20,120)
-				fitMC = TF1("mcFit","[0]+[1]*pow(x,-1)",20,120)
+				fitMC = TF1("mcFit","[0]+[1]*pow(x,-1)",20,200)
 				fitMC.SetLineColor(ROOT.kGreen-2)
 				fitMC.SetParameter(0,1)
 				fitMC.SetParLimits(0,0.5,2)
-				fitMC.SetParameter(1,0)
-				fitMC.SetParLimits(1,-10,10)
-				fitMC.SetParameter(2,0)
-				fitMC.SetParLimits(2,-10,10)
+				fitMC.SetParameter(1,10)
+				fitMC.SetParLimits(1,0,1000)
 				rMuE.Fit("dataFit")
 				rMuEMC.Fit("mcFit")
 				
 				fit.Draw("same l")		
 				fitMC.Draw("same l")			
 				
-				latex = ROOT.TLatex()
-				latex.SetTextSize(0.025)	
-				latex.SetNDC()	
-				#~ latex.DrawLatex(0.2, 0.25, "Fit on data: %.2f #pm %.2f %.5f #pm %.5f * m_{ll}"%(fit.GetParameter(0),fit.GetParError(0),fit.GetParameter(1),fit.GetParError(1)))
-				#~ latex.DrawLatex(0.2, 0.20, "Fit on MC:   %.2f #pm %.2f %.5f #pm %.5f * m_{ll}"%(fitMC.GetParameter(0),fitMC.GetParError(0),fitMC.GetParameter(1),fitMC.GetParError(1)))			
-				#~ latex.DrawLatex(0.2, 0.25, "Fit on data: (%.2f #pm %.2f) + (%.2f #pm %.2f) * p_{T}^{(%.5f #pm %.5f)})"%(fit.GetParameter(0),fit.GetParError(0),fit.GetParameter(1),fit.GetParError(1),fit.GetParameter(2),fit.GetParError(2)))
-				#~ latex.DrawLatex(0.2, 0.20, "Fit on MC:   (%.2f #pm %.2f) + (%.2f #pm %.2f) * p_{T}^{(%.5f #pm %.5f)})"%(fitMC.GetParameter(0),fitMC.GetParError(0),fitMC.GetParameter(1),fitMC.GetParError(1),fitMC.GetParameter(2),fitMC.GetParError(2)))			
-				latex.DrawLatex(0.2, 0.23, "Fit on data: (%.2f #pm %.2f) + (%.2f #pm %.2f) * p_{T}^{-1})"%(fit.GetParameter(0),fit.GetParError(0),fit.GetParameter(1),fit.GetParError(1)))
-				latex.DrawLatex(0.2, 0.18, "Fit on MC:   (%.2f #pm %.2f) + (%.2f #pm %.2f) * p_{T}^{-1})"%(fitMC.GetParameter(0),fitMC.GetParError(0),fitMC.GetParameter(1),fitMC.GetParError(1)))
-				
+				latexFit = ROOT.TLatex()
+				latexFit.SetTextSize(0.025)	
+				latexFit.SetNDC()
+				if not isMC:	
+					latexFit.DrawLatex(0.2, 0.23, "Fit on data: (%.2f #pm %.2f) + (%.2f #pm %.2f) * p_{T}^{-1})"%(fit.GetParameter(0),fit.GetParError(0),fit.GetParameter(1),fit.GetParError(1)))
+					latexFit.DrawLatex(0.2, 0.18, "Fit on MC:   (%.2f #pm %.2f) + (%.2f #pm %.2f) * p_{T}^{-1})"%(fitMC.GetParameter(0),fitMC.GetParError(0),fitMC.GetParameter(1),fitMC.GetParError(1)))
+				else:	
+					latexFit.DrawLatex(0.2, 0.23, "Fit on all MC: (%.2f #pm %.2f) + (%.2f #pm %.2f) * p_{T}^{-1})"%(fit.GetParameter(0),fit.GetParError(0),fit.GetParameter(1),fit.GetParError(1)))
+					latexFit.DrawLatex(0.2, 0.18, "Fit on ttbar MC:   (%.2f #pm %.2f) + (%.2f #pm %.2f) * p_{T}^{-1})"%(fitMC.GetParameter(0),fitMC.GetParError(0),fitMC.GetParameter(1),fitMC.GetParError(1)))
+								
 				
 				### Only store the fit parameters when not using the pt corrected cuts
 				### Otherwise things get screwed up
@@ -460,13 +636,13 @@ def dependencies(path,selection,plots,runRange,isMC,backgrounds,cmsExtra,fit,cor
 		# Pfeile
 		
 		if "eta" in plot.variable:
-			yMin = 0.8
-			yMax = 1.6
-			lineU1 = ROOT.TLine(1.4, yMin, 1.4, yMax-0.2)
+			yMin = 0.7
+			yMax = 1.5
+			lineU1 = ROOT.TLine(1.4, yMin, 1.4, yMax)
 			lineU1.SetLineColor(ROOT.kBlue-3)
 			lineU1.SetLineWidth(2)
 			lineU1.Draw("")
-			lineU2 = ROOT.TLine(1.6, yMin, 1.6, yMax-0.2)
+			lineU2 = ROOT.TLine(1.6, yMin, 1.6, yMax)
 			lineU2.SetLineColor(ROOT.kBlue-3)
 			lineU2.SetLineWidth(2)
 			lineU2.Draw("")
@@ -481,7 +657,7 @@ def dependencies(path,selection,plots,runRange,isMC,backgrounds,cmsExtra,fit,cor
 			arrow2.SetLineWidth(3)
 			arrow2.Draw("")
 
-			lineE = ROOT.TLine(2.4, yMin, 2.4, yMax-0.2) #3.5 -> 1.7
+			lineE = ROOT.TLine(2.4, yMin, 2.4, yMax) #3.5 -> 1.7
 			lineE.SetLineColor(ROOT.kRed-3)
 			lineE.SetLineWidth(2)
 			lineE.Draw("")
@@ -493,9 +669,15 @@ def dependencies(path,selection,plots,runRange,isMC,backgrounds,cmsExtra,fit,cor
 		
 				
 		if isMC:
-			hCanvas.Print("fig/rMuE_%s_%s_%s_%s_MC.pdf"%(selection.name,runRange.label,plot.variablePlotName,plot.additionalName))
-		else:	
-			hCanvas.Print("fig/rMuE_%s_%s_%s_%s.pdf"%(selection.name,runRange.label,plot.variablePlotName,plot.additionalName))	
+			if fit and "trailingPt" in name:
+				hCanvas.Print("fig/rMuE_%s_%s_%s_%s_MC_fit.pdf"%(selection.name,runRange.label,plot.variablePlotName,plot.additionalName))
+			else:
+				hCanvas.Print("fig/rMuE_%s_%s_%s_%s_MC.pdf"%(selection.name,runRange.label,plot.variablePlotName,plot.additionalName))
+		else:
+			if fit and "trailingPt" in name:	
+				hCanvas.Print("fig/rMuE_%s_%s_%s_%s_fit.pdf"%(selection.name,runRange.label,plot.variablePlotName,plot.additionalName))	
+			else:	
+				hCanvas.Print("fig/rMuE_%s_%s_%s_%s.pdf"%(selection.name,runRange.label,plot.variablePlotName,plot.additionalName))	
 	
 
 		for i in range(1, rMuE.GetNbinsX()+1):
@@ -525,35 +707,42 @@ def dependencies(path,selection,plots,runRange,isMC,backgrounds,cmsExtra,fit,cor
 		plotPad = ROOT.TPad("plotPad","plotPad",0,0,1,1)
 		setTDRStyle()
 		plotPad.UseCurrentStyle()
+		plotPad.SetLeftMargin(0.2)
 		
 		plotPad.Draw()	
 		plotPad.cd()
 		if corrected:	
-			plotPad.DrawFrame(plot.firstBin,0.975,plot.lastBin,1.1,"; %s; 0.5(r_{#mue} + 1/r_{#mue})" %plot.xaxis)
+			plotPad.DrawFrame(plot.firstBin,0.975,plot.lastBin,1.1,"; %s; 0.5(r^{corr.}_{#mu/e} + 1/r^{corr.}_{#mu/e})" %plot.xaxis)
 		else:
-			plotPad.DrawFrame(plot.firstBin,0.95,plot.lastBin,1.2,"; %s; 0.5(r_{#mue} + 1/r_{#mue})" %plot.xaxis)
+			plotPad.DrawFrame(plot.firstBin,0.95,plot.lastBin,1.2,"; %s; 0.5(r_{#mu/e} + 1/r_{#mu/e})" %plot.xaxis)
 		gStyle.SetErrorX(0.5)
 
 		latex.DrawLatex(0.95, 0.96, "%s fb^{-1} (13 TeV)"%runRange.printval)
 		
 
-		latexCMS.DrawLatex(0.19,0.88,"CMS")
-		if "Simulation" in cmsExtra:
-			yLabelPos = 0.81	
-		else:
-			yLabelPos = 0.84	
+		latexCMS.DrawLatex(0.23,0.88,"CMS")
+		#~ if "Simulation" in cmsExtra:
+			#~ yLabelPos = 0.81	
+		#~ else:
+			#~ yLabelPos = 0.84	
+		yLabelPos = 0.84	
 
-		latexCMSExtra.DrawLatex(0.19,yLabelPos,"%s"%(cmsExtra))
+		latexCMSExtra.DrawLatex(0.23,yLabelPos,"%s"%(cmsExtra))
 		
-		latexLabel.DrawLatex(0.2, 0.65, selection.labelSubRegion)
+		latexLabel.DrawLatex(0.25, 0.65, selection.labelSubRegion)
 		if corrected:
-			latexLabel.DrawLatex(0.2, 0.58, "lepton p_{T} corrected")
+			latexLabel.DrawLatex(0.25, 0.58, "lepton p_{T} corrected")
 
 
 		x= array("f",[plot.firstBin, plot.lastBin]) 
 		y= array("f", [0.5*(centralVals["rMuE"]+1./centralVals["rMuE"]),0.5*(centralVals["rMuE"]+1./centralVals["rMuE"])]) 
 		ex= array("f", [0.,0.])
-		ey= array("f", [0.5*(1. - (1./(centralVals["rMuE"]**2)))*centralVals["rMuESystErr"],0.5*(1. - (1./(centralVals["rMuE"]**2)))*centralVals["rMuESystErr"]])
+		if corrected:
+			erry = max(abs(0.5*(centralVals["rMuE"] + 1./centralVals["rMuE"] - centralVals["rMuEUp"] - 1./centralVals["rMuEUp"])),abs(0.5*(centralVals["rMuE"] + 1./centralVals["rMuE"] - centralVals["rMuEDown"] - 1./centralVals["rMuEDown"])))
+			#~ ey= array("f", [abs(0.5*(centralVals["rMuE"] + 1./centralVals["rMuE"] - centralVals["rMuE"]*(1+systematics.rMuE.inclusive.val) - 1./(centralVals["rMuE"]*(1+systematics.rMuE.inclusive.val)))),abs(0.5*(centralVals["rMuE"] + 1./centralVals["rMuE"] - centralVals["rMuE"]*(1+systematics.rMuE.inclusive.val) - 1./(centralVals["rMuE"]*(1+systematics.rMuE.inclusive.val))))])
+			ey= array("f", [erry,erry])
+		else:
+			ey= array("f", [0.5*(1. - (1./(centralVals["rMuE"]**2)))*centralVals["rMuESystErrOld"],0.5*(1. - (1./(centralVals["rMuE"]**2)))*centralVals["rMuESystErrOld"]])
 		ge= ROOT.TGraphErrors(2, x, y, ex, ey)
 		ge.SetFillColor(ROOT.kOrange-9)
 		ge.SetFillStyle(1001)
@@ -573,7 +762,6 @@ def dependencies(path,selection,plots,runRange,isMC,backgrounds,cmsExtra,fit,cor
 		if not isMC:
 			rMuE.Draw("hist E1P SAME")			
 			leg.AddEntry(rMuE, "Data", "p")
-			#~ leg.AddEntry(rMuEMC,"t#bar{t} MC","p")
 			leg.AddEntry(rMuEMC,"MC","p")
 			
 		else:
@@ -583,8 +771,11 @@ def dependencies(path,selection,plots,runRange,isMC,backgrounds,cmsExtra,fit,cor
 		if not isMC: 
 			leg.AddEntry(rmueLine, "central value", "l")
 		else:
-			leg.AddEntry(rmueLine, "central value on MC", "l") 
-		leg.AddEntry(ge,"syst. unc. of r_{#mu e}","f")
+			leg.AddEntry(rmueLine, "central value on MC", "l")
+		if corrected: 
+			leg.AddEntry(ge,"syst. unc. of r^{corr.}_{#mu/e}","f")
+		else: 
+			leg.AddEntry(ge,"syst. unc. of r_{#mu/e}","f")
 
 		leg.SetBorderSize(0)
 		leg.SetLineWidth(2)
@@ -666,7 +857,7 @@ def signalRegion(path,selection,plots,runRange,isMC,backgrounds,cmsExtra,correct
 		plotPad.Draw()	
 		plotPad.cd()				
 		
-		plotPad.DrawFrame(plot.firstBin,0,plot.lastBin,5,"; %s ; %s" %(plot.xaxis,"r_{#mu e}"))			
+		plotPad.DrawFrame(plot.firstBin,0,plot.lastBin,5,"; %s ; %s" %(plot.xaxis,"r_{#mu/e}"))			
 		latex = ROOT.TLatex()
 		latex.SetTextSize(0.04)
 		latex.SetNDC(True)
@@ -746,11 +937,11 @@ def signalRegion(path,selection,plots,runRange,isMC,backgrounds,cmsExtra,correct
 		entryHist = TH1F()
 		entryHist.SetFillColor(ROOT.kWhite)
 		legend.AddEntry(entryHist,selection.latex,"h")
-		legend.AddEntry(graphHigh,"r_{#mu e} = N_{SF}/N_{OF} + #sqrt{(N_{SF}/N_{OF})^{2} -1}","p")
-		legend.AddEntry(graphLow,"r_{#mu e} = N_{SF}/N_{OF} - #sqrt{(N_{SF}/N_{OF})^{2} -1}","p")
-		legend.AddEntry(rmueLine,"r_{#mu e} from Z peak","l")
-		legend.AddEntry(ge,"Syst. Uncert. of r_{#mu e}","f")
-		legend.AddEntry(graphMeasured,"r_{#mu e} = #sqrt{N_{#mu#mu}/N_{ee}} in SF signal region","p")
+		legend.AddEntry(graphHigh,"r_{#mu/e} = N_{SF}/N_{OF} + #sqrt{(N_{SF}/N_{OF})^{2} -1}","p")
+		legend.AddEntry(graphLow,"r_{#mu/e} = N_{SF}/N_{OF} - #sqrt{(N_{SF}/N_{OF})^{2} -1}","p")
+		legend.AddEntry(rmueLine,"r_{#mu/e} from Z peak","l")
+		legend.AddEntry(ge,"Syst. Uncert. of r_{#mu/e}","f")
+		legend.AddEntry(graphMeasured,"r_{#mu/e} = #sqrt{N_{#mu#mu}/N_{ee}} in SF signal region","p")
 		
 		legend.Draw("same")
 	
@@ -836,15 +1027,15 @@ def main():
 			#~ args.selection.append(regionsToUse.signal.forward.name)	
 			args.selection.append(regionsToUse.signal.inclusive.name)		
 		else:
-			args.selection.append(regionsToUse.rMuE.central.name)	
-			args.selection.append(regionsToUse.rMuE.forward.name)	
+			#~ args.selection.append(regionsToUse.rMuE.central.name)	
+			#~ args.selection.append(regionsToUse.rMuE.forward.name)	
 			args.selection.append(regionsToUse.rMuE.inclusive.name)
 			
 	if len(args.runRange) == 0:
 		args.runRange.append(runRanges.name)		
 
 	path = locations.dataSetPath
-
+	print path
 	
 
 	cmsExtra = ""

@@ -51,14 +51,14 @@ def getEventLists(trees, cut,isMC, colNames = ["eventNr","lumiSec","runNr"]):
 			gc.collect()
 	return result
 
-def getCounts(trees, cut, isMC, backgrounds,plot,runRange,baseTreePath):
+def getCounts(trees, cut, isMC, backgrounds,plot,runRange,path):
 
 	if isMC:
 		tmpCut = plot.cuts
 		plot.cuts = cut
 		source = ""
 		modifier = ""
-		eventCounts = totalNumberOfGeneratedEvents(baseTreePath,source,modifier)	
+		eventCounts = totalNumberOfGeneratedEvents(path,source,modifier)	
 		processes = []
 		for background in backgrounds:
 			processes.append(Process(getattr(Backgrounds,background),eventCounts))
@@ -67,36 +67,43 @@ def getCounts(trees, cut, isMC, backgrounds,plot,runRange,baseTreePath):
 		histMM = TheStack(processes,runRange.lumi,plot,trees["MM"],"None",1.0,1.0,1.0).theHistogram
 		histEM = TheStack(processes,runRange.lumi,plot,trees["EM"],"None",1.0,1.0,1.0).theHistogram
 						
-		#~ histoEE.Scale(getattr(triggerEffs,region).effEE.val)
-		#~ histoEE.Scale(getattr(triggerEffs,region).effMM.val)	
-		#~ histoEM.Scale(getattr(triggerEffs,region).effEM.val)	
+		histEE.Scale(getattr(triggerEffs,region).effEE.val)
+		histMM.Scale(getattr(triggerEffs,region).effMM.val)	
+		histEM.Scale(getattr(triggerEffs,region).effEM.val)	
 		
-		
+		offsetError = (systematics.rMuE.inclusive.val**2 + (rMuELeptonPt.inclusive.offsetErrMC/rMuELeptonPt.inclusive.offsetMC)**2)**0.5
+		fallingError = (systematics.rMuE.inclusive.val**2 + (rMuELeptonPt.inclusive.fallingErrMC/rMuELeptonPt.inclusive.fallingMC)**2)**0.5
 		cutRMuEScaled = "(%s)*0.5*((%s+%s*pow(((pt1 > pt2)*pt2 + (pt2 > pt1)*pt1),-1.))+ pow((%s+%s*pow(((pt1 > pt2)*pt2 + (pt2 > pt1)*pt1),-1.)),-1))"%(cut,rMuELeptonPt.inclusive.offsetMC,rMuELeptonPt.inclusive.fallingMC,rMuELeptonPt.inclusive.offsetMC,rMuELeptonPt.inclusive.fallingMC)
-		cutRMuEScaledUp = "(%s)*0.5*((%s+%s*pow(((pt1 > pt2)*pt2 + (pt2 > pt1)*pt1),-1.))+ pow((%s+%s*pow(((pt1 > pt2)*pt2 + (pt2 > pt1)*pt1),-1.)),-1))"%(cut,rMuELeptonPt.inclusive.offsetMC+rMuELeptonPt.inclusive.offsetErrMC,rMuELeptonPt.inclusive.fallingMC+rMuELeptonPt.inclusive.fallingErrMC,rMuELeptonPt.inclusive.offsetMC+rMuELeptonPt.inclusive.offsetErrMC,rMuELeptonPt.inclusive.fallingMC+rMuELeptonPt.inclusive.fallingErrMC)
-		cutRMuEScaledDown = "(%s)*0.5*((%s+%s*pow(((pt1 > pt2)*pt2 + (pt2 > pt1)*pt1),-1.))+ pow((%s+%s*pow(((pt1 > pt2)*pt2 + (pt2 > pt1)*pt1),-1.)),-1))"%(cut,rMuELeptonPt.inclusive.offsetMC-rMuELeptonPt.inclusive.offsetErrMC,rMuELeptonPt.inclusive.fallingMC-rMuELeptonPt.inclusive.fallingErrMC,rMuELeptonPt.inclusive.offsetMC-rMuELeptonPt.inclusive.offsetErrMC,rMuELeptonPt.inclusive.fallingMC-rMuELeptonPt.inclusive.fallingErrMC)
+		cutRMuEScaledUp = "(%s)*0.5*((%s+%s*pow(((pt1 > pt2)*pt2 + (pt2 > pt1)*pt1),-1.))+ pow((%s+%s*pow(((pt1 > pt2)*pt2 + (pt2 > pt1)*pt1),-1.)),-1))"%(cut,rMuELeptonPt.inclusive.offsetMC*(1+offsetError),rMuELeptonPt.inclusive.fallingMC*(1+fallingError),rMuELeptonPt.inclusive.offsetMC*(1+offsetError),rMuELeptonPt.inclusive.fallingMC*(1+fallingError))
+		cutRMuEScaledDown = "(%s)*0.5*((%s+%s*pow(((pt1 > pt2)*pt2 + (pt2 > pt1)*pt1),-1.))+ pow((%s+%s*pow(((pt1 > pt2)*pt2 + (pt2 > pt1)*pt1),-1.)),-1))"%(cut,rMuELeptonPt.inclusive.offsetMC*(1-offsetError),rMuELeptonPt.inclusive.fallingMC*(1-fallingError),rMuELeptonPt.inclusive.offsetMC*(1-offsetError),rMuELeptonPt.inclusive.fallingMC*(1-fallingError))
+		
 		
 		plot.cuts = cutRMuEScaled
 		histEMRMuEScaled = TheStack(processes,runRange.lumi,plot,trees["EM"],"None",1.0,1.0,1.0).theHistogram				
+		histEMRMuEScaled.Scale(getattr(triggerEffs,region).effEM.val)	
+					
 		plot.cuts = cutRMuEScaledUp
 		histEMRMuEScaledUp = TheStack(processes,runRange.lumi,plot,trees["EM"],"None",1.0,1.0,1.0).theHistogram				
+		histEMRMuEScaledUp.Scale(getattr(triggerEffs,region).effEM.val)		
+				
 		plot.cuts = cutRMuEScaledDown
 		histEMRMuEScaledDown = TheStack(processes,runRange.lumi,plot,trees["EM"],"None",1.0,1.0,1.0).theHistogram				
+		histEMRMuEScaledDown.Scale(getattr(triggerEffs,region).effEM.val)				
 				
 		
 		eeErr = ROOT.Double()
-		ee = histEE.IntegralAndError(1,histEE.GetNbinsX(),eeErr)
+		ee = histEE.IntegralAndError(0,-1,eeErr)
 		mmErr = ROOT.Double()
-		mm = histMM.IntegralAndError(1,histMM.GetNbinsX(),mmErr)
+		mm = histMM.IntegralAndError(0,-1,mmErr)
 		emErr = ROOT.Double()
-		em = histEM.IntegralAndError(1,histEM.GetNbinsX(),emErr)
+		em = histEM.IntegralAndError(0,-1,emErr)
 		
 		emRMuEScaledErr = ROOT.Double()
-		emRMuEScaled = histEMRMuEScaled.IntegralAndError(1,histEMRMuEScaled.GetNbinsX(),emRMuEScaledErr)
+		emRMuEScaled = histEMRMuEScaled.IntegralAndError(0,-1,emRMuEScaledErr)
 		emRMuEScaledUpErr = ROOT.Double()
-		emRMuEScaledUp = histEMRMuEScaledUp.IntegralAndError(1,histEMRMuEScaledUp.GetNbinsX(),emRMuEScaledUpErr)
+		emRMuEScaledUp = histEMRMuEScaledUp.IntegralAndError(0,-1,emRMuEScaledUpErr)
 		emRMuEScaledDownErr = ROOT.Double()
-		emRMuEScaledDown = histEMRMuEScaledDown.IntegralAndError(1,histEMRMuEScaledDown.GetNbinsX(),emRMuEScaledDownErr)
+		emRMuEScaledDown = histEMRMuEScaledDown.IntegralAndError(0,-1,emRMuEScaledDownErr)
 		
 		
 		
@@ -110,33 +117,29 @@ def getCounts(trees, cut, isMC, backgrounds,plot,runRange,baseTreePath):
 			}
 		n["MMStatErr"] = float(eeErr)	
 		n["EEStatErr"] = float(mmErr)	
-		n["EMStatErr"] = float(emErr)		
-		n["EMRMuEScaledStatErr"] = float(emRMuEScaledErr)		
-		n["EMRMuEScaledUpStatErr"] = float(emRMuEScaledUpErr)		
-		n["EMRMuEScaledDownStatErr"] = float(emRMuEScaledDownErr)		
+		n["EMStatErr"] = float(emErr)				
 		
 		plot.cuts = tmpCut
 		
 	else:		
+		offsetError = (systematics.rMuE.inclusive.val**2 + (rMuELeptonPt.inclusive.offsetErr/rMuELeptonPt.inclusive.offset)**2)**0.5
+		fallingError = (systematics.rMuE.inclusive.val**2 + (rMuELeptonPt.inclusive.fallingErr/rMuELeptonPt.inclusive.falling)**2)**0.5	
 		cutRMuEScaled = "(%s)*0.5*((%s+%s*pow(((pt1 > pt2)*pt2 + (pt2 > pt1)*pt1),-1.))+ pow((%s+%s*pow(((pt1 > pt2)*pt2 + (pt2 > pt1)*pt1),-1.)),-1))"%(cut,rMuELeptonPt.inclusive.offset,rMuELeptonPt.inclusive.falling,rMuELeptonPt.inclusive.offset,rMuELeptonPt.inclusive.falling)
-		cutRMuEScaledUp = "(%s)*0.5*((%s+%s*pow(((pt1 > pt2)*pt2 + (pt2 > pt1)*pt1),-1.))+ pow((%s+%s*pow(((pt1 > pt2)*pt2 + (pt2 > pt1)*pt1),-1.)),-1))"%(cut,rMuELeptonPt.inclusive.offset+rMuELeptonPt.inclusive.offsetErr,rMuELeptonPt.inclusive.falling+rMuELeptonPt.inclusive.fallingErr,rMuELeptonPt.inclusive.offset+rMuELeptonPt.inclusive.offsetErr,rMuELeptonPt.inclusive.falling+rMuELeptonPt.inclusive.fallingErr)
-		cutRMuEScaledDown = "(%s)*0.5*((%s+%s*pow(((pt1 > pt2)*pt2 + (pt2 > pt1)*pt1),-1.))+ pow((%s+%s*pow(((pt1 > pt2)*pt2 + (pt2 > pt1)*pt1),-1.)),-1))"%(cut,rMuELeptonPt.inclusive.offset-rMuELeptonPt.inclusive.offsetErr,rMuELeptonPt.inclusive.falling-rMuELeptonPt.inclusive.fallingErr,rMuELeptonPt.inclusive.offset-rMuELeptonPt.inclusive.offsetErr,rMuELeptonPt.inclusive.falling-rMuELeptonPt.inclusive.fallingErr)
+		cutRMuEScaledUp = "(%s)*0.5*((%s+%s*pow(((pt1 > pt2)*pt2 + (pt2 > pt1)*pt1),-1.))+ pow((%s+%s*pow(((pt1 > pt2)*pt2 + (pt2 > pt1)*pt1),-1.)),-1))"%(cut,rMuELeptonPt.inclusive.offset*(1+offsetError),rMuELeptonPt.inclusive.falling*(1+fallingError),rMuELeptonPt.inclusive.offset*(1+offsetError),rMuELeptonPt.inclusive.falling*(1+fallingError))
+		cutRMuEScaledDown = "(%s)*0.5*((%s+%s*pow(((pt1 > pt2)*pt2 + (pt2 > pt1)*pt1),-1.))+ pow((%s+%s*pow(((pt1 > pt2)*pt2 + (pt2 > pt1)*pt1),-1.)),-1))"%(cut,rMuELeptonPt.inclusive.offset*(1-offsetError),rMuELeptonPt.inclusive.falling*(1-fallingError),rMuELeptonPt.inclusive.offset*(1-offsetError),rMuELeptonPt.inclusive.falling*(1-fallingError))
 		
 		n= {
 			"MM": trees["MM"].GetEntries(cut),
 			"EE": trees["EE"].GetEntries(cut),
 			"EM": trees["EM"].GetEntries(cut),
-			"EMRMuEScaled": createHistoFromTree(trees["EM"],"mll",cutRMuEScaled,100,0,500).Integral(),
-			"EMRMuEScaledUp": createHistoFromTree(trees["EM"],"mll",cutRMuEScaledUp,100,0,500).Integral(),
-			"EMRMuEScaledDown": createHistoFromTree(trees["EM"],"mll",cutRMuEScaledDown,100,0,500).Integral(),
+			"EMRMuEScaled": createHistoFromTree(trees["EM"],"mll",cutRMuEScaled,100,0,1000).Integral(0,-1),
+			"EMRMuEScaledUp": createHistoFromTree(trees["EM"],"mll",cutRMuEScaledUp,100,0,1000).Integral(0,-1),
+			"EMRMuEScaledDown": createHistoFromTree(trees["EM"],"mll",cutRMuEScaledDown,100,0,1000).Integral(0,-1),
 			}
 		n["MMStatErr"] = n["MM"]**0.5	
 		n["EEStatErr"] = n["EE"]**0.5	
 		n["EMStatErr"] = n["EM"]**0.5	
-		n["EMRMuEScaledStatErr"] = n["EMRMuEScaled"]**0.5	
-		n["EMRMuEScaledUpStatErr"] = n["EMRMuEScaledUp"]**0.5	
-		n["EMRMuEScaledDownStatErr"] = n["EMRMuEScaledDown"]**0.5	
-		#~ print cut, n
+		
 	n["cut"] = cut
 	return n
 	
@@ -148,7 +151,7 @@ def getCounts(trees, cut, isMC, backgrounds,plot,runRange,baseTreePath):
 	
 
 
-def cutAndCountForRegion(path,baseTreePath,selection,plots,runRange,isMC,backgrounds):
+def cutAndCountForRegion(path,selection,plots,runRange,isMC,backgrounds):
 	
 	
 	if not isMC:
@@ -175,35 +178,81 @@ def cutAndCountForRegion(path,baseTreePath,selection,plots,runRange,isMC,backgro
 
 		counts = {}
 		eventLists = {}
-		#~ massRanges = ["default","edgeMass","zMass","highMass","belowZ","aboveZ"]
-		massRanges = ["default","edgeMass","lowMass","zMass","highMass"]
+		
+		massBins = ["mass20To60","mass60To81","mass60To86","mass81To101","mass86To96","mass96To150","mass101To150","mass150To200","mass200To300","mass300To400","mass400","highMassOld","highMass","lowMass","lowMassOld"]
 		nLLRegions = ["lowNLL","highNLL"]
+		MT2Regions = ["lowMT2","highMT2"]
 		
 		counts["default"] = {}
 		eventLists["default"] = {}
-		for mllCut in massRanges:
-			cut = plot.cuts+" && (%s)"%getattr(theCuts.massCuts,mllCut).cut
+		for mllCut in massBins:
+			cut = plot.cuts + " && (%s)"%getattr(theCuts.massCuts,mllCut).cut
+			cut = cut + " && (met / caloMet < 5. && nBadMuonJets == 0)"
+			#~ cut = cut + " && (met / caloMet > 5. && nBadMuonJets > 0)" ### Inverse bad muon cuts
+			if not (mllCut == "highMassOld" or mllCut == "lowMassOld"):
+				cut = cut+" && (abs(deltaPhiJetMet1) > 0.4 && abs(deltaPhiJetMet2) > 0.4)"
 			cut = cut.replace("p4.M()","mll")
-			cut = cut.replace("genWeight*weight*","")
+			cut = cut.replace("p4.Pt()","pt")
+			cut = cut.replace("metFilterSummary > 0 &&","")
+			cut = cut.replace("triggerSummary > 0 &&","")
+			cut = cut.replace("genWeight*","")
+			cut = cut.replace("weight*","")
+			cut = cut.replace("leptonFullSimScaleFactor1*","")
+			cut = cut.replace("leptonFullSimScaleFactor2*","")
+			cut = "leptonFullSimScaleFactor1*leptonFullSimScaleFactor2*genWeight*weight*("+cut+")"
 			#~ cut = "genWeight*weight*("+cut+")"
-			counts["default"][getattr(theCuts.massCuts,mllCut).name] = getCounts(trees, cut,isMC,backgrounds,plot,runRange,baseTreePath)
-			eventLists["default"][getattr(theCuts.massCuts,mllCut).name] = getEventLists(trees,cut,isMC)		
+				
+			
+			counts["default"][getattr(theCuts.massCuts,mllCut).name] = getCounts(trees, cut,isMC,backgrounds,plot,runRange,path)
+			#~ eventLists["default"][getattr(theCuts.massCuts,mllCut).name] = getEventLists(trees,cut,isMC)		
 
 		for nLLRegion in nLLRegions:		
 			counts[nLLRegion] = {}
 			eventLists[nLLRegion] = {}					
 			
-			for mllCut in massRanges:
+			for mllCut in massBins:
 				cut = plot.cuts+" && (%s)"%getattr(theCuts.nLLCuts,nLLRegion).cut
 				cut = cut + " && (%s)"%getattr(theCuts.massCuts,mllCut).cut
+				cut = cut + " && (met / caloMet < 5. && nBadMuonJets == 0)"
+				#~ cut = cut + " && (met / caloMet > 5. && nBadMuonJets > 0)" ### Inverse bad muon cuts
+				if not (mllCut == "highMassOld" or mllCut == "lowMassOld"):
+					cut = cut+" && (abs(deltaPhiJetMet1) > 0.4 && abs(deltaPhiJetMet2) > 0.4)"
 				cut = cut.replace("p4.M()","mll")
-				cut = cut.replace("genWeight*weight*","")
+				cut = cut.replace("p4.Pt()","pt")
+				cut = cut.replace("metFilterSummary > 0 &&","")
+				cut = cut.replace("triggerSummary > 0 &&","")
+				cut = cut.replace("genWeight*","")
+				cut = cut.replace("weight*","")
+				cut = cut.replace("leptonFullSimScaleFactor1*","")
+				cut = cut.replace("leptonFullSimScaleFactor2*","")
+				cut = "leptonFullSimScaleFactor1*leptonFullSimScaleFactor2*genWeight*weight*("+cut+")"
 				#~ cut = "genWeight*weight*("+cut+")"
-				counts[nLLRegion][getattr(theCuts.massCuts,mllCut).name] = getCounts(trees, cut,isMC,backgrounds,plot,runRange,baseTreePath)
-				eventLists[nLLRegion][getattr(theCuts.massCuts,mllCut).name] = getEventLists(trees, cut,isMC)				
+			
+				counts[nLLRegion][getattr(theCuts.massCuts,mllCut).name] = getCounts(trees, cut,isMC,backgrounds,plot,runRange,path)
+				
+			for MT2Region in MT2Regions:
+				for mllCut in massBins:
+					cut = plot.cuts+" && (%s)"%getattr(theCuts.nLLCuts,nLLRegion).cut
+					cut = cut + " && (%s)"%getattr(theCuts.mt2Cuts,MT2Region).cut
+					cut = cut + " && (%s)"%getattr(theCuts.massCuts,mllCut).cut
+					cut = cut + " && (met / caloMet < 5. && nBadMuonJets == 0)"
+					#~ cut = cut + " && (met / caloMet > 5. && nBadMuonJets > 0)" ### Inverse bad muon cuts
+					if not (mllCut == "highMassOld" or mllCut == "lowMassOld"):
+						cut = cut+" && (abs(deltaPhiJetMet1) > 0.4 && abs(deltaPhiJetMet2) > 0.4)"
+					cut = cut.replace("p4.M()","mll")
+					cut = cut.replace("p4.Pt()","pt")
+					cut = cut.replace("metFilterSummary > 0 &&","")
+					cut = cut.replace("triggerSummary > 0 &&","")
+					cut = cut.replace("genWeight*","")
+					cut = cut.replace("weight*","")
+					cut = cut.replace("leptonFullSimScaleFactor1*","")
+					cut = cut.replace("leptonFullSimScaleFactor2*","")
+					cut = "leptonFullSimScaleFactor1*leptonFullSimScaleFactor2*genWeight*weight*("+cut+")"
+					#~ cut = "genWeight*weight*("+cut+")"
+			
+					counts[nLLRegion][getattr(theCuts.mt2Cuts,MT2Region).name+"_"+getattr(theCuts.massCuts,mllCut).name] = getCounts(trees, cut,isMC,backgrounds,plot,runRange,path)
 
-		
-		return counts, eventLists
+		return counts
 
 
 def main():
@@ -223,8 +272,7 @@ def main():
 						  help="backgrounds to plot.")	
 	parser.add_argument("-w", "--write", action="store_true", dest="write", default=False,
 						  help="write results to central repository")	
-	parser.add_argument("-S", "--samesign", action="store_true", dest="samesign", default=False,
-						  help="use same-sign leptons")	
+
 					
 	args = parser.parse_args()
 
@@ -241,7 +289,6 @@ def main():
 
 
 	path = locations.dataSetPathNLL
-	baseTreePath = locations.dataSetPath
 	
 			
 	
@@ -253,9 +300,6 @@ def main():
 			
 			selection = getRegion(selectionName)
 			
-			if args.samesign:
-				selection.name += "_samesign"
-			
 			
 			if args.write:
 
@@ -265,14 +309,10 @@ def main():
 				process = subprocess.Popen(bashCommand.split())		
 			
 			else:
-				counts, eventLists = cutAndCountForRegion(path,baseTreePath,selection,args.plots,runRange,args.mc,args.backgrounds)
+				counts = cutAndCountForRegion(path,selection,args.plots,runRange,args.mc,args.backgrounds)
 				outFile = open("shelves/cutAndCountNLL_%s_%s.pkl"%(selection.name,runRange.label),"w")
 				pickle.dump(counts, outFile)
 				outFile.close()
-				if not args.mc:
-					outFile = open("shelves/eventLists_%s_%s.pkl"%(selection.name,runRange.label),"w")
-					pickle.dump(eventLists, outFile)
-					outFile.close()
 			
 
 

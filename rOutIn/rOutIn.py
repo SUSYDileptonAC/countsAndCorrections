@@ -28,8 +28,8 @@ from defs import getRegion, getPlot, getRunRange, Backgrounds
 from setTDRStyle import setTDRStyle
 from helpers import readTrees, getDataHist, TheStack, totalNumberOfGeneratedEvents, Process
 
-from corrections import rSFOF, rEEOF, rMMOF
-from centralConfig import regionsToUse, runRanges, backgroundLists, plotLists, systematics, mllBins
+from corrections import rSFOF, rEEOF, rMMOF, triggerEffs
+from centralConfig import regionsToUse, runRanges, backgroundLists, plotLists, systematics,  mllBins
 import corrections
 
 
@@ -37,7 +37,7 @@ import corrections
 from locations import locations
 
 
-def getHistograms(path,plot,runRange,isMC,backgrounds):
+def getHistograms(path,plot,runRange,isMC,backgrounds,region):
 
 	treesEE = readTrees(path,"EE")
 	treesEM = readTrees(path,"EMu")
@@ -51,12 +51,16 @@ def getHistograms(path,plot,runRange,isMC,backgrounds):
 		processes = []
 		for background in backgrounds:
 			processes.append(Process(getattr(Backgrounds,background),eventCounts))
-		histoEE = TheStack(processes,runRange.lumi,plot,treesEE,"None",1.0,1.0,1.0).theHistogram		
-		histoMM = TheStack(processes,runRange.lumi,plot,treesMM,"None",1.0,1.0,1.0).theHistogram
-		histoEM = TheStack(processes,runRange.lumi,plot,treesEM,"None",1.0,1.0,1.0).theHistogram
-		#~ histoEE.Scale(getattr(triggerEffs,region).effEE.val)
-		#~ histoMM.Scale(getattr(triggerEffs,region).effMM.val)	
-		#~ histoEM.Scale(getattr(triggerEffs,region).effEM.val)				
+		histoEE = TheStack(processes,runRange.lumi,plot,treesEE,"None",1.0,1.0,1.0,useTriggerEmulation=True).theHistogram		
+		histoMM = TheStack(processes,runRange.lumi,plot,treesMM,"None",1.0,1.0,1.0,useTriggerEmulation=True).theHistogram
+		histoEM = TheStack(processes,runRange.lumi,plot,treesEM,"None",1.0,1.0,1.0,useTriggerEmulation=True).theHistogram
+		
+		#~ histoEE = TheStack(processes,runRange.lumi,plot,treesEE,"None",1.0,1.0,1.0).theHistogram		
+		#~ histoMM = TheStack(processes,runRange.lumi,plot,treesMM,"None",1.0,1.0,1.0).theHistogram
+		#~ histoEM = TheStack(processes,runRange.lumi,plot,treesEM,"None",1.0,1.0,1.0).theHistogram
+		#~ histoEE.Scale(getattr(triggerEffs,region).effEE.valMC)
+		#~ histoMM.Scale(getattr(triggerEffs,region).effMM.valMC)	
+		#~ histoEM.Scale(getattr(triggerEffs,region).effEM.valMC)				
 		
 	else:
 		histoEE = getDataHist(plot,treesEE)
@@ -81,18 +85,14 @@ def plotMllSpectra(SFhist,EMuhist,runRange,selection,suffix,cmsExtra,additionalL
 	style.SetPadLeftMargin(0.19)		
 	plotPad.UseCurrentStyle()
 	plotPad.Draw()	
-	plotPad.cd()				
-	
-
-	
-	plotPad.DrawFrame(20,0,300,SFhist.GetBinContent(SFhist.GetMaximumBin())*1.5,"; %s ; %s" %("m_{ll} [GeV]","Events / 5 GeV"))		
+	plotPad.cd()					
 
 	
 	SFhist.SetMarkerStyle(20)
 	SFhist.SetMarkerColor(ROOT.kBlack)
 	
-	EMuhist.Draw("samehist")
-	SFhist.Draw("samepe")
+	#~ EMuhist.Draw("samehist")
+	#~ SFhist.Draw("samepe")
 	EMuhist.SetFillColor(855)
 	legend = TLegend(0.6, 0.7, 0.95, 0.95)
 	legend.SetFillStyle(0)
@@ -100,43 +100,31 @@ def plotMllSpectra(SFhist,EMuhist,runRange,selection,suffix,cmsExtra,additionalL
 	ROOT.gStyle.SetOptStat(0)	
 	legend.AddEntry(SFhist,"%s events"%suffix,"p")
 	legend.AddEntry(EMuhist,"OF events","f")
-	legend.Draw("same")
-
+	#~ legend.Draw("same")
 	
-	line1 = ROOT.TLine(mllBins.lowMass.low,0,mllBins.lowMass.low,SFhist.GetBinContent(SFhist.GetMaximumBin()))
-	line2 = ROOT.TLine(mllBins.lowMass.high,0,mllBins.lowMass.high,SFhist.GetBinContent(SFhist.GetMaximumBin()))
-	line3 = ROOT.TLine(mllBins.onZ.low,0,mllBins.onZ.low,SFhist.GetBinContent(SFhist.GetMaximumBin()))
-	line4 = ROOT.TLine(mllBins.onZ.high,0,mllBins.onZ.high,SFhist.GetBinContent(SFhist.GetMaximumBin()))
-	line5 = ROOT.TLine(mllBins.highMass.low,0,mllBins.highMass.low,SFhist.GetBinContent(SFhist.GetMaximumBin()))
-	line1.SetLineColor(ROOT.kBlack)
-	line2.SetLineColor(ROOT.kBlack)
-	line3.SetLineColor(ROOT.kRed+2)
-	line4.SetLineColor(ROOT.kRed+2)
-	line5.SetLineColor(ROOT.kBlack)
-	line1.SetLineWidth(2)
-	line2.SetLineWidth(2)
-	line3.SetLineWidth(2)
-	line4.SetLineWidth(2)
-	line5.SetLineWidth(2)
-	line1.Draw("same")
-	line2.Draw("same")
-	line3.Draw("same")
-	line4.Draw("same")
-	line5.Draw("same")
+	lines = {}
+	massBins = ["mass20To60","mass60To86","onZ","mass96To150","mass150To200","mass200To300","mass300To400","mass400"]
+	
+	for mllBin in massBins:
+		lines[mllBin] = ROOT.TLine(getattr(mllBins,mllBin).low,0,getattr(mllBins,mllBin).low,SFhist.GetBinContent(SFhist.GetMaximumBin()))
+		lines[mllBin].SetLineWidth(2)
+		if mllBin == "onZ" or mllBin == "mass96To150":
+			lines[mllBin].SetLineColor(ROOT.kRed+2)
+		else:
+			lines[mllBin].SetLineColor(ROOT.kBlack)
+			
+		lines[mllBin].Draw("same")
+
 
 	Labelin = ROOT.TLatex()
 	Labelin.SetTextAlign(12)
-	Labelin.SetTextSize(0.04)
+	Labelin.SetTextSize(0.025)
 	Labelin.SetTextColor(ROOT.kRed+2)
 	Labelout = ROOT.TLatex()
 	Labelout.SetTextAlign(12)
-	Labelout.SetTextSize(0.04)
+	Labelout.SetTextSize(0.025)
 	Labelout.SetTextColor(ROOT.kBlack)	
 	
-	
-	Labelin.DrawLatex(80.75,SFhist.GetBinContent(SFhist.GetMaximumBin())/1.5,"In")
-	Labelout.DrawLatex(27.25,SFhist.GetBinContent(SFhist.GetMaximumBin())/1.5,"Out")
-	Labelout.DrawLatex(150.25,SFhist.GetBinContent(SFhist.GetMaximumBin())/1.5,"Out")	
 	
 	latex = ROOT.TLatex()
 	latex.SetTextFont(42)
@@ -151,25 +139,6 @@ def plotMllSpectra(SFhist,EMuhist,runRange,selection,suffix,cmsExtra,additionalL
 	latexCMSExtra.SetTextFont(52)
 	latexCMSExtra.SetTextSize(0.03)
 	latexCMSExtra.SetNDC(True) 
-		
-	latex.DrawLatex(0.95, 0.96, "%s fb^{-1} (13 TeV)"%runRange.printval)
-	
-
-	latexCMS.DrawLatex(0.21,0.88,"CMS")
-	if "Simulation" in cmsExtra:
-		yLabelPos = 0.81	
-	else:
-		yLabelPos = 0.84	
-
-	latexCMSExtra.DrawLatex(0.21,yLabelPos,"%s"%(cmsExtra))
-	
-	plotPad.RedrawAxis()
-	if additionalLabel is not "":
-		hCanvas.Print("fig/rOutIn_NoLog_%s_%s_%s_%s.pdf"%(selection.name,suffix,runRange.label,additionalLabel))
-	else:
-		hCanvas.Print("fig/rOutIn_NoLog_%s_%s_%s.pdf"%(selection.name,suffix,runRange.label))
-			
-	
 	
 	
 	hCanvas.Clear()
@@ -183,7 +152,7 @@ def plotMllSpectra(SFhist,EMuhist,runRange,selection,suffix,cmsExtra,additionalL
 	
 
 	
-	plotPad.DrawFrame(mllBins.lowMass.low,1,300,SFhist.GetBinContent(SFhist.GetMaximumBin())*10,"; %s ; %s" %("m_{ll} [GeV]","Events / 5 GeV"))		
+	plotPad.DrawFrame(mllBins.mass20To60.low,0.1,500,SFhist.GetBinContent(SFhist.GetMaximumBin())*500,"; %s ; %s" %("m_{ll} [GeV]","Events / 5 GeV"))		
 	
 	plotPad.SetLogy()
 
@@ -193,23 +162,20 @@ def plotMllSpectra(SFhist,EMuhist,runRange,selection,suffix,cmsExtra,additionalL
 	legend.Draw("same")
 	
 
-	line1.SetY2(SFhist.GetBinContent(SFhist.GetMaximumBin()))
-	line2.SetY2(SFhist.GetBinContent(SFhist.GetMaximumBin()))
-	line3.SetY2(SFhist.GetBinContent(SFhist.GetMaximumBin()))
-	line4.SetY2(SFhist.GetBinContent(SFhist.GetMaximumBin()))
-	line5.SetY2(SFhist.GetBinContent(SFhist.GetMaximumBin()))
-	line1.Draw("same")
-	line2.Draw("same")
-	line3.Draw("same")
-	line4.Draw("same")
-	line5.Draw("same")
+	for mllBin in massBins:
+		lines[mllBin].SetY2(SFhist.GetBinContent(SFhist.GetMaximumBin()))
+		lines[mllBin].Draw("same")
+		
 	Labelin.SetTextAngle(90)
-	Labelin.DrawLatex(89.35,SFhist.GetBinContent(SFhist.GetMaximumBin())/18,"on Z")
+	Labelin.DrawLatex(91.,SFhist.GetBinContent(SFhist.GetMaximumBin())/18,"on Z")
 	Labelout.SetTextAngle(90)
-	Labelout.DrawLatex(47.25,SFhist.GetBinContent(SFhist.GetMaximumBin())/18,"low mass")
-	#~ Labelout.DrawLatex(75.25,SFhist.GetBinContent(SFhist.GetMaximumBin())/18,"below Z")
-	#~ Labelout.DrawLatex(109.25,SFhist.GetBinContent(SFhist.GetMaximumBin())/18,"above Z")
-	Labelout.DrawLatex(150.25,SFhist.GetBinContent(SFhist.GetMaximumBin())/18,"high mass")
+	Labelout.DrawLatex(40.,SFhist.GetBinContent(SFhist.GetMaximumBin())/18,"20-60 GeV")
+	Labelout.DrawLatex(73.,SFhist.GetBinContent(SFhist.GetMaximumBin())/18,"60-86 GeV")
+	Labelout.DrawLatex(123.,SFhist.GetBinContent(SFhist.GetMaximumBin())/18,"96-150 GeV")
+	Labelout.DrawLatex(175.,SFhist.GetBinContent(SFhist.GetMaximumBin())/18,"150-200 GeV")
+	Labelout.DrawLatex(250.,SFhist.GetBinContent(SFhist.GetMaximumBin())/18,"200-300 GeV")
+	Labelout.DrawLatex(350.,SFhist.GetBinContent(SFhist.GetMaximumBin())/18,"300-400 GeV")
+	Labelout.DrawLatex(450.,SFhist.GetBinContent(SFhist.GetMaximumBin())/18,"400+ GeV")
 	latex.DrawLatex(0.95, 0.96, "%s fb^{-1} (13 TeV)"%runRange.printval)
 	
 
@@ -232,34 +198,43 @@ def dependencies(path,selection,plots,runRange,mc,backgrounds,cmsExtra):
 	legend = TLegend(0.6, 0.7, 0.9, 0.9)
 	legend.SetFillStyle(0)
 	legend.SetBorderSize(0)
-	ROOT.gStyle.SetOptStat(0)		
+	ROOT.gStyle.SetOptStat(0)
+	
+	#~ massBins = ["mass20To60","mass60To86","mass96To150","mass150To200","mass200To300","mass300To400","mass400","edgeMass","highMassOld","highMass","lowMass"]		
+	massBins = ["edgeMass","highMassOld"]		
 	
 	for name in plots:
+		print name
 		hCanvas.Clear()
 		
 		plot = getPlot(name)
 		plot.addRegion(selection)
 		plot.cleanCuts()	
 		plot.cuts = plot.cuts % runRange.runCut	
+		plot.cuts = plot.cuts.replace("mll","p4.M()")
+		plot.cuts = plot.cuts.replace("pt > 25","p4.Pt() > 25")
+		plot.cuts = plot.cuts.replace("MT2 > 80 &&","")
+		plot.variable = plot.variable.replace("mll","p4.M()")
+		if 	plot.variable == "pt":
+			plot.variable = plot.variable.replace("pt","p4.Pt()")
 
-		if not "Forward" in selection.name:
-			relSyst = systematics.rOutIn.central.val
-			if "Central" in selection.name:
-				region = "central"
-			else:
-				region = "inclusive"
-		else:	
-			relSyst = systematics.rOutIn.forward.val
-			region = "forward"	
 		 
 		if len(plot.binning) == 0:
 			bins = [plot.firstBin+(plot.lastBin-plot.firstBin)/plot.nBins*i for i in range(plot.nBins+1)]
 		else:
 			bins = plot.binning
-		#~ rOutIn = {"LowMass":{"EE":[],"MM":[],"SF":[]},"HighMass":{"EE":[],"MM":[],"SF":[]},"BelowZ":{"EE":[],"MM":[],"SF":[]},"AboveZ":{"EE":[],"MM":[],"SF":[]}}
-		#~ rOutInErr = {"LowMass":{"EE":[],"MM":[],"SF":[]},"HighMass":{"EE":[],"MM":[],"SF":[]},"BelowZ":{"EE":[],"MM":[],"SF":[]},"AboveZ":{"EE":[],"MM":[],"SF":[]}}
-		rOutIn = {"EdgeMass":{"EE":[],"MM":[],"SF":[]},"LowMass":{"EE":[],"MM":[],"SF":[]},"HighMass":{"EE":[],"MM":[],"SF":[]},}
-		rOutInErr = {"EdgeMass":{"EE":[],"MM":[],"SF":[]},"LowMass":{"EE":[],"MM":[],"SF":[]},"HighMass":{"EE":[],"MM":[],"SF":[]}}
+		print bins
+		rOutIn = {}
+		rOutInErr = {}
+		rOutInMC = {}
+		rOutInMCErr = {}
+		for massBin in massBins:
+			#~ rOutIn[massBin] ={"EE":[],"MM":[],"SF":[]}
+			#~ rOutInErr[massBin] ={"EE":[],"MM":[],"SF":[]}
+			rOutIn[massBin] ={"SF":[]}
+			rOutInErr[massBin] ={"SF":[]}
+			rOutInMC[massBin] ={"SF":[]}
+			rOutInMCErr[massBin] ={"SF":[]}
 
 
 		binningErrs	= []
@@ -271,6 +246,7 @@ def dependencies(path,selection,plots,runRange,mc,backgrounds,cmsExtra):
 			else:
 				plotBinning.append(plotBinning[i-1]+(bins[i+1]-bins[i])/2+binningErrs[i-1])
 
+			print plotBinning
 			tmpCuts = selection.cut 
 			cuts = selection.cut.split("&&")
 			cutsUp = [] 
@@ -289,35 +265,76 @@ def dependencies(path,selection,plots,runRange,mc,backgrounds,cmsExtra):
 				selection.cut = selection.cut.replace(cut,"")		
 			for cut in cutsEqual:
 				selection.cut = selection.cut.replace(cut,"")		
+			
 			selection.cut = selection.cut + " && %s > %f && %s < %f"%(plot.variable,bins[i],plot.variable,bins[i+1]) + " && %s"%runRange.runCut
+			selection.cut.replace("&& &&","&&")
+			print selection.cut
 				
 			additionalLabel = "%s_%.2f_%.2f"%(plot.variable,bins[i],bins[i+1])
-			centralVal = centralValues(path,selection,runRange,mc,backgrounds,cmsExtra,additionalLabel)
-			for combination in ["EE","MM","SF"]:
-				#~ for region in ["LowMass","HighMass","BelowZ","AboveZ"]:
-				for region in ["EdgeMass","LowMass","HighMass"]:
-					rOutIn[region][combination].append(centralVal["rOutIn%s%s"%(region,combination)])
-					rOutInErr[region][combination].append(centralVal["rOutIn%sErr%s"%(region,combination)])
+			centralVal = centralValues(path,selection,runRange,False,backgrounds,cmsExtra,additionalLabel)
+			centralValMC = centralValues(path,selection,runRange,True,backgrounds,cmsExtra,additionalLabel)
+			
+			
+			outFilePkl = open("shelves/rOutIn_%s_%s_%s.pkl"%(selection.name,runRange.label,additionalLabel),"w")
+			pickle.dump(centralVal, outFilePkl)
+			outFilePkl.close()
+
+			outFilePklMC = open("shelves/rOutIn_%s_%s_%s_MC.pkl"%(selection.name,runRange.label,additionalLabel),"w")
+			pickle.dump(centralValMC, outFilePklMC)
+			outFilePklMC.close()
+				
+			print additionalLabel
+			##~ for combination in ["EE","MM","SF"]:
+			for combination in ["SF"]:
+				for region in massBins:
+					if region in ["edgeMass","highMassOld"]:
+						rOutIn[region][combination].append(centralVal["rOutIn_%s_NoMT2Cut_%s"%(region,combination)])
+						rOutInErr[region][combination].append(centralVal["rOutIn_%s_NoMT2Cut_Err%s"%(region,combination)])
+						rOutInMC[region][combination].append(centralValMC["rOutIn_%s_NoMT2Cut_%s"%(region,combination)])
+						rOutInMCErr[region][combination].append(centralValMC["rOutIn_%s_NoMT2Cut_Err%s"%(region,combination)])
+					else:
+						rOutIn[region][combination].append(centralVal["rOutIn_%s_%s"%(region,combination)])
+						rOutInErr[region][combination].append(centralVal["rOutIn_%s_Err%s"%(region,combination)])
+						rOutInMC[region][combination].append(centralValMC["rOutIn_%s_%s"%(region,combination)])
+						rOutInMCErr[region][combination].append(centralValMC["rOutIn_%s_Err%s"%(region,combination)])
 
 
 			
 			selection.cut = tmpCuts
-		if mc:		
-			if os.path.isfile("shelves/rOutIn_%s_%s_MC.pkl"%(selection.name,runRange.label)):
-				centralVals = pickle.load(open("shelves/rOutIn_%s_%s_MC.pkl"%(selection.name,runRange.label),"rb"))
-			else:
-				centralVals = centralValues(path,selection,runRange,mc,backgrounds,cmsExtra)					
+
+								
+		if os.path.isfile("shelves/rOutIn_%s_%s.pkl"%(selection.name,runRange.label)):
+			centralVals = pickle.load(open("shelves/rOutIn_%s_%s.pkl"%(selection.name,runRange.label),"rb"))
 		else:
-			if os.path.isfile("shelves/rOutIn_%s_%s.pkl"%(selection.name,runRange.label)):
-				centralVals = pickle.load(open("shelves/rOutIn_%s_%s.pkl"%(selection.name,runRange.label),"rb"))
-			else:
-				centralVals = centralValues(path,selection,runRange,mc,backgrounds,cmsExtra)		
+			centralVals = centralValues(path,selection,runRange,False,backgrounds,cmsExtra)	
+		if os.path.isfile("shelves/rOutIn_%s_%s_MC.pkl"%(selection.name,runRange.label)):
+			centralValsMC = pickle.load(open("shelves/rOutIn_%s_%s_MC.pkl"%(selection.name,runRange.label),"rb"))
+		else:
+			centralValsMC = centralValues(path,selection,runRange,True,backgrounds,cmsExtra)		
 		
-		for combination in ["EE","MM","SF"]:
-			relSystSave = relSyst
-			#~ for region in ["LowMass","HighMass","BelowZ","AboveZ"]:
-			for region in ["EdgeMass","LowMass","HighMass"]:
-				relSyst = relSystSave	
+		#~ for combination in ["EE","MM","SF"]:
+		for combination in ["SF"]:
+			
+			for region in massBins:
+				if region == "edgeMass" or region == "highMassOld":
+					relSyst = systematics.rOutIn.old.val
+					ymax = 0.25	
+				elif region == "mass20To60":
+					relSyst = systematics.rOutIn.massBelow150.val
+					ymax = 0.25	
+				elif region == "mass96To150" or region == "mass60To86":
+					relSyst = systematics.rOutIn.massBelow150.val	
+					ymax = 0.4
+				elif region == "lowMass" or region == "highMass":
+					relSyst = systematics.rOutIn.old.val	
+					ymax = 0.4
+				elif region == "mass150To200":
+					relSyst = systematics.rOutIn.massAbove150.val
+					ymax = 0.05
+				else:
+					relSyst = systematics.rOutIn.massAbove150.val
+					ymax = 0.03
+					
 				hCanvas = TCanvas("hCanvas", "Distribution", 800,800)
 
 				plotPad = TPad("plotPad","plotPad",0,0,1,1)
@@ -328,13 +345,19 @@ def dependencies(path,selection,plots,runRange,mc,backgrounds,cmsExtra):
 				plotPad.UseCurrentStyle()
 				plotPad.Draw()	
 				plotPad.cd()
+				
+				
 		
-				plotPad.DrawFrame(plot.firstBin,0.0,plot.lastBin,0.15,"; %s ; %s" %(plot.xaxis,"R_{out/in}"))		
+				plotPad.DrawFrame(plot.firstBin,0.0,plot.lastBin,ymax,"; %s ; %s" %(plot.xaxis,"R_{out/in}"))		
 				
 				
 				bandX = array("f",[plot.firstBin,plot.lastBin])
-				bandY = array("f",[centralVals["rOutIn%s%s"%(region,combination)],centralVals["rOutIn%s%s"%(region,combination)]])
-				bandYErr = array("f",[centralVals["rOutIn%s%s"%(region,combination)]*relSyst,centralVals["rOutIn%s%s"%(region,combination)]*relSyst])
+				if region in ["edgeMass","highMassOld"]:
+					bandY = array("f",[centralVals["rOutIn_%s_NoMT2Cut_%s"%(region,combination)],centralVals["rOutIn_%s_NoMT2Cut_%s"%(region,combination)]])
+					bandYErr = array("f",[centralVals["rOutIn_%s_NoMT2Cut_%s"%(region,combination)]*relSyst,centralVals["rOutIn_%s_NoMT2Cut_%s"%(region,combination)]*relSyst])
+				else:
+					bandY = array("f",[centralVals["rOutIn_%s_%s"%(region,combination)],centralVals["rOutIn_%s_%s"%(region,combination)]])
+					bandYErr = array("f",[centralVals["rOutIn_%s_%s"%(region,combination)]*relSyst,centralVals["rOutIn_%s_%s"%(region,combination)]*relSyst])
 				bandXErr = array("f",[0,0])
 				
 				
@@ -343,28 +366,53 @@ def dependencies(path,selection,plots,runRange,mc,backgrounds,cmsExtra):
 				errorband.GetXaxis().SetRangeUser(-5,105)
 				errorband.Draw("3same")
 				errorband.SetFillColor(ROOT.kOrange-9)
-				rOutInLine = ROOT.TLine(plot.firstBin,centralVals["rOutIn%s%s"%(region,combination)],plot.lastBin,centralVals["rOutIn%s%s"%(region,combination)])
+				if region in ["edgeMass","highMassOld"]:
+					rOutInLine = ROOT.TLine(plot.firstBin,centralVals["rOutIn_%s_NoMT2Cut_%s"%(region,combination)],plot.lastBin,centralVals["rOutIn_%s_NoMT2Cut_%s"%(region,combination)])
+				else:
+					rOutInLine = ROOT.TLine(plot.firstBin,centralVals["rOutIn_%s_%s"%(region,combination)],plot.lastBin,centralVals["rOutIn_%s_%s"%(region,combination)])
 				rOutInLine.SetLineStyle(ROOT.kDashed)
 				rOutInLine.SetLineWidth(2)
 				rOutInLine.Draw("same")
+				
+				if region in ["edgeMass","highMassOld"]:
+					rOutInLineMC = ROOT.TLine(plot.firstBin,centralValsMC["rOutIn_%s_NoMT2Cut_%s"%(region,combination)],plot.lastBin,centralValsMC["rOutIn_%s_NoMT2Cut_%s"%(region,combination)])
+				else:
+					rOutInLineMC = ROOT.TLine(plot.firstBin,centralValsMC["rOutIn_%s_%s"%(region,combination)],plot.lastBin,centralValsMC["rOutIn_%s_%s"%(region,combination)])
+				rOutInLineMC.SetLineStyle(ROOT.kDashed)
+				rOutInLineMC.SetLineWidth(2)
+				rOutInLineMC.SetLineColor(ROOT.kGreen-2)
+				rOutInLineMC.Draw("same")
 
 				
 				
 				
 				binning = array("f",plotBinning)
-				rOutInVals = array("f",rOutIn[region][combination])
 				binningErrs = array("f",binningErrs)
+				
+				rOutInVals = array("f",rOutIn[region][combination])
 				rOutInValsErrs = array("f",rOutInErr[region][combination])	
 				graph = ROOT.TGraphErrors(len(binning),binning,rOutInVals,binningErrs,rOutInValsErrs)
 				graph.Draw("Psame0")
+				
+				rOutInValsMC = array("f",rOutInMC[region][combination])
+				rOutInValsMCErrs = array("f",rOutInMCErr[region][combination])	
+				graphMC = ROOT.TGraphErrors(len(binning),binning,rOutInValsMC,binningErrs,rOutInValsMCErrs)
+				graphMC.SetLineColor(ROOT.kGreen-2) 
+				graphMC.SetMarkerColor(ROOT.kGreen-2) 
+				graphMC.Draw("Psame0")
+				
 				legend.Clear()
 
-				if mc:
-					legend.AddEntry(graph,"r_{out,in} MC","p")
+				
+				legend.AddEntry(graphMC,"R_{out,in} MC","p")
+				legend.AddEntry(graph,"R_{out,in} Data","p")
+				if region in ["edgeMass","highMassOld"]:
+					legend.AddEntry(rOutInLine, "Mean R_{out,in} Data = %.3f"%centralVals["rOutIn_%s_NoMT2Cut_%s"%(region,combination)],"l")
+					legend.AddEntry(rOutInLineMC, "Mean R_{out,in} MC = %.3f"%centralValsMC["rOutIn_%s_NoMT2Cut_%s"%(region,combination)],"l")
 				else:
-					legend.AddEntry(graph,"r_{out,in} Data","p")
-				legend.AddEntry(rOutInLine, "Mean r_{out,in} = %.3f"%centralVals["rOutIn%s%s"%(region,combination)],"l")
-				legend.AddEntry(errorband, "Mean r_{out,in} #pm %d %%"%(relSyst*100),"f")
+					legend.AddEntry(rOutInLine, "Mean R_{out,in} Data = %.3f"%centralVals["rOutIn_%s_%s"%(region,combination)],"l")
+					legend.AddEntry(rOutInLineMC, "Mean R_{out,in} MC = %.3f"%centralValsMC["rOutIn_%s_%s"%(region,combination)],"l")
+				legend.AddEntry(errorband, "Mean r_{out,in} Data #pm %d %%"%(relSyst*100),"f")
 				legend.Draw("same")
 
 
@@ -381,23 +429,28 @@ def dependencies(path,selection,plots,runRange,mc,backgrounds,cmsExtra):
 				latexCMSExtra.SetTextFont(52)
 				latexCMSExtra.SetTextSize(0.03)
 				latexCMSExtra.SetNDC(True) 
+				
+				latexLabel = ROOT.TLatex()
+				latexLabel.SetTextSize(0.03)	
+				latexLabel.SetNDC()
+				
+				if region == "edgeMass":
+					latexLabel.DrawLatex(0.6, 0.5, "mass 20-70 GeV")
+				if region == "highMassOld":
+					latexLabel.DrawLatex(0.6, 0.5, "mass > 101 GeV")
+				else:
+					latexLabel.DrawLatex(0.6, 0.5, region)
 					
 				latex.DrawLatex(0.95, 0.96, "%s fb^{-1} (13 TeV)"%runRange.printval)
 				
 
 				latexCMS.DrawLatex(0.19,0.89,"CMS")
-				if "Simulation" in cmsExtra:
-					yLabelPos = 0.83	
-				else:
-					yLabelPos = 0.85	
+				yLabelPos = 0.85	
 
 				latexCMSExtra.DrawLatex(0.19,yLabelPos,"%s"%(cmsExtra))		
 					
 				ROOT.gPad.RedrawAxis()
-				if mc:
-					hCanvas.Print("fig/rOutInSyst_%s_%s_%s_%s_%s_%s_MC.pdf"%(selection.name,runRange.label,plot.variablePlotName,region,combination,plot.additionalName))
-				else:
-					hCanvas.Print("fig/rOutInSyst_%s_%s_%s_%s_%s_%s.pdf"%(selection.name,runRange.label,plot.variablePlotName,region,combination,plot.additionalName))
+				hCanvas.Print("fig/rOutInSyst_%s_%s_%s_%s_%s_%s.pdf"%(selection.name,runRange.label,plot.variablePlotName,region,combination,plot.additionalName))
 
 	
 	
@@ -405,138 +458,140 @@ def dependencies(path,selection,plots,runRange,mc,backgrounds,cmsExtra):
 	
 	
 def centralValues(path,selection,runRange,isMC,backgrounds,cmsExtra,additionalLabel=""):			
-			
+	
+	massBins = ["mass20To60","mass60To86","mass96To150","mass150To200","mass200To300","mass300To400","mass400","edgeMass","highMassOld","lowMassOld","highMass","lowMass"]
+	
+	if "Forward" in selection.name:
+		region = "forward"
+	elif "Central" in selection.name:
+		region = "central"
+	else:		
+		region = "inclusive"		
 
 	plot = getPlot("mllPlotROutIn")
 	plot.addRegion(selection)
 	plot.cleanCuts()
-	plot.cuts = plot.cuts % runRange.runCut		
+	plot.cuts = plot.cuts % runRange.runCut	
+	plot.cuts = plot.cuts.replace("mll","p4.M()")
+	plot.cuts = plot.cuts.replace("pt > 25","p4.Pt() > 25")
+	if additionalLabel != "":
+		plot.cuts = plot.cuts.replace("MT2 > 80 &&","")
+	plot.variable = plot.variable.replace("mll","p4.M()")	
+	if 	plot.variable == "pt":
+		plot.variable = plot.variable.replace("pt","p4.Pt()")
+		
+	print plot.cuts
 
-	
-	if not "Forward" in selection.name:
-		region = "central"
-	else:		
-		region = "forward"
+	plotNoMT2Cut = getPlot("mllPlotROutIn")
+	plotNoMT2Cut.addRegion(selection)
+	plotNoMT2Cut.cleanCuts()
+	plotNoMT2Cut.cuts = plotNoMT2Cut.cuts % runRange.runCut	
+	plotNoMT2Cut.cuts = plotNoMT2Cut.cuts.replace("mll","p4.M()")
+	plotNoMT2Cut.cuts = plotNoMT2Cut.cuts.replace("pt > 25","p4.Pt() > 25")
+	plotNoMT2Cut.cuts = plotNoMT2Cut.cuts.replace("MT2 > 80 &&","")
+	plotNoMT2Cut.variable = plotNoMT2Cut.variable.replace("mll","p4.M()")
+	if 	plotNoMT2Cut.variable == "pt":
+		plotNoMT2Cut.variable = plotNoMT2Cut.variable.replace("pt","p4.Pt()")
 
-	histEE, histMM, histEM = getHistograms(path,plot,runRange,isMC,backgrounds)
+	histEE, histMM, histEM = getHistograms(path,plot,runRange,isMC,backgrounds,region)
 	histSF = histEE.Clone("histSF")
 	histSF.Add(histMM.Clone())
-
+	
+	histEENoMT2Cut, histMMNoMT2Cut, histEMNoMT2Cut = getHistograms(path,plotNoMT2Cut,runRange,isMC,backgrounds,region)
+	histSFNoMT2Cut = histEENoMT2Cut.Clone("histSFNoMT2Cut")
+	histSFNoMT2Cut.Add(histMMNoMT2Cut.Clone())
+	
 	result = {}
-	edgeMassLow = mllBins.edgeMass.low
-	edgeMassHigh = mllBins.edgeMass.high
-	lowMassLow = mllBins.lowMass.low
-	lowMassHigh = mllBins.lowMass.high
+	
 	peakLow = mllBins.onZ.low
 	peakHigh = mllBins.onZ.high
-	highMassLow = mllBins.highMass.low
-	highMassHigh = mllBins.highMass.high
-	#~ belowZLow = mllBins.belowZ.low
-	#~ belowZHigh = mllBins.belowZ.high
-	#~ aboveZLow = mllBins.aboveZ.low
-	#~ aboveZHigh = mllBins.aboveZ.high
-
-		
-	result["peakEE"] = histEE.Integral(histEE.FindBin(peakLow+0.01),histEE.FindBin(peakHigh-0.01))
-	result["peakMM"] = histMM.Integral(histMM.FindBin(peakLow+0.01),histMM.FindBin(peakHigh-0.01))
-	result["peakSF"] = result["peakEE"] + result["peakMM"]
-	result["peakOF"] = histEM.Integral(histEM.FindBin(peakLow+0.01),histEM.FindBin(peakHigh-0.01))
-
-	result["edgeMassEE"] = histEE.Integral(histEE.FindBin(edgeMassLow+0.01),histEE.FindBin(edgeMassHigh-0.01))
-	result["edgeMassMM"] = histMM.Integral(histMM.FindBin(edgeMassLow+0.01),histMM.FindBin(edgeMassHigh-0.01))
-	result["edgeMassSF"] = result["edgeMassEE"] + result["edgeMassMM"]
-	result["edgeMassOF"] = histEM.Integral(histEM.FindBin(edgeMassLow),histEM.FindBin(edgeMassHigh-0.01))
-	result["lowMassEE"] = histEE.Integral(histEE.FindBin(lowMassLow+0.01),histEE.FindBin(lowMassHigh-0.01))
-	result["lowMassMM"] = histMM.Integral(histMM.FindBin(lowMassLow+0.01),histMM.FindBin(lowMassHigh-0.01))
-	result["lowMassSF"] = result["lowMassEE"] + result["lowMassMM"]
-	result["lowMassOF"] = histEM.Integral(histEM.FindBin(lowMassLow),histEM.FindBin(lowMassHigh-0.01))
-	result["highMassEE"] = histEE.Integral(histEE.FindBin(highMassLow+0.01),histEE.FindBin(highMassHigh))
-	result["highMassMM"] = histMM.Integral(histMM.FindBin(highMassLow+0.01),histMM.FindBin(highMassHigh))
-	result["highMassSF"] = result["highMassEE"] + result["highMassMM"]
-	result["highMassOF"] = histEM.Integral(histEM.FindBin(highMassLow+0.01),histEM.FindBin(highMassHigh))
 	
-	#~ result["belowZEE"] = histEE.Integral(histEE.FindBin(belowZLow+0.01),histEE.FindBin(belowZHigh-0.01))
-	#~ result["belowZMM"] = histMM.Integral(histMM.FindBin(belowZLow+0.01),histMM.FindBin(belowZHigh-0.01))
-	#~ result["belowZSF"] = result["belowZEE"] + result["belowZMM"]
-	#~ result["belowZOF"] = histEM.Integral(histEM.FindBin(belowZLow),histEM.FindBin(belowZHigh-0.01))
-	#~ result["aboveZEE"] = histEE.Integral(histEE.FindBin(aboveZLow+0.01),histEE.FindBin(aboveZHigh))
-	#~ result["aboveZMM"] = histMM.Integral(histMM.FindBin(aboveZLow+0.01),histMM.FindBin(aboveZHigh))
-	#~ result["aboveZSF"] = result["aboveZEE"] + result["aboveZMM"]
-	#~ result["aboveZOF"] = histEM.Integral(histEM.FindBin(aboveZLow+0.01),histEM.FindBin(aboveZHigh))
+	result["peak_EE"] = histEE.Integral(histEE.FindBin(peakLow+0.01),histEE.FindBin(peakHigh-0.01))
+	result["peak_MM"] = histMM.Integral(histMM.FindBin(peakLow+0.01),histMM.FindBin(peakHigh-0.01))
+	result["peak_SF"] = result["peak_EE"] + result["peak_MM"]
+	result["peak_OF"] = histEM.Integral(histEM.FindBin(peakLow+0.01),histEM.FindBin(peakHigh-0.01))
+	
+	result["peak_NoMT2Cut_EE"] = histEENoMT2Cut.Integral(histEENoMT2Cut.FindBin(peakLow+0.01),histEENoMT2Cut.FindBin(peakHigh-0.01))
+	result["peak_NoMT2Cut_MM"] = histMMNoMT2Cut.Integral(histMMNoMT2Cut.FindBin(peakLow+0.01),histMMNoMT2Cut.FindBin(peakHigh-0.01))
+	result["peak_NoMT2Cut_SF"] = result["peak_NoMT2Cut_EE"] + result["peak_NoMT2Cut_MM"]
+	result["peak_NoMT2Cut_OF"] = histEMNoMT2Cut.Integral(histEMNoMT2Cut.FindBin(peakLow+0.01),histEMNoMT2Cut.FindBin(peakHigh-0.01))
+	
+	for massBin in massBins:
+		lowerEdge = getattr(mllBins,massBin).low
+		upperEdge = getattr(mllBins,massBin).high
+		
+		result[massBin+"_EE"] = histEE.Integral(histEE.FindBin(lowerEdge+0.01),histEE.FindBin(upperEdge-0.01))
+		result[massBin+"_MM"] = histMM.Integral(histMM.FindBin(lowerEdge+0.01),histMM.FindBin(upperEdge-0.01))
+		result[massBin+"_OF"] = histEM.Integral(histEM.FindBin(lowerEdge+0.01),histEM.FindBin(upperEdge-0.01))
+		result[massBin+"_SF"] = result[massBin+"_EE"]+result[massBin+"_MM"]
+		
+		result[massBin+"_NoMT2Cut_EE"] = histEENoMT2Cut.Integral(histEENoMT2Cut.FindBin(lowerEdge+0.01),histEENoMT2Cut.FindBin(upperEdge-0.01))
+		result[massBin+"_NoMT2Cut_MM"] = histMMNoMT2Cut.Integral(histMMNoMT2Cut.FindBin(lowerEdge+0.01),histMMNoMT2Cut.FindBin(upperEdge-0.01))
+		result[massBin+"_NoMT2Cut_OF"] = histEMNoMT2Cut.Integral(histEMNoMT2Cut.FindBin(lowerEdge+0.01),histEMNoMT2Cut.FindBin(upperEdge-0.01))
+		result[massBin+"_NoMT2Cut_SF"] = result[massBin+"_NoMT2Cut_EE"]+result[massBin+"_NoMT2Cut_MM"]
 
-	for combination in ["EE","MM","SF"]:
-		corr = getattr(corrections,"r%sOF"%combination).central.val
-		corrErr = getattr(corrections,"r%sOF"%combination).central.err
+
+	#~ for combination in ["EE","MM","SF"]:
+	for combination in ["SF"]:
 		if isMC:
 			corr = getattr(corrections,"r%sOF"%combination).central.valMC
 			corrErr = getattr(corrections,"r%sOF"%combination).central.errMC
-		peak = result["peak%s"%combination] - result["peakOF"]*corr			
-		peakErr = sqrt(result["peak%s"%combination] + (sqrt(result["peakOF"])*corr)**2 + (sqrt(result["peakOF"])*corr*corrErr)**2)
+		else:
+			corr = getattr(corrections,"r%sOF"%combination).central.val
+			corrErr = getattr(corrections,"r%sOF"%combination).central.err
+		peak = result["peak_%s"%combination] - result["peak_OF"]*corr			
+		#~ peakErr = sqrt(result["peak%s"%combination] + (sqrt(result["peakOF"])*corr)**2 + (sqrt(result["peakOF"])*corr*corrErr)**2)
 
-		lowMass = result["lowMass%s"%combination] - result["lowMassOF"]*corr			
-		lowMassErr = sqrt(result["lowMass%s"%combination] + (sqrt(result["lowMassOF"])*corr)**2 + (sqrt(result["lowMassOF"])*corr*corrErr)**2)
-		edgeMass = result["edgeMass%s"%combination] - result["edgeMassOF"]*corr			
-		edgeMassErr = sqrt(result["edgeMass%s"%combination] + (sqrt(result["edgeMassOF"])*corr)**2 + (sqrt(result["edgeMassOF"])*corr*corrErr)**2)
-		highMass = result["highMass%s"%combination] - result["highMassOF"]*corr			
-		highMassErr = sqrt(result["highMass%s"%combination] + (sqrt(result["highMassOF"])*corr)**2 + (sqrt(result["highMassOF"])*corr*corrErr)**2)	
-				
-		#~ belowZ = result["belowZ%s"%combination] - result["belowZOF"]*corr			
-		#~ belowZErr = sqrt(result["belowZ%s"%combination] + (sqrt(result["belowZOF"])*corr)**2 + (sqrt(result["belowZOF"])*corr*corrErr)**2)
-		#~ aboveZ = result["aboveZ%s"%combination] - result["aboveZOF"]*corr			
-		#~ aboveZErr = sqrt(result["aboveZ%s"%combination] + (sqrt(result["aboveZOF"])*corr)**2 + (sqrt(result["aboveZOF"])*corr*corrErr)**2)	
-				
-		result["correctedPeak%s"%combination] = peak
-		result["peakError%s"%combination] = peakErr
-
-		result["correctedEdgeMass%s"%combination] = edgeMass
-		result["edgeMassError%s"%combination] = edgeMassErr
-		result["correctedLowMass%s"%combination] = lowMass
-		result["lowMassError%s"%combination] = lowMassErr
-		result["correctedHighMass%s"%combination] = highMass
-		result["highMassError%s"%combination] = highMassErr
-
-		#~ result["correctedBelowZ%s"%combination] = belowZ
-		#~ result["belowZError%s"%combination] = belowZErr
-		#~ result["correctedAboveZ%s"%combination] = aboveZ
-		#~ result["aboveZError%s"%combination] = aboveZErr
+		peakErr = sqrt(result["peak_%s"%combination] + result["peak_OF"]*corr**2 + (result["peak_OF"]*corrErr)**2)
+		
+		peakNoMT2Cut = result["peak_NoMT2Cut_%s"%combination] - result["peak_NoMT2Cut_OF"]*corr			
+		peakNoMT2CutErr = sqrt(result["peak_NoMT2Cut_%s"%combination] + result["peak_NoMT2Cut_OF"]*corr**2 + (result["peak_NoMT2Cut_OF"]*corrErr)**2)
+		
+		result["corrected_peak_%s"%combination] = peak
+		result["peak_Error%s"%combination] = peakErr
+		
+		result["corrected_peak_NoMT2Cut_%s"%combination] = peakNoMT2Cut
+		result["peak_NoMT2Cut_Error%s"%combination] = peakNoMT2CutErr
 		
 		result["correction"] = 	corr
 		result["correctionErr"] = 	corrErr
+
+		for massBin in massBins:
+			if massBin == "mass150To200" or massBin  == "mass200To300" or massBin  == "mass300To400" or massBin  == "mass400":
+				relSyst = systematics.rOutIn.massAbove150.val		
+			elif massBin == "mass20To60" or massBin  == "mass60To86" or massBin  == "mass96To150":
+				relSyst = systematics.rOutIn.massBelow150.val
+			else:
+				relSyst = systematics.rOutIn.old.val
+					
+			corrYield =  result[massBin+"_"+combination] - result[massBin+"_"+"OF"]*corr			
+			corrYieldErr = sqrt(result[massBin+"_"+combination] + result[massBin+"_OF"]*corr**2 + (result[massBin+"_OF"]*corrErr)**2)
+			
+			result["corrected_"+massBin+"_"+combination] = corrYield
+			result[massBin+"_Error"+combination] = corrYieldErr
+			
+			corrYieldNoMT2Cut =  result[massBin+"_NoMT2Cut_"+combination] - result[massBin+"_NoMT2Cut_"+"OF"]*corr			
+			corrYieldNoMT2CutErr = sqrt(result[massBin+"_NoMT2Cut_"+combination] + result[massBin+"_NoMT2Cut_OF"]*corr**2 + (result[massBin+"_NoMT2Cut_OF"]*corrErr)**2)
+			
+			result["corrected_"+massBin+"_NoMT2Cut_"+combination] = corrYieldNoMT2Cut
+			result[massBin+"_NoMT2Cut_Error"+combination] = corrYieldNoMT2CutErr
+			
 	
-		rOutInEdgeMass =   edgeMass / peak
-		rOutInLowMass =   lowMass / peak
-		rOutInHighMass = highMass / peak
-		rOutInEdgeMassSystErr = rOutInEdgeMass*systematics.rOutIn.central.val
-		rOutInLowMassSystErr = rOutInLowMass*systematics.rOutIn.central.val
-		rOutInHighMassSystErr = rOutInHighMass*systematics.rOutIn.central.val
-		rOutInEdgeMassErr = sqrt((edgeMassErr/peak)**2 + (edgeMass*peakErr/peak**2)**2)
-		rOutInLowMassErr = sqrt((lowMassErr/peak)**2 + (lowMass*peakErr/peak**2)**2)
-		rOutInHighMassErr = sqrt((highMassErr/peak)**2 + (highMass*peakErr/peak**2)**2)
-	
-		#~ rOutInBelowZ =   belowZ / peak
-		#~ rOutInAboveZ = aboveZ / peak
-		#~ rOutInBelowZSystErr = rOutInBelowZ*systematics.rOutIn.central.val
-		#~ rOutInAboveZSystErr = rOutInAboveZ*systematics.rOutIn.central.val
-		#~ rOutInBelowZErr = sqrt((belowZErr/peak)**2 + (belowZ*peakErr/peak**2)**2)
-		#~ rOutInAboveZErr = sqrt((aboveZErr/peak)**2 + (aboveZ*peakErr/peak**2)**2)
+			rOutIn = corrYield / peak
+			rOutInSystErr = rOutIn * relSyst
+			rOutInErr = sqrt( (corrYieldErr/peak)**2 + (corrYield*peakErr/peak**2)**2 )
 
+			rOutInNoMT2Cut = corrYieldNoMT2Cut / peakNoMT2Cut
+			rOutInNoMT2CutSystErr = rOutInNoMT2Cut * relSyst
+			rOutInNoMT2CutErr = sqrt( (corrYieldNoMT2CutErr/peakNoMT2Cut)**2 + (corrYieldNoMT2Cut*peakNoMT2CutErr/peakNoMT2Cut**2)**2 )
+			
+			result["rOutIn_"+massBin+"_"+combination] = rOutIn
+			result["rOutIn_"+massBin+"_"+"Err"+combination] = rOutInErr
+			result["rOutIn_"+massBin+"_"+"Syst"+combination] = rOutInSystErr
 
-		result["rOutInEdgeMass%s"%combination] = rOutInEdgeMass
-		result["rOutInEdgeMassErr%s"%combination] = rOutInEdgeMassErr
-		result["rOutInEdgeMassSyst%s"%combination] = rOutInEdgeMassSystErr
-		result["rOutInLowMass%s"%combination] = rOutInLowMass
-		result["rOutInLowMassErr%s"%combination] = rOutInLowMassErr
-		result["rOutInLowMassSyst%s"%combination] = rOutInLowMassSystErr
-		result["rOutInHighMass%s"%combination] = rOutInHighMass
-		result["rOutInHighMassErr%s"%combination] = rOutInHighMassErr
-		result["rOutInHighMassSyst%s"%combination] = rOutInHighMassSystErr
-
-		#~ result["rOutInBelowZ%s"%combination] = rOutInBelowZ
-		#~ result["rOutInBelowZErr%s"%combination] = rOutInBelowZErr
-		#~ result["rOutInBelowZSyst%s"%combination] = rOutInBelowZSystErr
-		#~ result["rOutInAboveZ%s"%combination] = rOutInAboveZ
-		#~ result["rOutInAboveZErr%s"%combination] = rOutInAboveZErr
-		#~ result["rOutInAboveZSyst%s"%combination] = rOutInAboveZSystErr
+			result["rOutIn_"+massBin+"_NoMT2Cut_"+combination] = rOutInNoMT2Cut
+			result["rOutIn_"+massBin+"_NoMT2Cut_"+"Err"+combination] = rOutInNoMT2CutErr
+			result["rOutIn_"+massBin+"_NoMT2Cut_"+"Syst"+combination] = rOutInNoMT2CutSystErr
 
 		
 		saveLabel = additionalLabel
@@ -598,8 +653,8 @@ def main():
 	if len(args.plots) == 0:
 		args.plots = plotLists.rOutIn
 	if len(args.selection) == 0:
-		args.selection.append(regionsToUse.rOutIn.central.name)	
-		args.selection.append(regionsToUse.rOutIn.forward.name)	
+		#~ args.selection.append(regionsToUse.rOutIn.central.name)	
+		#~ args.selection.append(regionsToUse.rOutIn.forward.name)	
 		args.selection.append(regionsToUse.rOutIn.inclusive.name)	
 	if len(args.runRange) == 0:
 		args.runRange.append(runRanges.name)	
