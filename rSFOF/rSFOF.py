@@ -146,8 +146,8 @@ def dependencies(source,modifier,path,selection,plots,runRange,isMC,nonNormalize
 		rsfofLine.Draw("SAME")
 		
 		rsfofLineTTbar= ROOT.TF1("rsfoflineTTbar","%f"%centralValsTTbar["rSFOF"],plot.firstBin,plot.lastBin)
-		#~ rsfofLineTTbar.SetLineColor(ROOT.kGreen-2)
-		rsfofLineTTbar.SetLineColor(ROOT.kBlack)
+		rsfofLineTTbar.SetLineColor(ROOT.kGreen-2)
+		#~ rsfofLineTTbar.SetLineColor(ROOT.kBlack)
 		rsfofLineTTbar.SetLineWidth(3)
 		rsfofLineTTbar.SetLineStyle(2)
 		rsfofLineTTbar.Draw("SAME")
@@ -180,10 +180,10 @@ def dependencies(source,modifier,path,selection,plots,runRange,isMC,nonNormalize
 			histRSFOF.Draw("hist E1P SAME")
 		
 		histRSFOFTTbar.SetMarkerStyle(21)
-		#~ histRSFOFTTbar.SetLineColor(ROOT.kGreen-2) 
-		#~ histRSFOFTTbar.SetMarkerColor(ROOT.kGreen-2)
-		histRSFOFTTbar.SetLineColor(ROOT.kBlack) 
-		histRSFOFTTbar.SetMarkerColor(ROOT.kBlack)
+		histRSFOFTTbar.SetLineColor(ROOT.kGreen-2) 
+		histRSFOFTTbar.SetMarkerColor(ROOT.kGreen-2)
+		#~ histRSFOFTTbar.SetLineColor(ROOT.kBlack) 
+		#~ histRSFOFTTbar.SetMarkerColor(ROOT.kBlack)
 		
 		histRSFOFTTbar.Draw("hist E1P SAME") 
 		

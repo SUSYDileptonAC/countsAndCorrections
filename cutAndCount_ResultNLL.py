@@ -54,8 +54,6 @@ def getEventLists(trees, cut,isMC, colNames = ["eventNr","lumiSec","runNr"]):
 def getCounts(trees, cut, isMC, backgrounds,plot,runRange,path):
 
 	if isMC:
-		tmpCut = plot.cuts
-		plot.cuts = cut
 		source = ""
 		modifier = ""
 		eventCounts = totalNumberOfGeneratedEvents(path,source,modifier)	
@@ -63,82 +61,95 @@ def getCounts(trees, cut, isMC, backgrounds,plot,runRange,path):
 		for background in backgrounds:
 			processes.append(Process(getattr(Backgrounds,background),eventCounts))
 		
-		histEE = TheStack(processes,runRange.lumi,plot,trees["EE"],"None",1.0,1.0,1.0).theHistogram		
-		histMM = TheStack(processes,runRange.lumi,plot,trees["MM"],"None",1.0,1.0,1.0).theHistogram
-		histEM = TheStack(processes,runRange.lumi,plot,trees["EM"],"None",1.0,1.0,1.0).theHistogram
-						
-		histEE.Scale(getattr(triggerEffs,region).effEE.val)
-		histMM.Scale(getattr(triggerEffs,region).effMM.val)	
-		histEM.Scale(getattr(triggerEffs,region).effEM.val)	
+		n= {}
+		for region in ["central","forward"]:
+			plot.cuts = cut
+			if region = "central":
+				plot.cuts = cut.replace("weight*(","weight*((abs(eta1)<1.4 && abs(eta2)<1.4) &&")
+			elif region =="forward":
+				plot.cuts = cut.replace("weight*(","weight*((1.4 <= TMath::Max(abs(eta1),abs(eta2)))")
 		
-		offsetError = (systematics.rMuE.inclusive.val**2 + (rMuELeptonPt.inclusive.offsetErrMC/rMuELeptonPt.inclusive.offsetMC)**2)**0.5
-		fallingError = (systematics.rMuE.inclusive.val**2 + (rMuELeptonPt.inclusive.fallingErrMC/rMuELeptonPt.inclusive.fallingMC)**2)**0.5
-		cutRMuEScaled = "(%s)*0.5*((%s+%s*pow(((pt1 > pt2)*pt2 + (pt2 > pt1)*pt1),-1.))+ pow((%s+%s*pow(((pt1 > pt2)*pt2 + (pt2 > pt1)*pt1),-1.)),-1))"%(cut,rMuELeptonPt.inclusive.offsetMC,rMuELeptonPt.inclusive.fallingMC,rMuELeptonPt.inclusive.offsetMC,rMuELeptonPt.inclusive.fallingMC)
-		cutRMuEScaledUp = "(%s)*0.5*((%s+%s*pow(((pt1 > pt2)*pt2 + (pt2 > pt1)*pt1),-1.))+ pow((%s+%s*pow(((pt1 > pt2)*pt2 + (pt2 > pt1)*pt1),-1.)),-1))"%(cut,rMuELeptonPt.inclusive.offsetMC*(1+offsetError),rMuELeptonPt.inclusive.fallingMC*(1+fallingError),rMuELeptonPt.inclusive.offsetMC*(1+offsetError),rMuELeptonPt.inclusive.fallingMC*(1+fallingError))
-		cutRMuEScaledDown = "(%s)*0.5*((%s+%s*pow(((pt1 > pt2)*pt2 + (pt2 > pt1)*pt1),-1.))+ pow((%s+%s*pow(((pt1 > pt2)*pt2 + (pt2 > pt1)*pt1),-1.)),-1))"%(cut,rMuELeptonPt.inclusive.offsetMC*(1-offsetError),rMuELeptonPt.inclusive.fallingMC*(1-fallingError),rMuELeptonPt.inclusive.offsetMC*(1-offsetError),rMuELeptonPt.inclusive.fallingMC*(1-fallingError))
+			histEE = TheStack(processes,runRange.lumi,plot,trees["EE"],"None",1.0,1.0,1.0).theHistogram		
+			histMM = TheStack(processes,runRange.lumi,plot,trees["MM"],"None",1.0,1.0,1.0).theHistogram
+			histEM = TheStack(processes,runRange.lumi,plot,trees["EM"],"None",1.0,1.0,1.0).theHistogram
+							
+			histEE.Scale(getattr(triggerEffs,region).effEE.val)
+			histMM.Scale(getattr(triggerEffs,region).effMM.val)	
+			histEM.Scale(getattr(triggerEffs,region).effEM.val)	
+		
+			offsetError = (getattr(systematics.rMuE,region).val**2 + (getattr(rMuELeptonPt,region).offsetErrMC/getattr(rMuELeptonPt,region).offsetMC)**2)**0.5
+			fallingError = (getattr(systematics.rMuE,region).val**2 + (getattr(rMuELeptonPt,region).fallingErrMC/getattr(rMuELeptonPt,region).fallingMC)**2)**0.5
+			cutRMuEScaled = "(%s)*0.5*((%s+%s*pow(((pt1 > pt2)*pt2 + (pt2 > pt1)*pt1),-1.))+ pow((%s+%s*pow(((pt1 > pt2)*pt2 + (pt2 > pt1)*pt1),-1.)),-1))"%(plot.cuts,getattr(rMuELeptonPt,region).offsetMC,getattr(rMuELeptonPt,region).fallingMC,getattr(rMuELeptonPt,region).offsetMC,getattr(rMuELeptonPt,region).fallingMC)
+			cutRMuEScaledUp = "(%s)*0.5*((%s+%s*pow(((pt1 > pt2)*pt2 + (pt2 > pt1)*pt1),-1.))+ pow((%s+%s*pow(((pt1 > pt2)*pt2 + (pt2 > pt1)*pt1),-1.)),-1))"%(plot.cuts,getattr(rMuELeptonPt,region).offsetMC*(1+offsetError),getattr(rMuELeptonPt,region).fallingMC*(1+fallingError),getattr(rMuELeptonPt,region).offsetMC*(1+offsetError),getattr(rMuELeptonPt,region).fallingMC*(1+fallingError))
+			cutRMuEScaledDown = "(%s)*0.5*((%s+%s*pow(((pt1 > pt2)*pt2 + (pt2 > pt1)*pt1),-1.))+ pow((%s+%s*pow(((pt1 > pt2)*pt2 + (pt2 > pt1)*pt1),-1.)),-1))"%(plot.cuts,getattr(rMuELeptonPt,region).offsetMC*(1-offsetError),getattr(rMuELeptonPt,region).fallingMC*(1-fallingError),getattr(rMuELeptonPt,region).offsetMC*(1-offsetError),getattr(rMuELeptonPt,region).fallingMC*(1-fallingError))
 		
 		
-		plot.cuts = cutRMuEScaled
-		histEMRMuEScaled = TheStack(processes,runRange.lumi,plot,trees["EM"],"None",1.0,1.0,1.0).theHistogram				
-		histEMRMuEScaled.Scale(getattr(triggerEffs,region).effEM.val)	
+			plot.cuts = cutRMuEScaled
+			histEMRMuEScaled = TheStack(processes,runRange.lumi,plot,trees["EM"],"None",1.0,1.0,1.0).theHistogram				
+			histEMRMuEScaled.Scale(getattr(triggerEffs,region).effEM.val)	
 					
-		plot.cuts = cutRMuEScaledUp
-		histEMRMuEScaledUp = TheStack(processes,runRange.lumi,plot,trees["EM"],"None",1.0,1.0,1.0).theHistogram				
-		histEMRMuEScaledUp.Scale(getattr(triggerEffs,region).effEM.val)		
+			plot.cuts = cutRMuEScaledUp
+			histEMRMuEScaledUp = TheStack(processes,runRange.lumi,plot,trees["EM"],"None",1.0,1.0,1.0).theHistogram				
+			histEMRMuEScaledUp.Scale(getattr(triggerEffs,region).effEM.val)		
 				
-		plot.cuts = cutRMuEScaledDown
-		histEMRMuEScaledDown = TheStack(processes,runRange.lumi,plot,trees["EM"],"None",1.0,1.0,1.0).theHistogram				
-		histEMRMuEScaledDown.Scale(getattr(triggerEffs,region).effEM.val)				
+			plot.cuts = cutRMuEScaledDown
+			histEMRMuEScaledDown = TheStack(processes,runRange.lumi,plot,trees["EM"],"None",1.0,1.0,1.0).theHistogram				
+			histEMRMuEScaledDown.Scale(getattr(triggerEffs,region).effEM.val)				
 				
 		
-		eeErr = ROOT.Double()
-		ee = histEE.IntegralAndError(0,-1,eeErr)
-		mmErr = ROOT.Double()
-		mm = histMM.IntegralAndError(0,-1,mmErr)
-		emErr = ROOT.Double()
-		em = histEM.IntegralAndError(0,-1,emErr)
+			eeErr = ROOT.Double()
+			ee = histEE.IntegralAndError(0,-1,eeErr)
+			mmErr = ROOT.Double()
+			mm = histMM.IntegralAndError(0,-1,mmErr)
+			emErr = ROOT.Double()
+			em = histEM.IntegralAndError(0,-1,emErr)
+			
+			emRMuEScaledErr = ROOT.Double()
+			emRMuEScaled = histEMRMuEScaled.IntegralAndError(0,-1,emRMuEScaledErr)
+			emRMuEScaledUpErr = ROOT.Double()
+			emRMuEScaledUp = histEMRMuEScaledUp.IntegralAndError(0,-1,emRMuEScaledUpErr)
+			emRMuEScaledDownErr = ROOT.Double()
+			emRMuEScaledDown = histEMRMuEScaledDown.IntegralAndError(0,-1,emRMuEScaledDownErr)
+			
+			n["MM_"+region] = mm
+			n["EE_"+region] = ee
+			n["EM_"+region] = em
+			
+			n["EMRMuEScaled_"+region] = emRMuEScaled
+			n["EMRMuEScaledUp_"+region] = emRMuEScaledUp
+			n["EMRMuEScaledDown_"+region] = emRMuEScaledDown
+			
+			n["MMStatErr_"+region] = float(mmErr)
+			n["EEStatErr_"+region] = float(eeErr)
+			n["EMStatErr_"+region] = float(emErr)
+
 		
-		emRMuEScaledErr = ROOT.Double()
-		emRMuEScaled = histEMRMuEScaled.IntegralAndError(0,-1,emRMuEScaledErr)
-		emRMuEScaledUpErr = ROOT.Double()
-		emRMuEScaledUp = histEMRMuEScaledUp.IntegralAndError(0,-1,emRMuEScaledUpErr)
-		emRMuEScaledDownErr = ROOT.Double()
-		emRMuEScaledDown = histEMRMuEScaledDown.IntegralAndError(0,-1,emRMuEScaledDownErr)
-		
-		
-		
-		n= {
-			"MM": ee,
-			"EE": mm,
-			"EM": em,
-			"EMRMuEScaled": emRMuEScaled,
-			"EMRMuEScaledUp": emRMuEScaledUp,
-			"EMRMuEScaledDown": emRMuEScaledDown,
-			}
-		n["MMStatErr"] = float(eeErr)	
-		n["EEStatErr"] = float(mmErr)	
-		n["EMStatErr"] = float(emErr)				
-		
-		plot.cuts = tmpCut
-		
-	else:		
-		offsetError = (systematics.rMuE.inclusive.val**2 + (rMuELeptonPt.inclusive.offsetErr/rMuELeptonPt.inclusive.offset)**2)**0.5
-		fallingError = (systematics.rMuE.inclusive.val**2 + (rMuELeptonPt.inclusive.fallingErr/rMuELeptonPt.inclusive.falling)**2)**0.5	
-		cutRMuEScaled = "(%s)*0.5*((%s+%s*pow(((pt1 > pt2)*pt2 + (pt2 > pt1)*pt1),-1.))+ pow((%s+%s*pow(((pt1 > pt2)*pt2 + (pt2 > pt1)*pt1),-1.)),-1))"%(cut,rMuELeptonPt.inclusive.offset,rMuELeptonPt.inclusive.falling,rMuELeptonPt.inclusive.offset,rMuELeptonPt.inclusive.falling)
-		cutRMuEScaledUp = "(%s)*0.5*((%s+%s*pow(((pt1 > pt2)*pt2 + (pt2 > pt1)*pt1),-1.))+ pow((%s+%s*pow(((pt1 > pt2)*pt2 + (pt2 > pt1)*pt1),-1.)),-1))"%(cut,rMuELeptonPt.inclusive.offset*(1+offsetError),rMuELeptonPt.inclusive.falling*(1+fallingError),rMuELeptonPt.inclusive.offset*(1+offsetError),rMuELeptonPt.inclusive.falling*(1+fallingError))
-		cutRMuEScaledDown = "(%s)*0.5*((%s+%s*pow(((pt1 > pt2)*pt2 + (pt2 > pt1)*pt1),-1.))+ pow((%s+%s*pow(((pt1 > pt2)*pt2 + (pt2 > pt1)*pt1),-1.)),-1))"%(cut,rMuELeptonPt.inclusive.offset*(1-offsetError),rMuELeptonPt.inclusive.falling*(1-fallingError),rMuELeptonPt.inclusive.offset*(1-offsetError),rMuELeptonPt.inclusive.falling*(1-fallingError))
-		
-		n= {
-			"MM": trees["MM"].GetEntries(cut),
-			"EE": trees["EE"].GetEntries(cut),
-			"EM": trees["EM"].GetEntries(cut),
-			"EMRMuEScaled": createHistoFromTree(trees["EM"],"mll",cutRMuEScaled,100,0,1000).Integral(0,-1),
-			"EMRMuEScaledUp": createHistoFromTree(trees["EM"],"mll",cutRMuEScaledUp,100,0,1000).Integral(0,-1),
-			"EMRMuEScaledDown": createHistoFromTree(trees["EM"],"mll",cutRMuEScaledDown,100,0,1000).Integral(0,-1),
-			}
-		n["MMStatErr"] = n["MM"]**0.5	
-		n["EEStatErr"] = n["EE"]**0.5	
-		n["EMStatErr"] = n["EM"]**0.5	
+	else:
+		n= {}
+		for region in ["central","forward"]:
+			plot.cuts = cut
+			if region = "central":
+				plot.cuts = cut.replace("weight*(","weight*((abs(eta1)<1.4 && abs(eta2)<1.4) &&")
+			elif region =="forward":
+				plot.cuts = cut.replace("weight*(","weight*((1.4 <= TMath::Max(abs(eta1),abs(eta2)))")	
+				
+			offsetError = (getattr(systematics.rMuE,region).val**2 + (getattr(rMuELeptonPt,region).offsetErr/getattr(rMuELeptonPt,region).offset)**2)**0.5
+			fallingError = (getattr(systematics.rMuE,region).val**2 + (getattr(rMuELeptonPt,region).fallingErr/getattr(rMuELeptonPt,region).falling)**2)**0.5	
+			cutRMuEScaled = "(%s)*0.5*((%s+%s*pow(((pt1 > pt2)*pt2 + (pt2 > pt1)*pt1),-1.))+ pow((%s+%s*pow(((pt1 > pt2)*pt2 + (pt2 > pt1)*pt1),-1.)),-1))"%(plot.cuts,getattr(rMuELeptonPt,region).offset,getattr(rMuELeptonPt,region).falling,getattr(rMuELeptonPt,region).offset,getattr(rMuELeptonPt,region).falling)
+			cutRMuEScaledUp = "(%s)*0.5*((%s+%s*pow(((pt1 > pt2)*pt2 + (pt2 > pt1)*pt1),-1.))+ pow((%s+%s*pow(((pt1 > pt2)*pt2 + (pt2 > pt1)*pt1),-1.)),-1))"%(plot.cuts,getattr(rMuELeptonPt,region).offset*(1+offsetError),getattr(rMuELeptonPt,region).falling*(1+fallingError),getattr(rMuELeptonPt,region).offset*(1+offsetError),getattr(rMuELeptonPt,region).falling*(1+fallingError))
+			cutRMuEScaledDown = "(%s)*0.5*((%s+%s*pow(((pt1 > pt2)*pt2 + (pt2 > pt1)*pt1),-1.))+ pow((%s+%s*pow(((pt1 > pt2)*pt2 + (pt2 > pt1)*pt1),-1.)),-1))"%(plot.cuts,getattr(rMuELeptonPt,region).offset*(1-offsetError),getattr(rMuELeptonPt,region).falling*(1-fallingError),getattr(rMuELeptonPt,region).offset*(1-offsetError),getattr(rMuELeptonPt,region).falling*(1-fallingError))
+			
+				
+			n["MM_"+region] = trees["MM"].GetEntries(plot.cuts)
+			n["EE_"+region] = trees["EE"].GetEntries(plot.cuts)
+			n["EM_"+region] = trees["EM"].GetEntries(plot.cuts)
+			n["EMRMuEScaled_"+region] = createHistoFromTree(trees["EM"],"mll",cutRMuEScaled,100,0,1000).Integral(0,-1)
+			n["EMRMuEScaledUp_"+region] = createHistoFromTree(trees["EM"],"mll",cutRMuEScaledUp,100,0,1000).Integral(0,-1)
+			n["EMRMuEScaledDown_"+region] = createHistoFromTree(trees["EM"],"mll",cutRMuEScaledDown,100,0,1000).Integral(0,-1)
+
+			n["MMStatErr_"+region] = n["MM_"+region]**0.5	
+			n["EEStatErr_"+region] = n["EE_"+region]**0.5	
+			n["EMStatErr_"+region] = n["EM_"+region]**0.5	
 		
 	n["cut"] = cut
 	return n

@@ -111,8 +111,8 @@ def getCounts(trees, cut, isMC, backgrounds,plot,runRange,path,region):
 		plot.cuts = tmpCut
 		
 	else:
-		offsetError = (systematics.rMuE.inclusive.val**2 + (rMuELeptonPt.inclusive.offsetErr/rMuELeptonPt.inclusive.offset)**2)**0.5
-		fallingError = (systematics.rMuE.inclusive.val**2 + (rMuELeptonPt.inclusive.fallingErr/rMuELeptonPt.inclusive.falling)**2)**0.5	
+		offsetError = (getattr(systematics.rMuE,region).val**2 + (getattr(rMuELeptonPt,region).offsetErr/getattr(rMuELeptonPt,region).offset)**2)**0.5
+		fallingError = (getattr(systematics.rMuE,region).val**2 + (getattr(rMuELeptonPt,region).fallingErr/getattr(rMuELeptonPt,region).falling)**2)**0.5	
 		cutRMuEScaled = "(%s)*0.5*((%s+%s*pow(((pt1 > pt2)*pt2 + (pt2 > pt1)*pt1),-1.))+ pow((%s+%s*pow(((pt1 > pt2)*pt2 + (pt2 > pt1)*pt1),-1.)),-1))"%(cut,getattr(rMuELeptonPt,region).offset,getattr(rMuELeptonPt,region).falling,getattr(rMuELeptonPt,region).offset,getattr(rMuELeptonPt,region).falling)
 		cutRMuEScaledUp = "(%s)*0.5*((%s+%s*pow(((pt1 > pt2)*pt2 + (pt2 > pt1)*pt1),-1.))+ pow((%s+%s*pow(((pt1 > pt2)*pt2 + (pt2 > pt1)*pt1),-1.)),-1))"%(cut,getattr(rMuELeptonPt,region).offset*(1+offsetError),getattr(rMuELeptonPt,region).falling*(1+fallingError),getattr(rMuELeptonPt,region).offset*(1+offsetError),getattr(rMuELeptonPt,region).falling*(1+fallingError))
 		cutRMuEScaledDown = "(%s)*0.5*((%s+%s*pow(((pt1 > pt2)*pt2 + (pt2 > pt1)*pt1),-1.))+ pow((%s+%s*pow(((pt1 > pt2)*pt2 + (pt2 > pt1)*pt1),-1.)),-1))"%(cut,getattr(rMuELeptonPt,region).offset*(1-offsetError),getattr(rMuELeptonPt,region).falling*(1-fallingError),getattr(rMuELeptonPt,region).offset*(1-offsetError),getattr(rMuELeptonPt,region).falling*(1-fallingError))
