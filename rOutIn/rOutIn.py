@@ -103,7 +103,8 @@ def plotMllSpectra(SFhist,EMuhist,runRange,selection,suffix,cmsExtra,additionalL
 	#~ legend.Draw("same")
 	
 	lines = {}
-	massBins = ["mass20To60","mass60To86","onZ","mass96To150","mass150To200","mass200To300","mass300To400","mass400"]
+	#~ massBins = ["mass20To60","mass60To86","onZ","mass96To150","mass150To200","mass200To300","mass300To400","mass400"]
+	massBins = ["edgeMass"]
 	
 	for mllBin in massBins:
 		lines[mllBin] = ROOT.TLine(getattr(mllBins,mllBin).low,0,getattr(mllBins,mllBin).low,SFhist.GetBinContent(SFhist.GetMaximumBin()))
@@ -193,15 +194,18 @@ def plotMllSpectra(SFhist,EMuhist,runRange,selection,suffix,cmsExtra,additionalL
 		hCanvas.Print("fig/rOutIn_%s_%s_%s.pdf"%(suffix,selection.name,runRange.label))	
 	
 	
-def dependencies(path,selection,plots,runRange,mc,backgrounds,cmsExtra):
+def dependencies(path,selection,plots,runRange,mc,backgrounds,cmsExtra,useExisting):
 	hCanvas = TCanvas("hCanvas", "Distribution", 800,800)
-	legend = TLegend(0.6, 0.7, 0.9, 0.9)
+	legend = TLegend(0.5, 0.65, 0.9, 0.925)
 	legend.SetFillStyle(0)
 	legend.SetBorderSize(0)
 	ROOT.gStyle.SetOptStat(0)
 	
+	
 	#~ massBins = ["mass20To60","mass60To86","mass96To150","mass150To200","mass200To300","mass300To400","mass400","edgeMass","highMassOld","highMass","lowMass"]		
-	massBins = ["edgeMass","highMassOld"]		
+	massBins = ["edgeMass"]		
+	#~ massBins = ["mass20To60","mass60To86","lowMass","highMass"]		
+	#~ massBins = ["lowMass","highMass"]		
 	
 	for name in plots:
 		print name
@@ -213,7 +217,7 @@ def dependencies(path,selection,plots,runRange,mc,backgrounds,cmsExtra):
 		plot.cuts = plot.cuts % runRange.runCut	
 		plot.cuts = plot.cuts.replace("mll","p4.M()")
 		plot.cuts = plot.cuts.replace("pt > 25","p4.Pt() > 25")
-		plot.cuts = plot.cuts.replace("MT2 > 80 &&","")
+		#~ plot.cuts = plot.cuts.replace("MT2 > 80 &&","")
 		plot.variable = plot.variable.replace("mll","p4.M()")
 		if 	plot.variable == "pt":
 			plot.variable = plot.variable.replace("pt","p4.Pt()")
@@ -266,28 +270,53 @@ def dependencies(path,selection,plots,runRange,mc,backgrounds,cmsExtra):
 			for cut in cutsEqual:
 				selection.cut = selection.cut.replace(cut,"")		
 			
-			selection.cut = selection.cut + " && %s > %f && %s < %f"%(plot.variable,bins[i],plot.variable,bins[i+1]) + " && %s"%runRange.runCut
-			selection.cut.replace("&& &&","&&")
+			selection.cut = selection.cut + " && %s >= %f && %s < %f"%(plot.variable,bins[i],plot.variable,bins[i+1]) + " && %s"%runRange.runCut
+			selection.cut = selection.cut.replace("&& &&","&&")
+			
+			if plot.variable == "met":
+				selection.cut = selection.cut.replace("chargeProduct < 0","chargeProduct < 0 && !(nJets >= 3 && met > 100)")
 			print selection.cut
 				
 			additionalLabel = "%s_%.2f_%.2f"%(plot.variable,bins[i],bins[i+1])
-			centralVal = centralValues(path,selection,runRange,False,backgrounds,cmsExtra,additionalLabel)
-			centralValMC = centralValues(path,selection,runRange,True,backgrounds,cmsExtra,additionalLabel)
+			if not useExisting:
+				centralVal = centralValues(path,selection,runRange,False,backgrounds,cmsExtra,additionalLabel)
+				centralValMC = centralValues(path,selection,runRange,True,backgrounds,cmsExtra,additionalLabel)
+				
+				outFilePkl = open("shelves/rOutIn_%s_%s_%s.pkl"%(selection.name,runRange.label,additionalLabel),"w")
+				pickle.dump(centralVal, outFilePkl)
+				outFilePkl.close()
+				
+				outFilePklMC = open("shelves/rOutIn_%s_%s_%s_MC.pkl"%(selection.name,runRange.label,additionalLabel),"w")
+				pickle.dump(centralValMC, outFilePklMC)
+				outFilePklMC.close()
+			
+			else:
+				if os.path.isfile("shelves/rOutIn_%s_%s_%s.pkl"%(selection.name,runRange.label,additionalLabel)):
+					centralVal = pickle.load(open("shelves/rOutIn_%s_%s_%s.pkl"%(selection.name,runRange.label,additionalLabel),"rb"))
+				else:
+					centralVal = centralValues(path,selection,runRange,False,backgrounds,cmsExtra,additionalLabel)
+					outFilePkl = open("shelves/rOutIn_%s_%s_%s.pkl"%(selection.name,runRange.label,additionalLabel),"w")
+					pickle.dump(centralVal, outFilePkl)
+					outFilePkl.close()
+					
+				if os.path.isfile("shelves/rOutIn_%s_%s_%s_MC.pkl"%(selection.name,runRange.label,additionalLabel)):
+					centralValMC = pickle.load(open("shelves/rOutIn_%s_%s_%s_MC.pkl"%(selection.name,runRange.label,additionalLabel),"rb"))
+				else:
+					centralValMC = centralValues(path,selection,runRange,True,backgrounds,cmsExtra,additionalLabel)
+					outFilePklMC = open("shelves/rOutIn_%s_%s_%s_MC.pkl"%(selection.name,runRange.label,additionalLabel),"w")
+					pickle.dump(centralValMC, outFilePklMC)
+					outFilePklMC.close()
 			
 			
-			outFilePkl = open("shelves/rOutIn_%s_%s_%s.pkl"%(selection.name,runRange.label,additionalLabel),"w")
-			pickle.dump(centralVal, outFilePkl)
-			outFilePkl.close()
+			
 
-			outFilePklMC = open("shelves/rOutIn_%s_%s_%s_MC.pkl"%(selection.name,runRange.label,additionalLabel),"w")
-			pickle.dump(centralValMC, outFilePklMC)
-			outFilePklMC.close()
+			
 				
 			print additionalLabel
 			##~ for combination in ["EE","MM","SF"]:
 			for combination in ["SF"]:
 				for region in massBins:
-					if region in ["edgeMass","highMassOld"]:
+					if not "HighMT2" in selection.name:
 						rOutIn[region][combination].append(centralVal["rOutIn_%s_NoMT2Cut_%s"%(region,combination)])
 						rOutInErr[region][combination].append(centralVal["rOutIn_%s_NoMT2Cut_Err%s"%(region,combination)])
 						rOutInMC[region][combination].append(centralValMC["rOutIn_%s_NoMT2Cut_%s"%(region,combination)])
@@ -324,35 +353,40 @@ def dependencies(path,selection,plots,runRange,mc,backgrounds,cmsExtra):
 					ymax = 0.25	
 				elif region == "mass96To150" or region == "mass60To86":
 					relSyst = systematics.rOutIn.massBelow150.val	
-					ymax = 0.4
-				elif region == "lowMass" or region == "highMass":
+					ymax = 0.6
+				elif region == "highMass":
 					relSyst = systematics.rOutIn.old.val	
-					ymax = 0.4
+					#~ ymax = 0.4
+					#~ relSyst = systematics.rOutIn.massBelow150.val	
+					ymax = 0.5
+				elif region == "lowMass":
+					relSyst = systematics.rOutIn.old.val	
+					ymax = 0.7
+					#~ relSyst = systematics.rOutIn.massBelow150.val	
+					#~ ymax = 0.8
 				elif region == "mass150To200":
 					relSyst = systematics.rOutIn.massAbove150.val
 					ymax = 0.05
 				else:
 					relSyst = systematics.rOutIn.massAbove150.val
 					ymax = 0.03
-					
+								
 				hCanvas = TCanvas("hCanvas", "Distribution", 800,800)
-
 				plotPad = TPad("plotPad","plotPad",0,0,1,1)
-				
 				style=setTDRStyle()
 				style.SetTitleYOffset(1.3)
+				style.SetTitleXOffset(1.2)
 				style.SetPadLeftMargin(0.16)		
+				style.SetPadBottomMargin(0.15)		
 				plotPad.UseCurrentStyle()
 				plotPad.Draw()	
 				plotPad.cd()
-				
-				
 		
 				plotPad.DrawFrame(plot.firstBin,0.0,plot.lastBin,ymax,"; %s ; %s" %(plot.xaxis,"R_{out/in}"))		
 				
 				
 				bandX = array("f",[plot.firstBin,plot.lastBin])
-				if region in ["edgeMass","highMassOld"]:
+				if not "HighMT2" in selection.name:
 					bandY = array("f",[centralVals["rOutIn_%s_NoMT2Cut_%s"%(region,combination)],centralVals["rOutIn_%s_NoMT2Cut_%s"%(region,combination)]])
 					bandYErr = array("f",[centralVals["rOutIn_%s_NoMT2Cut_%s"%(region,combination)]*relSyst,centralVals["rOutIn_%s_NoMT2Cut_%s"%(region,combination)]*relSyst])
 				else:
@@ -366,7 +400,8 @@ def dependencies(path,selection,plots,runRange,mc,backgrounds,cmsExtra):
 				errorband.GetXaxis().SetRangeUser(-5,105)
 				errorband.Draw("3same")
 				errorband.SetFillColor(ROOT.kOrange-9)
-				if region in ["edgeMass","highMassOld"]:
+				errorband.SetLineColor(ROOT.kWhite)
+				if not "HighMT2" in selection.name:
 					rOutInLine = ROOT.TLine(plot.firstBin,centralVals["rOutIn_%s_NoMT2Cut_%s"%(region,combination)],plot.lastBin,centralVals["rOutIn_%s_NoMT2Cut_%s"%(region,combination)])
 				else:
 					rOutInLine = ROOT.TLine(plot.firstBin,centralVals["rOutIn_%s_%s"%(region,combination)],plot.lastBin,centralVals["rOutIn_%s_%s"%(region,combination)])
@@ -374,7 +409,7 @@ def dependencies(path,selection,plots,runRange,mc,backgrounds,cmsExtra):
 				rOutInLine.SetLineWidth(2)
 				rOutInLine.Draw("same")
 				
-				if region in ["edgeMass","highMassOld"]:
+				if not "HighMT2" in selection.name:
 					rOutInLineMC = ROOT.TLine(plot.firstBin,centralValsMC["rOutIn_%s_NoMT2Cut_%s"%(region,combination)],plot.lastBin,centralValsMC["rOutIn_%s_NoMT2Cut_%s"%(region,combination)])
 				else:
 					rOutInLineMC = ROOT.TLine(plot.firstBin,centralValsMC["rOutIn_%s_%s"%(region,combination)],plot.lastBin,centralValsMC["rOutIn_%s_%s"%(region,combination)])
@@ -399,6 +434,7 @@ def dependencies(path,selection,plots,runRange,mc,backgrounds,cmsExtra):
 				graphMC = ROOT.TGraphErrors(len(binning),binning,rOutInValsMC,binningErrs,rOutInValsMCErrs)
 				graphMC.SetLineColor(ROOT.kGreen-2) 
 				graphMC.SetMarkerColor(ROOT.kGreen-2) 
+				graphMC.SetMarkerStyle(21) 
 				graphMC.Draw("Psame0")
 				
 				legend.Clear()
@@ -406,13 +442,13 @@ def dependencies(path,selection,plots,runRange,mc,backgrounds,cmsExtra):
 				
 				legend.AddEntry(graphMC,"R_{out,in} MC","p")
 				legend.AddEntry(graph,"R_{out,in} Data","p")
-				if region in ["edgeMass","highMassOld"]:
+				if not "HighMT2" in selection.name:
 					legend.AddEntry(rOutInLine, "Mean R_{out,in} Data = %.3f"%centralVals["rOutIn_%s_NoMT2Cut_%s"%(region,combination)],"l")
 					legend.AddEntry(rOutInLineMC, "Mean R_{out,in} MC = %.3f"%centralValsMC["rOutIn_%s_NoMT2Cut_%s"%(region,combination)],"l")
 				else:
 					legend.AddEntry(rOutInLine, "Mean R_{out,in} Data = %.3f"%centralVals["rOutIn_%s_%s"%(region,combination)],"l")
 					legend.AddEntry(rOutInLineMC, "Mean R_{out,in} MC = %.3f"%centralValsMC["rOutIn_%s_%s"%(region,combination)],"l")
-				legend.AddEntry(errorband, "Mean r_{out,in} Data #pm %d %%"%(relSyst*100),"f")
+				legend.AddEntry(errorband, "Mean R_{out,in} Data #pm %d %%"%(relSyst*100),"f")
 				legend.Draw("same")
 
 
@@ -434,12 +470,47 @@ def dependencies(path,selection,plots,runRange,mc,backgrounds,cmsExtra):
 				latexLabel.SetTextSize(0.03)	
 				latexLabel.SetNDC()
 				
-				if region == "edgeMass":
-					latexLabel.DrawLatex(0.6, 0.5, "mass 20-70 GeV")
-				if region == "highMassOld":
-					latexLabel.DrawLatex(0.6, 0.5, "mass > 101 GeV")
+				if "HighMT2" in selection.name:
+					if plot.variable == "met":
+						latexLabel.DrawLatex(0.225, 0.6, "N_{Jets} #geq 2, M_{T2} > 80 GeV")
+					elif plot.variable == "nJets":					
+						latexLabel.DrawLatex(0.225, 0.6, "p_{T}^{miss} < 50 GeV, M_{T2} > 80 GeV")
+					else:					
+						latexLabel.DrawLatex(0.225, 0.6, "N_{Jets} #geq 2, p_{T}^{miss} < 50 GeV, M_{T2} > 80 GeV")
+					
+					if region == "edgeMass":
+						latexLabel.DrawLatex(0.225, 0.55, "20 < m_{ll} < 70 GeV")
+					elif region == "lowMass":
+						latexLabel.DrawLatex(0.225, 0.55, "20 < m_{ll} < 86 GeV")
+					elif region == "mass20To60":
+						latexLabel.DrawLatex(0.225, 0.55, "20 < m_{ll} < 60 GeV")
+					elif region == "mass60To86":
+						latexLabel.DrawLatex(0.225, 0.55, "60 < m_{ll} < 86 GeV")
+					elif region == "highMass":
+						latexLabel.DrawLatex(0.225, 0.55, "m_{ll} > 96 GeV")
+					else:
+						latexLabel.DrawLatex(0.225, 0.55, region)
+						
 				else:
-					latexLabel.DrawLatex(0.6, 0.5, region)
+					if plot.variable == "met":
+						latexLabel.DrawLatex(0.225, 0.6, "N_{Jets} #geq 2")
+					elif plot.variable == "nJets":					
+						latexLabel.DrawLatex(0.225, 0.6, "p_{T}^{miss} < 50 GeV")
+					else:					
+						latexLabel.DrawLatex(0.225, 0.6, "N_{Jets} #geq 2, p_{T}^{miss} < 50 GeV")
+					
+					if region == "edgeMass":
+						latexLabel.DrawLatex(0.225, 0.55, "20 < m_{ll} < 70 GeV")
+					elif region == "lowMass":
+						latexLabel.DrawLatex(0.225, 0.55, "20 < m_{ll} < 86 GeV")
+					elif region == "mass20To60":
+						latexLabel.DrawLatex(0.225, 0.55, "20 < m_{ll} < 60 GeV")
+					elif region == "mass60To86":
+						latexLabel.DrawLatex(0.225, 0.55, "60 < m_{ll} < 86 GeV")
+					elif region == "highMass":
+						latexLabel.DrawLatex(0.225, 0.55, "m_{ll} > 96 GeV")
+					else:
+						latexLabel.DrawLatex(0.225, 0.55, region)
 					
 				latex.DrawLatex(0.95, 0.96, "%s fb^{-1} (13 TeV)"%runRange.printval)
 				
@@ -459,7 +530,7 @@ def dependencies(path,selection,plots,runRange,mc,backgrounds,cmsExtra):
 	
 def centralValues(path,selection,runRange,isMC,backgrounds,cmsExtra,additionalLabel=""):			
 	
-	massBins = ["mass20To60","mass60To86","mass96To150","mass150To200","mass200To300","mass300To400","mass400","edgeMass","highMassOld","lowMassOld","highMass","lowMass"]
+	massBins = ["mass20To60","mass60To86","mass96To150","mass150To200","mass200To300","mass300To400","mass400","edgeMass","highMass","lowMass"]
 	
 	if "Forward" in selection.name:
 		region = "forward"
@@ -474,8 +545,8 @@ def centralValues(path,selection,runRange,isMC,backgrounds,cmsExtra,additionalLa
 	plot.cuts = plot.cuts % runRange.runCut	
 	plot.cuts = plot.cuts.replace("mll","p4.M()")
 	plot.cuts = plot.cuts.replace("pt > 25","p4.Pt() > 25")
-	if additionalLabel != "":
-		plot.cuts = plot.cuts.replace("MT2 > 80 &&","")
+	#~ if additionalLabel != "":
+	#~ plot.cuts = plot.cuts.replace("MT2 > 80 &&","")
 	plot.variable = plot.variable.replace("mll","p4.M()")	
 	if 	plot.variable == "pt":
 		plot.variable = plot.variable.replace("pt","p4.Pt()")
@@ -563,9 +634,13 @@ def centralValues(path,selection,runRange,isMC,backgrounds,cmsExtra,additionalLa
 				relSyst = systematics.rOutIn.massBelow150.val
 			else:
 				relSyst = systematics.rOutIn.old.val
-					
-			corrYield =  result[massBin+"_"+combination] - result[massBin+"_"+"OF"]*corr			
-			corrYieldErr = sqrt(result[massBin+"_"+combination] + result[massBin+"_OF"]*corr**2 + (result[massBin+"_OF"]*corrErr)**2)
+				
+			corrYield =  result[massBin+"_"+combination] - result[massBin+"_"+"OF"]*corr
+			if corrYield > 0:
+				corrYieldErr = sqrt(result[massBin+"_"+combination] + result[massBin+"_OF"]*corr**2 + (result[massBin+"_OF"]*corrErr)**2)
+			else:
+				corrYield = 0
+				corrYieldErr = 0
 			
 			result["corrected_"+massBin+"_"+combination] = corrYield
 			result[massBin+"_Error"+combination] = corrYieldErr
@@ -576,10 +651,14 @@ def centralValues(path,selection,runRange,isMC,backgrounds,cmsExtra,additionalLa
 			result["corrected_"+massBin+"_NoMT2Cut_"+combination] = corrYieldNoMT2Cut
 			result[massBin+"_NoMT2Cut_Error"+combination] = corrYieldNoMT2CutErr
 			
-	
-			rOutIn = corrYield / peak
-			rOutInSystErr = rOutIn * relSyst
-			rOutInErr = sqrt( (corrYieldErr/peak)**2 + (corrYield*peakErr/peak**2)**2 )
+			if peak > 0:
+				rOutIn = corrYield / peak
+				rOutInSystErr = rOutIn * relSyst
+				rOutInErr = sqrt( (corrYieldErr/peak)**2 + (corrYield*peakErr/peak**2)**2 )
+			else:
+				rOutIn = 0
+				rOutInSystErr = 0
+				rOutInErr = 0
 
 			rOutInNoMT2Cut = corrYieldNoMT2Cut / peakNoMT2Cut
 			rOutInNoMT2CutSystErr = rOutInNoMT2Cut * relSyst
@@ -641,6 +720,8 @@ def main():
 						  help="make dependency plots")		
 	parser.add_argument("-x", "--private", action="store_true", dest="private", default=False,
 						  help="plot is private work.")	
+	parser.add_argument("-u", "--useExisting", action="store_true", dest="useExisting", default=False,
+						  help="use existing values from pickles for dependency plots.")	
 	parser.add_argument("-w", "--write", action="store_true", dest="write", default=False,
 						  help="write results to central repository")	
 					
@@ -691,7 +772,7 @@ def main():
 				outFilePkl.close()
 				
 			if args.dependencies:
-				 dependencies(path,selection,args.plots,runRange,args.mc,args.backgrounds,cmsExtra)	
+				 dependencies(path,selection,args.plots,runRange,args.mc,args.backgrounds,cmsExtra,args.useExisting)	
 				 
 			if args.write:
 				import subprocess
