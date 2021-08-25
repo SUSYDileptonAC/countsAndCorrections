@@ -6,6 +6,7 @@ syntax: glob
 *.nav
 *.snm
 *.toc
+*.json
 *.synctex.gz
 *.out
 *.pyc
